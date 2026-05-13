@@ -1,111 +1,105 @@
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
+  /* NORA — тёмная тема по умолчанию, акцент брендовый фиолетовый */
+  color-scheme: dark;
+  --text: #a9a4b8;
+  --text-h: #f7f4ff;
+  --bg: #0f0e16;
+  --surface: #17161f;
+  --surface-raised: #1e1d2a;
+  --border: #2f2e3d;
+  --code-bg: #222030;
+  --accent: #c084fc;
+  --accent-muted: color-mix(in srgb, var(--accent) 72%, #6b21a8);
+  --accent-bg: rgba(192, 132, 252, 0.14);
+  --accent-border: rgba(192, 132, 252, 0.48);
+  --accent-glow: rgba(168, 85, 247, 0.28);
+  --on-accent: #ffffff;
+  --social-bg: rgba(36, 34, 52, 0.72);
   --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+    rgba(0, 0, 0, 0.55) 0 14px 28px -8px,
+    rgba(95, 60, 180, 0.08) 0 4px 12px -4px;
 
   --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
+  /* Единая шкала UI */
+  --text-ui: 0.9375rem;
+  --text-ui-sm: 0.8125rem;
+  --leading-ui: 1.35;
+  --leading-body: 1.5;
+  --control-h: 2.625rem;
+  --radius-ui: 10px;
+  --radius-field: 10px;
+  --radius-lg: 12px;
+  --pad-btn-x: 1rem;
+  --pad-btn-y: 0.625rem;
+
+  font: 16px / var(--leading-body) var(--sans);
+  letter-spacing: 0.01em;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+html {
+  background: var(--bg);
+}
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+body {
+  margin: 0;
+  background: var(--bg);
+  background-image: radial-gradient(
+    ellipse 130% 70% at 50% -35%,
+    color-mix(in srgb, var(--accent) 18%, transparent),
+    transparent 52%
+  );
 }
 
 #root {
-  width: 1126px;
+  width: 100%;
   max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
+  margin: 0;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-}
-
 h1,
 h2 {
   font-family: var(--heading);
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-h);
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
+  font-size: clamp(1.375rem, 2.8vw, 1.75rem);
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  margin: 0 0 0.75rem;
 }
+
 h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
+  font-size: clamp(1.0625rem, 2vw, 1.25rem);
+  line-height: var(--leading-ui);
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5rem;
 }
 p {
   margin: 0;
 }
 
-code,
-.counter {
+code {
   font-family: var(--mono);
   display: inline-flex;
   border-radius: 4px;
   color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
+  font-size: 0.8125em;
+  line-height: 1.45;
+  padding: 0.15em 0.45em;
   background: var(--code-bg);
 }

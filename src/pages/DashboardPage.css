@@ -1,0 +1,72 @@
+.dashboard {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 28px 20px 48px;
+  text-align: left;
+}
+
+.dashboard-acronym {
+  margin: 0 0 4px;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+  opacity: 0.85;
+}
+
+.dashboard-user-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.dashboard-title {
+  margin: 0 0 8px;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  letter-spacing: -0.02em;
+}
+
+.dashboard-names {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-lead {
+  margin-bottom: 0;
+  color: var(--text);
+}
+
+.dashboard-name-full {
+  color: var(--text);
+  font-weight: 400;
+  font-size: 0.95rem;
+}
+
+.dashboard-hint {
+  margin: 16px 0 28px;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.dashboard-map-wrap {
+  width: 100%;
+}
+
+.dashboard-map-heading {
+  margin: 0 0 6px;
+  font-size: clamp(1.0625rem, 2vw, 1.1875rem);
+  font-weight: 600;
+  color: var(--text-h);
+  letter-spacing: -0.02em;
+  line-height: var(--leading-ui);
+}
+
+.dashboard-map-sub {
+  margin: 0 0 14px;
+  font-size: var(--text-ui);
+  color: var(--text);
+  line-height: var(--leading-body);
+  max-width: 42rem;
+}

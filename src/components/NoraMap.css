@@ -1,0 +1,158 @@
+.nora-map-shell {
+  position: relative;
+  width: 100%;
+  /* Совпадает с --bg до отрисовки тайлов */
+  background: var(--bg);
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow:
+    var(--shadow),
+    0 0 0 1px color-mix(in srgb, var(--accent) 16%, var(--border)),
+    inset 0 1px 0 color-mix(in srgb, var(--accent) 12%, transparent);
+  min-height: min(52vh, 440px);
+  height: 440px;
+}
+
+@media (max-width: 640px) {
+  .nora-map-shell {
+    border-radius: 22px;
+    height: min(48vh, 380px);
+    min-height: 300px;
+  }
+}
+
+.nora-map-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 400;
+  box-shadow: inset 0 0 80px rgba(120, 90, 200, 0.06);
+}
+
+.nora-map-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: var(--text-ui-sm);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-h);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.nora-map-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+  animation: nora-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes nora-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.15);
+  }
+}
+
+.nora-map {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+}
+
+/* Контейнер MapGL */
+.nora-map > .mapgl-map-container {
+  border-radius: inherit;
+}
+
+/*
+ * Дневной векторный стиль MapGL по умолчанию. Настоящая «тёмная тема» карты —
+ * отдельный ночной стиль по ID из styles.2gis.com → VITE_2GIS_MAP_STYLE.
+ * Пока ID не задан: ночной вид через инверсию WebGL (не затемнение яркости).
+ */
+.nora-map-shell--night-invert .nora-map canvas {
+  filter: invert(1) hue-rotate(180deg) saturate(0.88) contrast(1.03);
+}
+
+.nora-map-fallback {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  height: 440px;
+  box-sizing: border-box;
+  background: var(--code-bg);
+}
+
+@media (max-width: 640px) {
+  .nora-map-fallback {
+    height: min(48vh, 380px);
+    min-height: 300px;
+  }
+}
+
+.nora-map-fallback-title {
+  margin: 0;
+  font-size: clamp(1.0625rem, 2vw, 1.25rem);
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+.nora-map-fallback-text,
+.nora-map-fallback-hint {
+  margin: 0;
+  font-size: var(--text-ui);
+  line-height: var(--leading-body);
+  color: var(--text);
+}
+
+.nora-map-fallback-hint a {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.nora-map-fallback-code {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  font-size: var(--text-ui-sm);
+  word-break: break-all;
+}
+
+.nora-map-fallback-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: var(--text-ui);
+  line-height: var(--leading-body);
+  color: var(--text);
+}
+
+.nora-map-fallback-list li {
+  margin-bottom: 8px;
+}
+
+.nora-map-fallback-list li:last-child {
+  margin-bottom: 0;
+}
