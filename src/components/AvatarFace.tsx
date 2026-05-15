@@ -1,5 +1,7 @@
-import { initialsFromDisplay } from '../types/user'
-import './AvatarFace.css'
+'use client'
+
+import { initialsFromDisplay } from '@/types/user'
+import { cn } from '@/lib/utils'
 
 type AvatarFaceProps = {
   src: string | null
@@ -12,22 +14,31 @@ export function AvatarFace({
   src,
   displayName,
   size = 40,
-  className = '',
+  className,
 }: AvatarFaceProps) {
   const label = displayName.trim() || 'Профиль'
   const initials = initialsFromDisplay(label)
 
   return (
     <span
-      className={`avatar-face ${className}`.trim()}
+      className={cn(
+        'relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-[var(--nora-border)] bg-[var(--nora-surface-strong)] font-semibold text-[var(--nora-text)] shadow-inner',
+        className,
+      )}
       style={{ width: size, height: size, fontSize: size * 0.36 }}
       role="img"
       aria-label={label}
     >
       {src ? (
-        <img src={src} alt="" width={size} height={size} />
+        <img
+          src={src}
+          alt=""
+          width={size}
+          height={size}
+          className="h-full w-full object-cover"
+        />
       ) : (
-        <span className="avatar-face-fallback" aria-hidden="true">
+        <span className="text-gradient-sky" aria-hidden="true">
           {initials}
         </span>
       )}

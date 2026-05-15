@@ -1,0 +1,19 @@
+{
+  "name": "NORA — Navigation Organized Route Assistant",
+  "short_name": "NORA",
+  "description": "Адаптивный навигатор: карта, настроение, маршруты и ментальный паспорт.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "/icons.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

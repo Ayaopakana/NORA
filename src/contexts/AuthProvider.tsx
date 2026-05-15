@@ -1,10 +1,26 @@
-import { useCallback, useMemo, useState, type ReactNode } from 'react'
-import { isBudgetComfort, isPsychotypeId } from '../profile/noraProfile'
-import { normalizeUser, type User } from '../types/user'
+'use client'
+
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
+import { isBudgetComfort, isPsychotypeId } from '@/profile/noraProfile'
+import { isMbtiId } from '@/lib/mbti'
+import {
+  isMoodPreset,
+  isUserStatus,
+  normalizeUser,
+  type User,
+  type UserZones,
+} from '@/types/user'
 import {
   AuthContext,
   type AuthContextValue,
   type ProfileUpdate,
+  type RegisterExtras,
 } from './auth-context'
 
 const SESSION_KEY = 'nora_session'
@@ -96,6 +112,11 @@ function loadSessionUser(): User | null {
   }
 }
 
+function mergeZones(prev: UserZones, patch?: UserZones): UserZones {
+  if (!patch) return prev
+  return { ...prev, ...patch }
+}
+
 function applyProfilePatch(prev: User, patch: ProfileUpdate): User {
   let next: User = { ...prev }
 
@@ -127,12 +148,51 @@ function applyProfilePatch(prev: User, patch: ProfileUpdate): User {
   if (patch.cityIntent !== undefined) {
     next = { ...next, cityIntent: patch.cityIntent.trim() }
   }
+  if (patch.mbti !== undefined) {
+    next = {
+      ...next,
+      mbti: patch.mbti === '' || isMbtiId(patch.mbti) ? patch.mbti : prev.mbti,
+    }
+  }
+  if (patch.countryOrigin !== undefined) {
+    next = { ...next, countryOrigin: patch.countryOrigin }
+  }
+  if (patch.countryCurrent !== undefined) {
+    next = { ...next, countryCurrent: patch.countryCurrent }
+  }
+  if (patch.userStatus !== undefined) {
+    next = {
+      ...next,
+      userStatus: isUserStatus(patch.userStatus)
+        ? patch.userStatus
+        : prev.userStatus,
+    }
+  }
+  if (patch.zones !== undefined) {
+    next = { ...next, zones: mergeZones(prev.zones, patch.zones) }
+  }
+  if (patch.dailyBudgetIndex !== undefined) {
+    const v = Math.max(0, Math.min(3, Math.round(patch.dailyBudgetIndex)))
+    next = { ...next, dailyBudgetIndex: v }
+  }
+  if (patch.initialMood !== undefined) {
+    next = {
+      ...next,
+      initialMood: isMoodPreset(patch.initialMood)
+        ? patch.initialMood
+        : prev.initialMood,
+    }
+  }
 
   return next
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(loadSessionUser)
+  const [user, setUser] = useState<User | null>(null)
+
+  useEffect(() => {
+    setUser(loadSessionUser())
+  }, [])
 
   const login = useCallback(async (email: string, password: string) => {
     const normalized = email.trim().toLowerCase()
@@ -158,6 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: string,
       password: string,
       avatarDataUrl: string | null,
+      extras?: RegisterExtras,
     ) => {
       const trimmedNickname = nickname.trim()
       if (trimmedNickname.length < 2) {
@@ -179,9 +240,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         nickname: trimmedNickname,
         avatarUrl: avatarDataUrl,
         psychotypeId: '',
-        moodNote: '',
-        budgetComfort: '',
+        moodNote: extras?.moodNote?.trim() ?? '',
+        budgetComfort: extras?.budgetComfort ?? '',
         cityIntent: '',
+        mbti: extras?.mbti && isMbtiId(extras.mbti) ? extras.mbti : '',
+        countryOrigin: extras?.countryOrigin ?? '',
+        countryCurrent: extras?.countryCurrent ?? '',
+        userStatus: extras?.userStatus && isUserStatus(extras.userStatus)
+          ? extras.userStatus
+          : '',
+        zones: extras?.zones ?? {},
+        dailyBudgetIndex:
+          extras?.dailyBudgetIndex !== undefined
+            ? Math.max(0, Math.min(3, Math.round(extras.dailyBudgetIndex)))
+            : 1,
+        initialMood:
+          extras?.initialMood && isMoodPreset(extras.initialMood)
+            ? extras.initialMood
+            : '',
         password,
       }
       saveAccounts([...accounts, next])

@@ -1,6 +1,7 @@
 import { createContext } from 'react'
-import type { User } from '../types/user'
-import type { BudgetComfort, PsychotypeId } from '../profile/noraProfile'
+import type { User, UserStatus, UserZones, MoodPreset } from '@/types/user'
+import type { BudgetComfort, PsychotypeId } from '@/profile/noraProfile'
+import type { MbtiId } from '@/lib/mbti'
 
 export type ProfileUpdate = {
   nickname?: string
@@ -9,6 +10,25 @@ export type ProfileUpdate = {
   moodNote?: string
   budgetComfort?: BudgetComfort
   cityIntent?: string
+  mbti?: MbtiId | ''
+  countryOrigin?: string
+  countryCurrent?: string
+  userStatus?: UserStatus
+  zones?: UserZones
+  dailyBudgetIndex?: number
+  initialMood?: MoodPreset
+}
+
+export type RegisterExtras = {
+  countryOrigin?: string
+  countryCurrent?: string
+  userStatus?: UserStatus
+  mbti?: MbtiId | ''
+  zones?: UserZones
+  initialMood?: MoodPreset
+  dailyBudgetIndex?: number
+  moodNote?: string
+  budgetComfort?: BudgetComfort
 }
 
 export type AuthContextValue = {
@@ -20,6 +40,7 @@ export type AuthContextValue = {
     email: string,
     password: string,
     avatarDataUrl: string | null,
+    extras?: RegisterExtras,
   ) => Promise<void>
   updateProfile: (patch: ProfileUpdate) => void
   logout: () => void

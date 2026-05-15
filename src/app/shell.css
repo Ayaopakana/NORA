@@ -1,0 +1,90 @@
+/**
+ * Резервная оболочка: если основной бандл стилей не подгрузился (кэш SW,
+ * сбой dev, блокировщик), интерфейс остаётся читаемым, карта — на весь экран.
+ */
+html:not(.light) {
+  background-color: #020617;
+}
+
+html.light {
+  background-color: #e0f2fe;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+/* Дублируем ключевую геометрию без Tailwind */
+.nora-map-viewport {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  z-index: 0;
+}
+
+.nora-map-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.nora-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
+  align-items: stretch;
+  justify-content: space-around;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  border-top: 1px solid rgba(56, 189, 248, 0.16);
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+html.light .nora-bottom-nav {
+  background: rgba(255, 255, 255, 0.82);
+  border-top-color: rgba(37, 99, 235, 0.14);
+}
+
+.nora-bottom-nav a {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-size: 11px;
+  font-weight: 500;
+  text-decoration: none;
+  color: #94a3b8;
+}
+
+html.light .nora-bottom-nav a {
+  color: #64748b;
+}
+
+.nora-bottom-nav a:hover {
+  color: #e2e8f0;
+}
+
+html.light .nora-bottom-nav a:hover {
+  color: #0f172a;
+}

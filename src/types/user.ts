@@ -1,5 +1,17 @@
-import type { BudgetComfort, PsychotypeId } from '../profile/noraProfile'
-import { isBudgetComfort, isPsychotypeId } from '../profile/noraProfile'
+import type { BudgetComfort, PsychotypeId } from '@/profile/noraProfile'
+import { isBudgetComfort, isPsychotypeId } from '@/profile/noraProfile'
+import type { MbtiId } from '@/lib/mbti'
+import { isMbtiId } from '@/lib/mbti'
+
+export type UserStatus = '' | 'student' | 'tourist' | 'expat' | 'local'
+
+export type MoodPreset = '' | 'calm' | 'energy' | 'tired' | 'anxious'
+
+export type ZoneKey = 'home' | 'school' | 'work'
+
+export type ZonePoint = { lng: number; lat: number }
+
+export type UserZones = Partial<Record<ZoneKey, ZonePoint>>
 
 export type User = {
   id: string
@@ -7,14 +19,55 @@ export type User = {
   name: string
   nickname: string
   avatarUrl: string | null
-  /** Стиль восприятия / «психотип» для подбора (демо, позже API) */
   psychotypeId: PsychotypeId
-  /** Текущее настроение, ритм дня — своими словами */
   moodNote: string
-  /** Комфортный уровень трат на активности */
   budgetComfort: BudgetComfort
-  /** Что ищете в городе: люди, события, знакомство со средой */
   cityIntent: string
+  mbti: MbtiId | ''
+  countryOrigin: string
+  countryCurrent: string
+  userStatus: UserStatus
+  zones: UserZones
+  /** 0–3: шаг бюджета «на сегодня» для слайдера */
+  dailyBudgetIndex: number
+  initialMood: MoodPreset
+}
+
+export function isUserStatus(v: unknown): v is UserStatus {
+  return (
+    v === '' ||
+    v === 'student' ||
+    v === 'tourist' ||
+    v === 'expat' ||
+    v === 'local'
+  )
+}
+
+export function isMoodPreset(v: unknown): v is MoodPreset {
+  return (
+    v === '' ||
+    v === 'calm' ||
+    v === 'energy' ||
+    v === 'tired' ||
+    v === 'anxious'
+  )
+}
+
+function normalizeZones(raw: unknown): UserZones {
+  if (!raw || typeof raw !== 'object') return {}
+  const o = raw as Record<string, unknown>
+  const out: UserZones = {}
+  for (const key of ['home', 'school', 'work'] as ZoneKey[]) {
+    const z = o[key]
+    if (!z || typeof z !== 'object') continue
+    const p = z as Record<string, unknown>
+    const lng = Number(p.lng)
+    const lat = Number(p.lat)
+    if (Number.isFinite(lng) && Number.isFinite(lat)) {
+      out[key] = { lng, lat }
+    }
+  }
+  return out
 }
 
 /** Совместимость со старыми записями в localStorage */
@@ -38,13 +91,27 @@ export function normalizeUser(raw: unknown): User | null {
   }
 
   const psychotypeId = isPsychotypeId(o.psychotypeId) ? o.psychotypeId : ''
-  const moodNote =
-    typeof o.moodNote === 'string' ? o.moodNote : ''
+  const moodNote = typeof o.moodNote === 'string' ? o.moodNote : ''
   const budgetComfort = isBudgetComfort(o.budgetComfort)
     ? o.budgetComfort
     : ''
-  const cityIntent =
-    typeof o.cityIntent === 'string' ? o.cityIntent : ''
+  const cityIntent = typeof o.cityIntent === 'string' ? o.cityIntent : ''
+
+  const mbti = isMbtiId(o.mbti) ? o.mbti : ''
+  const countryOrigin =
+    typeof o.countryOrigin === 'string' ? o.countryOrigin : ''
+  const countryCurrent =
+    typeof o.countryCurrent === 'string' ? o.countryCurrent : ''
+  const userStatus = isUserStatus(o.userStatus) ? o.userStatus : ''
+  const zones = normalizeZones(o.zones)
+  const dailyBudgetIndexRaw = Number(o.dailyBudgetIndex)
+  const dailyBudgetIndex =
+    Number.isFinite(dailyBudgetIndexRaw) &&
+    dailyBudgetIndexRaw >= 0 &&
+    dailyBudgetIndexRaw <= 3
+      ? Math.round(dailyBudgetIndexRaw)
+      : 1
+  const initialMood = isMoodPreset(o.initialMood) ? o.initialMood : ''
 
   return {
     id: o.id,
@@ -56,6 +123,13 @@ export function normalizeUser(raw: unknown): User | null {
     moodNote,
     budgetComfort,
     cityIntent,
+    mbti,
+    countryOrigin,
+    countryCurrent,
+    userStatus,
+    zones,
+    dailyBudgetIndex,
+    initialMood,
   }
 }
 

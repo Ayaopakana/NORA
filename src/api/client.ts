@@ -1,7 +1,7 @@
 const SESSION_KEY = 'nora_session'
 
 function resolveUrl(path: string): string {
-  const base = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '')
   if (path.startsWith('http')) return path
   const p = path.startsWith('/') ? path : `/${path}`
   return `${base}${p}`
@@ -13,15 +13,17 @@ export async function apiFetch(
   init: RequestInit = {},
 ): Promise<Response> {
   const headers = new Headers(init.headers)
-  const raw = localStorage.getItem(SESSION_KEY)
-  if (raw) {
-    try {
-      const parsed = JSON.parse(raw) as { token?: string }
-      if (parsed.token) {
-        headers.set('Authorization', `Bearer ${parsed.token}`)
+  if (typeof window !== 'undefined') {
+    const raw = localStorage.getItem(SESSION_KEY)
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as { token?: string }
+        if (parsed.token) {
+          headers.set('Authorization', `Bearer ${parsed.token}`)
+        }
+      } catch {
+        /* ignore */
       }
-    } catch {
-      /* ignore */
     }
   }
 
