@@ -9,7 +9,7 @@ import { CountryCombobox } from '@/components/CountryCombobox'
 import { MbtiGrid } from '@/components/MbtiGrid'
 import { MapboxSurface } from '@/components/map/MapboxSurface'
 import { Button } from '@/components/ui/button'
-import { Slider } from '@/components/ui/slider'
+import { DailyBudgetSlider } from '@/components/DailyBudgetSlider'
 import { useAuth } from '@/contexts/useAuth'
 import { COUNTRIES } from '@/lib/countries'
 import type { MbtiId } from '@/lib/mbti'
@@ -190,17 +190,17 @@ export function RegisterWizard() {
           />
         </div>
 
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="sync" initial={false}>
           <motion.div
             key={step}
-            initial={{ opacity: 0, y: 14, scale: 0.985 }}
+            initial={{ opacity: 0, y: 10, scale: 0.992 }}
             animate={
               leaving
-                ? { opacity: 0, scale: 0.9, y: -8 }
+                ? { opacity: 0, scale: 0.96, y: -6 }
                 : { opacity: 1, y: 0, scale: 1 }
             }
-            exit={{ opacity: 0, y: -12, scale: 0.98 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
+            exit={{ opacity: 0, y: -8, scale: 0.99 }}
+            transition={{ duration: 0.48, ease: [0.25, 0.1, 0.25, 1] }}
             className="rounded-2xl border border-[var(--nora-border)] glass-panel-strong p-6 shadow-2xl"
           >
             {step === 0 ? (
@@ -401,16 +401,12 @@ export function RegisterWizard() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">Бюджет на сегодня</p>
-                  <p className="mt-1 text-xs text-[var(--nora-text-muted)]">
-                    {BUDGET_LABELS[budgetIdx]}
-                  </p>
-                  <Slider
-                    className="mt-3"
-                    min={0}
-                    max={3}
-                    step={1}
-                    value={[budgetIdx]}
-                    onValueChange={(v) => setBudgetIdx(v[0] ?? 1)}
+                  <DailyBudgetSlider
+                    value={budgetIdx}
+                    onValueChange={setBudgetIdx}
+                    labels={BUDGET_LABELS}
+                    labelClassName="mt-1 text-xs text-[var(--nora-text-muted)]"
+                    sliderClassName="mt-3"
                   />
                 </div>
               </div>

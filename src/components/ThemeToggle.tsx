@@ -1,18 +1,25 @@
 'use client'
 
+import { motion, useReducedMotion } from 'framer-motion'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import * as React from 'react'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
+import { transitionTheme } from '@/lib/theme-view-transition'
+import { mapAppearanceScheme } from '@/lib/map-appearance'
 import { cn } from '@/lib/utils'
+
+const iconSpring = { type: 'spring' as const, stiffness: 200, damping: 30 }
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
+  const reduceMotion = useReducedMotion()
 
   React.useEffect(() => setMounted(true), [])
 
-  const isDark = (theme === 'system' ? resolvedTheme : theme) === 'dark'
+  const displayScheme = mapAppearanceScheme(theme, resolvedTheme)
+  const isDark = displayScheme === 'dark'
 
   if (!mounted) {
     return (
@@ -27,19 +34,45 @@ export function ThemeToggle({ className }: { className?: string }) {
   }
 
   return (
-    <Button
+    <motion.button
       type="button"
-      variant="secondary"
-      size="icon"
       className={cn(
-        'relative h-11 w-11 shrink-0 overflow-hidden rounded-glass glass-panel shadow-glass transition-all duration-300 hover:shadow-glass-lg active:scale-95',
+        buttonVariants({ variant: 'secondary', size: 'icon' }),
+        'relative h-11 w-11 shrink-0 overflow-hidden rounded-glass shadow-glass',
         className,
       )}
       aria-label={isDark ? 'Светлая тема' : 'Тёмная тема'}
-      onClick={() => setTheme(isDark ? 'light' : 'dark')}
+      whileTap={reduceMotion ? undefined : { scale: 0.96 }}
+      whileHover={reduceMotion ? undefined : { scale: 1.03 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+      onClick={() => transitionTheme(isDark ? 'light' : 'dark', setTheme)}
     >
-      <Sun className="h-[1.1rem] w-[1.1rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-[1.1rem] w-[1.1rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-    </Button>
+      <span className="pointer-events-none relative flex h-full w-full items-center justify-center">
+        <motion.span
+          className="absolute inset-0 flex items-center justify-center"
+          initial={false}
+          animate={{
+            rotate: isDark ? -70 : 0,
+            scale: isDark ? 0 : 1,
+            opacity: isDark ? 0 : 1,
+          }}
+          transition={reduceMotion ? { duration: 0 } : iconSpring}
+        >
+          <Sun className="h-[1.1rem] w-[1.1rem]" aria-hidden />
+        </motion.span>
+        <motion.span
+          className="absolute inset-0 flex items-center justify-center"
+          initial={false}
+          animate={{
+            rotate: isDark ? 0 : 70,
+            scale: isDark ? 1 : 0,
+            opacity: isDark ? 1 : 0,
+          }}
+          transition={reduceMotion ? { duration: 0 } : iconSpring}
+        >
+          <Moon className="h-[1.1rem] w-[1.1rem]" aria-hidden />
+        </motion.span>
+      </span>
+    </motion.button>
   )
 }

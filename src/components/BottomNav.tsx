@@ -9,6 +9,7 @@ import {
   Search,
   UserRound,
 } from 'lucide-react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 const items = [
@@ -21,6 +22,7 @@ const items = [
 
 export function BottomNav() {
   const pathname = usePathname() ?? ''
+  const reduceMotion = useReducedMotion()
 
   return (
     <nav
@@ -38,13 +40,24 @@ export function BottomNav() {
               key={href}
               href={href}
               className={cn(
-                'relative flex min-w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-medium transition-all duration-300',
+                'relative flex min-w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-medium transition-colors duration-300',
                 active
                   ? 'text-[var(--nora-accent)]'
                   : 'text-[var(--nora-text-muted)] hover:text-[var(--nora-text)]',
               )}
             >
-              {active ? (
+              {active && !reduceMotion ? (
+                <motion.span
+                  layoutId="bottom-nav-active"
+                  className="absolute inset-x-0.5 inset-y-0.5 -z-10 rounded-xl border border-[var(--nora-border-subtle)] bg-[var(--nora-surface)] shadow-[inset_0_1px_0_var(--nora-glass-highlight)] backdrop-blur-md"
+                  aria-hidden
+                  transition={{
+                    type: 'spring',
+                    stiffness: 260,
+                    damping: 38,
+                  }}
+                />
+              ) : active ? (
                 <span
                   className="absolute inset-x-0.5 inset-y-0.5 -z-10 rounded-xl border border-[var(--nora-border-subtle)] bg-[var(--nora-surface)] shadow-[inset_0_1px_0_var(--nora-glass-highlight)] backdrop-blur-md"
                   aria-hidden
@@ -52,7 +65,7 @@ export function BottomNav() {
               ) : null}
               <Icon
                 className={cn(
-                  'h-5 w-5',
+                  'h-5 w-5 transition-transform duration-300',
                   active && 'drop-shadow-[0_0_10px_rgba(56,189,248,0.55)]',
                 )}
                 strokeWidth={active ? 2.25 : 1.75}

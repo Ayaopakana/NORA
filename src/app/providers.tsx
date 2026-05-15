@@ -9,7 +9,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       attribute="class"
       defaultTheme="dark"
       enableSystem
-      disableTransitionOnChange
+      disableTransitionOnChange={false}
     >
       <AuthProvider>{children}</AuthProvider>
     </ThemeProvider>

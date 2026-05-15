@@ -1,17 +1,17 @@
 import type { StyleSpecification } from 'maplibre-gl'
 
 /**
- * Светлый векторный стиль + инверсия в CSS (nora-map-dark).
- * Даёт заметно выше контраст, чем нативный OpenFreeMap «dark».
+ * Светлая тема — Positron: чистые пастельные тона, меньше визуального шума.
+ * @see https://openfreemap.org/
  */
-export const OPENFREEMAP_DARK =
-  'https://tiles.openfreemap.org/styles/liberty'
+export const OPENFREEMAP_LIGHT = 'https://tiles.openfreemap.org/styles/positron'
 
-/** Светлый стиль — если включена светлая тема приложения. */
-export const OPENFREEMAP_LIGHT =
-  'https://tiles.openfreemap.org/styles/liberty'
+/**
+ * Тёмная_theme — нативный тёмный стиль (без CSS-invert поверх Liberty).
+ */
+export const OPENFREEMAP_DARK = 'https://tiles.openfreemap.org/styles/dark'
 
-/** Запасной тёмный растр (CARTO Dark Matter). */
+/** Запасной тёмный растр — Dark Matter (мягче с лёгким тонингом в CSS). */
 export const CARTO_DARK_FALLBACK: StyleSpecification = {
   version: 8,
   sources: {
@@ -35,22 +35,24 @@ export const CARTO_DARK_FALLBACK: StyleSpecification = {
   ],
 }
 
-/** Запасной светлый растр (OSM). */
-export const OSM_LIGHT_FALLBACK: StyleSpecification = {
+/** Запасной светлый растр — Voyager (приятнее сырых OSM-тайлов). */
+export const CARTO_LIGHT_FALLBACK: StyleSpecification = {
   version: 8,
   sources: {
-    osm: {
+    voyager: {
       type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tiles: [
+        'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+      ],
       tileSize: 256,
-      attribution: '© OpenStreetMap',
+      attribution: '© CARTO © OpenStreetMap contributors',
     },
   },
   layers: [
     {
-      id: 'osm',
+      id: 'voyager',
       type: 'raster',
-      source: 'osm',
+      source: 'voyager',
       minzoom: 0,
       maxzoom: 19,
     },
@@ -64,5 +66,5 @@ export function mapStyleForTheme(theme: string | undefined): string {
 export function mapFallbackForTheme(
   theme: string | undefined,
 ): StyleSpecification {
-  return theme === 'light' ? OSM_LIGHT_FALLBACK : CARTO_DARK_FALLBACK
+  return theme === 'light' ? CARTO_LIGHT_FALLBACK : CARTO_DARK_FALLBACK
 }

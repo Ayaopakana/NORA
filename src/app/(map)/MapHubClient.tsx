@@ -2,11 +2,11 @@
 
 import dynamic from 'next/dynamic'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Coins, MapPin } from 'lucide-react'
+import { Coins } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MapMoodSheet } from '@/components/map/MapMoodSheet'
-import { Slider } from '@/components/ui/slider'
-import { dailyBudgetLabel } from '@/lib/daily-budget'
+import { DailyBudgetLabel } from '@/components/DailyBudgetLabel'
+import { BudgetStepSlider } from '@/components/BudgetStepSlider'
 import { useAuth } from '@/contexts/useAuth'
 import type { MoodPreset, ZoneKey } from '@/types/user'
 import type { NoraMapHandle } from './map-types'
@@ -174,38 +174,21 @@ export default function MapHubClient() {
 
       <div className="pointer-events-none fixed inset-0 z-10 flex flex-col nora-map-overlay">
 
-        <div className="pointer-events-none mt-auto flex w-full flex-col items-center gap-2 px-3 pb-[calc(72px+env(safe-area-inset-bottom,0px))]">
-          <a
-            href="https://organicmaps.app/ru/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="pointer-events-auto flex max-w-[min(96vw,420px)] items-center gap-2 rounded-full border border-[var(--nora-border)] glass-panel px-3 py-1.5 text-[11px] text-[var(--nora-text-muted)] shadow-md transition-colors hover:border-sky-400/35 hover:text-sky-200"
-          >
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-emerald-400/90" aria-hidden />
-            <span>
-              Те же{' '}
-              <span className="font-medium text-[var(--nora-text)]">OpenStreetMap</span>, что
-              в{' '}
-              <span className="font-medium text-sky-300">Organic Maps</span>
-              — офлайн, без рекламы и слежки
-            </span>
-          </a>
+        <div className="pointer-events-none mt-auto flex w-full flex-col items-center px-3 pb-[calc(72px+env(safe-area-inset-bottom,0px))]">
           <div className="pointer-events-auto flex w-[min(96vw,420px)] items-center gap-3 rounded-2xl border border-[var(--nora-border)] glass-panel px-4 py-3 shadow-xl">
             <Coins className="h-5 w-5 shrink-0 text-sky-300" aria-hidden />
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--nora-text-muted)]">
                 Бюджет на сегодня
               </p>
-              <p className="truncate text-sm text-[var(--nora-text)]">
-                {dailyBudgetLabel(budgetIdx)}
-              </p>
-              <Slider
+              <DailyBudgetLabel
+                index={budgetIdx}
+                className="block w-full truncate text-sm text-[var(--nora-text)]"
+              />
+              <BudgetStepSlider
                 className="mt-2"
-                min={0}
-                max={3}
-                step={1}
-                value={[budgetIdx]}
-                onValueChange={(v) => setBudgetIdx(v[0] ?? 1)}
+                value={budgetIdx}
+                onValueChange={setBudgetIdx}
               />
             </div>
           </div>
@@ -219,7 +202,7 @@ export default function MapHubClient() {
             initial={{ y: 120, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 120, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+            transition={{ type: 'spring', stiffness: 220, damping: 32 }}
             className="fixed inset-x-0 bottom-[calc(64px+env(safe-area-inset-bottom,0px))] z-30 mx-auto w-[min(96vw,440px)] px-3"
           >
             <div className="rounded-2xl border border-[var(--nora-border)] glass-panel-strong p-4 shadow-2xl">

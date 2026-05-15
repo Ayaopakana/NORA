@@ -5,7 +5,7 @@ import { Coins, MapPin, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { PlaceMapDialog } from '@/components/planner/PlaceMapDialog'
 import { RequireAuth } from '@/components/RequireAuth'
-import { dailyBudgetLabel } from '@/lib/daily-budget'
+import { DailyBudgetLabel } from '@/components/DailyBudgetLabel'
 import {
   budgetLabelForTier,
   fitsUserBudget,
@@ -90,9 +90,10 @@ function PlannerContent() {
         <p className="mt-2 inline-flex items-center gap-1.5 rounded-full glass-chip px-2.5 py-1 text-xs text-[var(--nora-text-muted)]">
           <Coins className="h-3.5 w-3.5 text-sky-400" aria-hidden />
           Бюджет на сегодня:{' '}
-          <span className="font-medium text-[var(--nora-text)]">
-            {dailyBudgetLabel(budgetIdx)}
-          </span>
+          <DailyBudgetLabel
+            index={budgetIdx}
+            className="inline font-medium text-[var(--nora-text)]"
+          />
         </p>
       </header>
 
@@ -131,21 +132,25 @@ function PlannerContent() {
         </p>
       </section>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="sync" initial={false}>
         <motion.ul
-          key={`${mood}-${budgetIdx}`}
-          initial={{ opacity: 0, y: 8 }}
+          key={mood}
+          initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.25 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.42, ease: [0.25, 0.1, 0.25, 1] }}
           className="space-y-4"
         >
-          {recommendations.map((r, i) => (
+          {recommendations.map((r) => (
             <motion.li
               key={r.id}
-              initial={{ opacity: 0, y: 14 }}
+              layout
+              initial={false}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.06, duration: 0.35, ease: 'easeOut' }}
+              transition={{
+                layout: { duration: 0.48, ease: [0.25, 0.1, 0.25, 1] },
+                opacity: { duration: 0.36, ease: [0.25, 0.1, 0.25, 1] },
+              }}
             >
               <button
                 type="button"

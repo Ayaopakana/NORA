@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { buttonVariants } from '@/components/ui/button'
 import {
   Command,
   CommandEmpty,
@@ -40,50 +40,57 @@ export function CountryCombobox({
   const selected = countries.find((c) => c.code === value)
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
+    <div className="relative z-20">
+      <Popover open={open} onOpenChange={setOpen} modal={false}>
+        <PopoverTrigger
           id={id}
-          variant="secondary"
           role="combobox"
           aria-expanded={open}
-          className="h-12 w-full justify-between rounded-xl border border-[var(--nora-border)] px-3 font-normal"
+          className={cn(
+            buttonVariants({ variant: 'secondary', size: 'default' }),
+            'h-12 w-full justify-between rounded-xl border border-[var(--nora-border)] px-3 font-normal hover:opacity-100',
+          )}
         >
-          <span className="truncate">
+          <span className="truncate text-left">
             {selected ? selected.name : placeholder}
           </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-60" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="p-0" align="start">
-        <Command>
-          <span className="sr-only">{label}</span>
-          <CommandInput placeholder="Поиск страны…" />
-          <CommandList>
-            <CommandEmpty>Ничего не найдено.</CommandEmpty>
-            <CommandGroup>
-              {countries.map((c) => (
-                <CommandItem
-                  key={c.code}
-                  value={`${c.name} ${c.code}`}
-                  onSelect={() => {
-                    onChange(c.code)
-                    setOpen(false)
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      'mr-2 h-4 w-4',
-                      value === c.code ? 'opacity-100' : 'opacity-0',
-                    )}
-                  />
-                  {c.name}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+        </PopoverTrigger>
+        <PopoverContent
+          className="p-0"
+          align="start"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          <Command>
+            <span className="sr-only">{label}</span>
+            <CommandInput placeholder="Поиск страны…" />
+            <CommandList>
+              <CommandEmpty>Ничего не найдено.</CommandEmpty>
+              <CommandGroup>
+                {countries.map((c) => (
+                  <CommandItem
+                    key={c.code}
+                    value={c.code}
+                    keywords={[c.name, c.code]}
+                    onSelect={() => {
+                      onChange(c.code)
+                      setOpen(false)
+                    }}
+                  >
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        value === c.code ? 'opacity-100' : 'opacity-0',
+                      )}
+                    />
+                    {c.name}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+    </div>
   )
 }

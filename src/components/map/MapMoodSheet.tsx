@@ -107,6 +107,7 @@ export function MapMoodSheet({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
               className="pointer-events-auto fixed inset-0 z-30 bg-[color-mix(in_srgb,var(--nora-bg-base)_40%,transparent)] backdrop-blur-md"
               onClick={() => onOpenChange(false)}
             />
@@ -117,7 +118,7 @@ export function MapMoodSheet({
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
-              transition={{ type: 'spring', stiffness: 380, damping: 36 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 34 }}
               className={cn(
                 'pointer-events-auto fixed z-40 flex w-[min(88vw,320px)] flex-col',
                 'left-0 top-0 bottom-[calc(64px+env(safe-area-inset-bottom,0px))]',
