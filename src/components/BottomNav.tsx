@@ -4,21 +4,17 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   CalendarDays,
-  HelpCircle,
   MapPin,
   MessageCircle,
   Search,
-  Store,
   UserRound,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const items = [
   { href: '/', label: 'Карта', icon: MapPin },
-  { href: '/partners', label: 'Партнёры', icon: Store },
   { href: '/search', label: 'Поиск', icon: Search },
   { href: '/chat', label: 'Чат', icon: MessageCircle },
-  { href: '/faq', label: 'FAQ', icon: HelpCircle },
   { href: '/planner', label: 'Планер', icon: CalendarDays },
   { href: '/passport', label: 'Профиль', icon: UserRound },
 ] as const
@@ -28,7 +24,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="nora-bottom-nav fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--nora-border)] glass-panel backdrop-blur-glass"
+      className="nora-bottom-nav fixed bottom-0 left-0 right-0 z-50 shrink-0 border-t border-[var(--nora-border)] glass-panel backdrop-blur-glass"
       aria-label="Основная навигация"
     >
       <div className="flex h-16 min-w-0 items-stretch overflow-x-auto overflow-y-hidden px-1 pb-[env(safe-area-inset-bottom,0px)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

@@ -32,7 +32,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       variant="secondary"
       size="icon"
       className={cn(
-        'relative overflow-hidden rounded-xl border border-[var(--nora-border)] glass-panel shadow-none',
+        'relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-[var(--nora-border)] glass-panel shadow-none',
         className,
       )}
       aria-label={isDark ? 'Светлая тема' : 'Тёмная тема'}

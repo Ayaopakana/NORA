@@ -97,7 +97,7 @@ function PassportContent() {
   }
 
   return (
-    <PageShell>
+    <PageShell className="pr-[6.25rem] sm:pr-4">
       <header className="mb-6 flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-sky-400">
@@ -109,6 +109,7 @@ function PassportContent() {
           type="button"
           variant="ghost"
           size="icon"
+          className="shrink-0"
           aria-label="Выйти"
           onClick={logout}
         >
