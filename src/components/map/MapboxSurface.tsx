@@ -8,38 +8,19 @@ import type {
   StyleSpecification,
 } from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import { useTheme } from 'next-themes'
 import { useEffect, useRef, useState } from 'react'
+import {
+  mapFallbackForTheme,
+  mapStyleForTheme,
+} from '@/lib/map-styles'
 import { cn } from '@/lib/utils'
 
 const DEFAULT_CENTER: [number, number] = [37.6173, 55.7558]
 
-/** Бесплатный векторный стиль OSM для MapLibre (OpenFreeMap). */
-const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/liberty'
-
-/** Запасной растровый OSM, если основной стиль недоступен. */
-const OSM_RASTER_FALLBACK: StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: {
-      type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      attribution: '© OpenStreetMap',
-    },
-  },
-  layers: [
-    {
-      id: 'osm',
-      type: 'raster',
-      source: 'osm',
-      minzoom: 0,
-      maxzoom: 19,
-    },
-  ],
-}
-
 export type MapboxSurfaceProps = {
   className?: string
+  /** @deprecated тонировка задаётся классом nora-map-dark / nora-map-light */
   blueMono?: boolean
   onMap?: (map: MapLibreMap) => void
   pickPoint?: (coords: { lng: number; lat: number }) => void
@@ -48,11 +29,13 @@ export type MapboxSurfaceProps = {
 
 export function MapboxSurface({
   className,
-  blueMono = false,
   onMap,
   pickPoint,
   markers,
 }: MapboxSurfaceProps) {
+  const { resolvedTheme } = useTheme()
+  const isDark = resolvedTheme !== 'light'
+
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
   const markerObjs = useRef<Marker[]>([])
@@ -62,17 +45,28 @@ export function MapboxSurface({
   pickPointRef.current = pickPoint
 
   const [tileError, setTileError] = useState<string | null>(null)
+  const [isRasterFallback, setIsRasterFallback] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const el = containerRef.current
-    if (!el) return
+    if (!el || !mounted) return
 
     setTileError(null)
+    setIsRasterFallback(false)
 
     let cancelled = false
     let instance: MapLibreMap | null = null
     let ro: ResizeObserver | null = null
     let onClick: ((e: MapMouseEvent) => void) | undefined
+    let usedFallback = false
+
+    const vectorStyle = mapStyleForTheme(resolvedTheme)
+    const rasterFallback = mapFallbackForTheme(resolvedTheme)
 
     const attachPick = (map: MapLibreMap) => {
       if (onClick) map.off('click', onClick)
@@ -125,6 +119,7 @@ export function MapboxSurface({
         center: DEFAULT_CENTER,
         zoom: 12,
         attributionControl: { compact: true },
+        fadeDuration: 0,
       })
 
       mapRef.current = instance
@@ -147,19 +142,21 @@ export function MapboxSurface({
       ro.observe(containerRef.current)
     }
 
-    createMap(OPENFREEMAP_STYLE)
+    createMap(vectorStyle)
 
     const fallbackTimer = window.setTimeout(() => {
-      if (cancelled || !instance) return
+      if (cancelled || !instance || usedFallback) return
       if (instance.isStyleLoaded() && instance.loaded()) return
 
+      usedFallback = true
+      setIsRasterFallback(true)
       instance.remove()
       instance = null
       mapRef.current = null
       markerObjs.current.forEach((m) => m.remove())
       markerObjs.current = []
 
-      createMap(OSM_RASTER_FALLBACK)
+      createMap(rasterFallback)
     }, 8000)
 
     return () => {
@@ -173,7 +170,7 @@ export function MapboxSurface({
       instance = null
       mapRef.current = null
     }
-  }, [])
+  }, [mounted, resolvedTheme])
 
   useEffect(() => {
     const map = mapRef.current
@@ -200,29 +197,40 @@ export function MapboxSurface({
     const map = mapRef.current
     if (!map || !markers) return
 
-    markerObjs.current.forEach((m) => m.remove())
-    markerObjs.current = []
+    const syncMarkers = () => {
+      markerObjs.current.forEach((m) => m.remove())
+      markerObjs.current = []
 
-    for (const m of markers) {
-      const el = document.createElement('div')
-      el.style.width = '14px'
-      el.style.height = '14px'
-      el.style.borderRadius = '999px'
-      el.style.background = m.color ?? '#38bdf8'
-      el.style.boxShadow = '0 0 12px rgba(56,189,248,0.8)'
-      el.style.border = '2px solid rgba(255,255,255,0.85)'
-      const marker = new maplibregl.Marker({ element: el })
-        .setLngLat([m.lng, m.lat])
-        .addTo(map)
-      markerObjs.current.push(marker)
+      for (const m of markers) {
+        const el = document.createElement('div')
+        el.style.width = '14px'
+        el.style.height = '14px'
+        el.style.borderRadius = '999px'
+        el.style.background = m.color ?? '#38bdf8'
+        el.style.boxShadow =
+          '0 0 14px rgba(56,189,248,0.85), 0 0 4px rgba(37,99,235,0.5)'
+        el.style.border = '2px solid rgba(226,232,240,0.9)'
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat([m.lng, m.lat])
+          .addTo(map)
+        markerObjs.current.push(marker)
+      }
     }
-  }, [markers])
+
+    if (map.isStyleLoaded()) {
+      syncMarkers()
+    } else {
+      map.once('load', syncMarkers)
+    }
+  }, [markers, resolvedTheme])
 
   return (
     <div
       className={cn(
         'relative h-full min-h-0 w-full overflow-hidden',
-        blueMono && 'nora-map-organic',
+        isDark && 'nora-map-dark',
+        isDark && isRasterFallback && 'nora-map-raster',
+        !isDark && 'nora-map-light',
         className,
       )}
     >

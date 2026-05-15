@@ -96,11 +96,7 @@
   }
 }
 
-/* MapLibre — атрибуция и ссылки (Organic Maps, OSM) */
-.maplibregl-ctrl-attrib.maplibregl-compact {
-  border-radius: 10px;
-}
-
+/* MapLibre — под Cyber-Adaptive Glassmorphism NORA */
 .maplibregl-map,
 .maplibregl-canvas-container,
 .maplibregl-canvas {
@@ -110,17 +106,99 @@
 
 .maplibregl-popup-content {
   border-radius: 12px !important;
+  background: var(--nora-surface-strong) !important;
+  color: var(--nora-text) !important;
+  border: 1px solid var(--nora-border) !important;
 }
 
-/**
- * Мягкая тонировка под NORA: сохраняем «живые» зелёные зоны Voyager/OSM,
- * слегка уводим в холодный сумеречный тон, как ночная тема Organic Maps.
+/* Тёмная карта: высокий контраст, холодный slate + cyan */
+.nora-map-dark {
+  background: #0f172a;
+}
+
+/* Лёгкая виньетка по краям — не гасим центр карты */
+.nora-map-dark::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(
+      ellipse 110% 70% at 50% 100%,
+      rgba(2, 6, 23, 0.22) 0%,
+      transparent 62%
+    ),
+    radial-gradient(
+      ellipse 80% 50% at 50% 0%,
+      rgba(56, 189, 248, 0.06) 0%,
+      transparent 48%
+    );
+}
+
+/*
+ * Liberty + инверсия: светлые дороги и подписи на тёмном фоне,
+ * заметно читабельнее, чем «чёрное на чёрном» в native dark.
  */
-.nora-map-organic .maplibregl-canvas {
-  filter: saturate(0.88) contrast(1.04) brightness(0.88) hue-rotate(-6deg);
+.nora-map-dark .maplibregl-canvas {
+  filter: invert(1) hue-rotate(188deg) brightness(1.22) contrast(1.32)
+    saturate(1.05);
 }
 
-/* совместимость со старым классом */
+.nora-map-light .maplibregl-canvas {
+  filter: saturate(0.95) contrast(1.02) brightness(1.02);
+}
+
+/* Элементы управления — glass panel */
+.nora-map-dark .maplibregl-ctrl-group,
+.nora-map-light .maplibregl-ctrl-group {
+  background: var(--nora-surface-strong) !important;
+  border: 1px solid var(--nora-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.35) !important;
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+
+.nora-map-dark .maplibregl-ctrl-group button + button,
+.nora-map-light .maplibregl-ctrl-group button + button {
+  border-top-color: var(--nora-border) !important;
+}
+
+.nora-map-dark .maplibregl-ctrl-icon,
+.nora-map-light .maplibregl-ctrl-icon {
+  filter: brightness(0) saturate(100%) invert(78%) sepia(12%) saturate(1200%)
+    hue-rotate(169deg) brightness(103%) contrast(96%);
+}
+
+html.light .nora-map-light .maplibregl-ctrl-icon {
+  filter: brightness(0) saturate(100%) invert(28%) sepia(20%) saturate(800%)
+    hue-rotate(169deg);
+}
+
+.nora-map-dark .maplibregl-ctrl-attrib,
+.nora-map-light .maplibregl-ctrl-attrib {
+  background: var(--nora-surface) !important;
+  color: var(--nora-text-muted) !important;
+  border: 1px solid var(--nora-border) !important;
+  border-radius: 10px !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.nora-map-dark .maplibregl-ctrl-attrib a,
+.nora-map-light .maplibregl-ctrl-attrib a {
+  color: var(--nora-accent) !important;
+}
+
+/* совместимость */
+.nora-map-organic .maplibregl-canvas,
 .nora-map-blue-mono .maplibregl-canvas {
-  filter: saturate(0.88) contrast(1.04) brightness(0.88) hue-rotate(-6deg);
+  filter: invert(1) hue-rotate(188deg) brightness(1.22) contrast(1.32)
+    saturate(1.05);
+}
+
+/* Запасной растр CARTO Dark — поднимаем яркость отдельно */
+.nora-map-dark.nora-map-raster .maplibregl-canvas {
+  filter: brightness(1.28) contrast(1.25) saturate(1.08) hue-rotate(6deg);
 }
