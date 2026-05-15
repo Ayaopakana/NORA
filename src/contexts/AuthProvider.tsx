@@ -195,10 +195,13 @@ function applyProfilePatch(prev: User, patch: ProfileUpdate): User {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  /** Начальное состояние одинаково на сервере и клиенте — сессию читаем только в useEffect. */
   const [user, setUser] = useState<User | null>(null)
+  const [authReady, setAuthReady] = useState(false)
 
   useEffect(() => {
     setUser(loadSessionUser())
+    setAuthReady(true)
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
@@ -303,12 +306,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
+      authReady,
       login,
       register,
       updateProfile,
       logout,
     }),
-    [user, login, register, updateProfile, logout],
+    [user, authReady, login, register, updateProfile, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

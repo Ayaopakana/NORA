@@ -35,6 +35,8 @@ export type RegisterExtras = {
 
 export type AuthContextValue = {
   user: User | null
+  /** false до чтения localStorage на клиенте (избегаем ложного редиректа на /login) */
+  authReady: boolean
   login: (email: string, password: string) => Promise<void>
   register: (
     name: string,
