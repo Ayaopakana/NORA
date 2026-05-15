@@ -24,7 +24,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="nora-bottom-nav fixed bottom-0 left-0 right-0 z-50 shrink-0 border-t border-[var(--nora-border)] glass-panel backdrop-blur-glass"
+      className="nora-bottom-nav glass-nav fixed bottom-0 left-0 right-0 z-50 shrink-0"
       aria-label="Основная навигация"
     >
       <div className="flex h-16 min-w-0 items-stretch overflow-x-auto overflow-y-hidden px-1 pb-[env(safe-area-inset-bottom,0px)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -38,12 +38,18 @@ export function BottomNav() {
               key={href}
               href={href}
               className={cn(
-                'flex min-w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-medium transition-colors',
+                'relative flex min-w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-medium transition-all duration-300',
                 active
-                  ? 'text-sky-400'
+                  ? 'text-[var(--nora-accent)]'
                   : 'text-[var(--nora-text-muted)] hover:text-[var(--nora-text)]',
               )}
             >
+              {active ? (
+                <span
+                  className="absolute inset-x-0.5 inset-y-0.5 -z-10 rounded-xl border border-[var(--nora-border-subtle)] bg-[var(--nora-surface)] shadow-[inset_0_1px_0_var(--nora-glass-highlight)] backdrop-blur-md"
+                  aria-hidden
+                />
+              ) : null}
               <Icon
                 className={cn(
                   'h-5 w-5',

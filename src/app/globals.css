@@ -2,71 +2,227 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Cyber-Adaptive Glassmorphism — NORA */
+/* NORA — Modern Glass (light + dark) */
 :root {
-  --nora-bg: #e0f2fe;
-  --nora-surface: rgba(255, 255, 255, 0.72);
-  --nora-surface-strong: rgba(255, 255, 255, 0.9);
-  --nora-text: #0f172a;
-  --nora-text-muted: #334155;
-  --nora-accent: #38bdf8;
-  --nora-accent-2: #2563eb;
-  --nora-border: rgba(37, 99, 235, 0.14);
-  --nora-glow: rgba(56, 189, 248, 0.22);
-  --nora-progress: rgba(56, 189, 248, 0.85);
   color-scheme: light;
+
+  --nora-bg-base: #e8f4fc;
+  --nora-mesh-a: rgba(56, 189, 248, 0.28);
+  --nora-mesh-b: rgba(37, 99, 235, 0.14);
+  --nora-mesh-c: rgba(255, 255, 255, 0.9);
+
+  --nora-bg: #e8f4fc;
+  --nora-text: #0f172a;
+  --nora-text-muted: #475569;
+  --nora-accent: #0ea5e9;
+  --nora-accent-2: #2563eb;
+  --nora-border: rgba(255, 255, 255, 0.65);
+  --nora-border-subtle: rgba(37, 99, 235, 0.12);
+  --nora-glow: rgba(14, 165, 233, 0.35);
+  --nora-progress: rgba(14, 165, 233, 0.9);
+
+  --nora-glass-highlight: rgba(255, 255, 255, 0.92);
+  --nora-glass-shade: rgba(255, 255, 255, 0.35);
+  --nora-surface: rgba(255, 255, 255, 0.52);
+  --nora-surface-strong: rgba(255, 255, 255, 0.72);
+  --nora-nav-bg: rgba(255, 255, 255, 0.62);
+
+  --nora-blur: 22px;
+  --nora-blur-strong: 32px;
+  --nora-radius: 1rem;
+  --nora-radius-lg: 1.25rem;
+
+  --nora-shadow-glass:
+    0 4px 6px -1px rgba(15, 23, 42, 0.04),
+    0 12px 28px -8px rgba(37, 99, 235, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+  --nora-shadow-glass-lg:
+    0 8px 32px -4px rgba(37, 99, 235, 0.18),
+    0 24px 48px -12px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --nora-shadow-nav:
+    0 -4px 24px rgba(37, 99, 235, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .dark {
+  color-scheme: dark;
+
+  --nora-bg-base: #020617;
+  --nora-mesh-a: rgba(56, 189, 248, 0.14);
+  --nora-mesh-b: rgba(37, 99, 235, 0.22);
+  --nora-mesh-c: rgba(15, 23, 42, 0.5);
+
   --nora-bg: #020617;
-  --nora-surface: rgba(15, 23, 42, 0.42);
-  --nora-surface-strong: rgba(15, 23, 42, 0.58);
-  --nora-text: #e2e8f0;
+  --nora-text: #f1f5f9;
   --nora-text-muted: #94a3b8;
   --nora-accent: #38bdf8;
-  --nora-accent-2: #2563eb;
-  --nora-border: rgba(56, 189, 248, 0.16);
-  --nora-glow: rgba(56, 189, 248, 0.28);
+  --nora-accent-2: #3b82f6;
+  --nora-border: rgba(148, 163, 184, 0.14);
+  --nora-border-subtle: rgba(56, 189, 248, 0.1);
+  --nora-glow: rgba(56, 189, 248, 0.4);
   --nora-progress: rgba(56, 189, 248, 0.95);
-  color-scheme: dark;
+
+  --nora-glass-highlight: rgba(255, 255, 255, 0.09);
+  --nora-glass-shade: rgba(2, 6, 23, 0.35);
+  --nora-surface: rgba(15, 23, 42, 0.48);
+  --nora-surface-strong: rgba(15, 23, 42, 0.68);
+  --nora-nav-bg: rgba(2, 6, 23, 0.55);
+
+  --nora-shadow-glass:
+    0 4px 24px -4px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(56, 189, 248, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+  --nora-shadow-glass-lg:
+    0 12px 40px -8px rgba(0, 0, 0, 0.55),
+    0 0 48px -16px rgba(56, 189, 248, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --nora-shadow-nav:
+    0 -8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 @layer base {
   html {
     @apply antialiased;
-    background: var(--nora-bg);
+    background: var(--nora-bg-base);
   }
 
   body {
     margin: 0;
     min-height: 100dvh;
     min-height: 100svh;
-    background: var(--nora-bg);
+    background: transparent;
     color: var(--nora-text);
     font-feature-settings: 'rlig' 1, 'calt' 1;
-    /* iOS safe areas */
     padding-top: env(safe-area-inset-top);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        ellipse 90% 55% at 8% -5%,
+        var(--nora-mesh-a) 0%,
+        transparent 55%
+      ),
+      radial-gradient(
+        ellipse 70% 50% at 95% 15%,
+        var(--nora-mesh-b) 0%,
+        transparent 50%
+      ),
+      radial-gradient(
+        ellipse 60% 45% at 50% 100%,
+        var(--nora-mesh-c) 0%,
+        transparent 45%
+      ),
+      var(--nora-bg-base);
+  }
+
+  /* Тонкая «зернистость» для глубины стекла */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  .dark body::after {
+    opacity: 0.2;
   }
 }
 
 @layer utilities {
   .glass-panel {
-    background: var(--nora-surface);
+    border-radius: var(--nora-radius);
     border: 1px solid var(--nora-border);
-    box-shadow:
-      0 8px 32px rgba(2, 6, 23, 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(18px) saturate(160%);
-    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    background: linear-gradient(
+      145deg,
+      var(--nora-glass-highlight) 0%,
+      var(--nora-surface) 42%,
+      var(--nora-glass-shade) 100%
+    );
+    box-shadow: var(--nora-shadow-glass);
+    backdrop-filter: blur(var(--nora-blur)) saturate(190%);
+    -webkit-backdrop-filter: blur(var(--nora-blur)) saturate(190%);
+    transition:
+      background 0.35s ease,
+      border-color 0.35s ease,
+      box-shadow 0.35s ease;
   }
 
   .glass-panel-strong {
-    background: var(--nora-surface-strong);
+    border-radius: var(--nora-radius-lg);
     border: 1px solid var(--nora-border);
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    background: linear-gradient(
+      155deg,
+      var(--nora-glass-highlight) 0%,
+      var(--nora-surface-strong) 50%,
+      var(--nora-glass-shade) 100%
+    );
+    box-shadow: var(--nora-shadow-glass-lg);
+    backdrop-filter: blur(var(--nora-blur-strong)) saturate(200%);
+    -webkit-backdrop-filter: blur(var(--nora-blur-strong)) saturate(200%);
+  }
+
+  .glass-nav {
+    border-top: 1px solid var(--nora-border-subtle);
+    background: linear-gradient(
+      180deg,
+      var(--nora-glass-highlight) 0%,
+      var(--nora-nav-bg) 35%,
+      var(--nora-nav-bg) 100%
+    );
+    box-shadow: var(--nora-shadow-nav);
+    backdrop-filter: blur(28px) saturate(200%);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+  }
+
+  .glass-chip {
+    border-radius: 0.75rem;
+    border: 1px solid var(--nora-border-subtle);
+    background: var(--nora-surface);
+    backdrop-filter: blur(12px) saturate(160%);
+    -webkit-backdrop-filter: blur(12px) saturate(160%);
+    box-shadow: inset 0 1px 0 var(--nora-glass-highlight);
+  }
+
+  .glass-input {
+    border-radius: 0.75rem;
+    border: 1px solid var(--nora-border-subtle);
+    background: var(--nora-surface);
+    color: var(--nora-text);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .glass-input:focus {
+    outline: none;
+    border-color: color-mix(in srgb, var(--nora-accent) 55%, transparent);
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--nora-accent) 22%, transparent),
+      inset 0 1px 2px rgba(15, 23, 42, 0.04);
+  }
+
+  .dark .glass-input:focus {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--nora-accent) 18%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
   .text-gradient-sky {
@@ -82,9 +238,9 @@
 
   .neon-ring {
     box-shadow:
-      0 0 0 1px rgba(56, 189, 248, 0.55),
-      0 0 28px rgba(56, 189, 248, 0.35),
-      0 0 64px rgba(37, 99, 235, 0.2);
+      0 0 0 1px color-mix(in srgb, var(--nora-accent) 50%, transparent),
+      0 0 24px var(--nora-glow),
+      inset 0 1px 0 var(--nora-glass-highlight);
   }
 
   .safe-pb-nav {
@@ -96,7 +252,7 @@
   }
 }
 
-/* MapLibre — под Cyber-Adaptive Glassmorphism NORA */
+/* MapLibre */
 .maplibregl-map,
 .maplibregl-canvas-container,
 .maplibregl-canvas {
@@ -105,18 +261,23 @@
 }
 
 .maplibregl-popup-content {
-  border-radius: 12px !important;
-  background: var(--nora-surface-strong) !important;
+  border-radius: var(--nora-radius) !important;
+  background: linear-gradient(
+    145deg,
+    var(--nora-glass-highlight),
+    var(--nora-surface-strong)
+  ) !important;
   color: var(--nora-text) !important;
   border: 1px solid var(--nora-border) !important;
+  backdrop-filter: blur(var(--nora-blur)) !important;
+  -webkit-backdrop-filter: blur(var(--nora-blur)) !important;
+  box-shadow: var(--nora-shadow-glass-lg) !important;
 }
 
-/* Тёмная карта: высокий контраст, холодный slate + cyan */
 .nora-map-dark {
   background: #0f172a;
 }
 
-/* Лёгкая виньетка по краям — не гасим центр карты */
 .nora-map-dark::after {
   content: '';
   pointer-events: none;
@@ -136,10 +297,6 @@
     );
 }
 
-/*
- * Liberty + инверсия: светлые дороги и подписи на тёмном фоне,
- * заметно читабельнее, чем «чёрное на чёрном» в native dark.
- */
 .nora-map-dark .maplibregl-canvas {
   filter: invert(1) hue-rotate(188deg) brightness(1.22) contrast(1.32)
     saturate(1.05);
@@ -149,20 +306,23 @@
   filter: saturate(0.95) contrast(1.02) brightness(1.02);
 }
 
-/* Элементы управления — glass panel */
 .nora-map-dark .maplibregl-ctrl-group,
 .nora-map-light .maplibregl-ctrl-group {
-  background: var(--nora-surface-strong) !important;
+  border-radius: var(--nora-radius) !important;
   border: 1px solid var(--nora-border) !important;
-  border-radius: 12px !important;
-  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.35) !important;
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  background: linear-gradient(
+    145deg,
+    var(--nora-glass-highlight),
+    var(--nora-surface-strong)
+  ) !important;
+  box-shadow: var(--nora-shadow-glass) !important;
+  backdrop-filter: blur(var(--nora-blur)) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(var(--nora-blur)) saturate(190%) !important;
 }
 
 .nora-map-dark .maplibregl-ctrl-group button + button,
 .nora-map-light .maplibregl-ctrl-group button + button {
-  border-top-color: var(--nora-border) !important;
+  border-top-color: var(--nora-border-subtle) !important;
 }
 
 .nora-map-dark .maplibregl-ctrl-icon,
@@ -171,19 +331,19 @@
     hue-rotate(169deg) brightness(103%) contrast(96%);
 }
 
-html.light .nora-map-light .maplibregl-ctrl-icon {
+html:not(.dark) .nora-map-light .maplibregl-ctrl-icon {
   filter: brightness(0) saturate(100%) invert(28%) sepia(20%) saturate(800%)
     hue-rotate(169deg);
 }
 
 .nora-map-dark .maplibregl-ctrl-attrib,
 .nora-map-light .maplibregl-ctrl-attrib {
+  border-radius: 0.625rem !important;
+  border: 1px solid var(--nora-border-subtle) !important;
   background: var(--nora-surface) !important;
   color: var(--nora-text-muted) !important;
-  border: 1px solid var(--nora-border) !important;
-  border-radius: 10px !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(14px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(180%) !important;
 }
 
 .nora-map-dark .maplibregl-ctrl-attrib a,
@@ -191,14 +351,12 @@ html.light .nora-map-light .maplibregl-ctrl-icon {
   color: var(--nora-accent) !important;
 }
 
-/* совместимость */
 .nora-map-organic .maplibregl-canvas,
 .nora-map-blue-mono .maplibregl-canvas {
   filter: invert(1) hue-rotate(188deg) brightness(1.22) contrast(1.32)
     saturate(1.05);
 }
 
-/* Запасной растр CARTO Dark — поднимаем яркость отдельно */
 .nora-map-dark.nora-map-raster .maplibregl-canvas {
   filter: brightness(1.28) contrast(1.25) saturate(1.08) hue-rotate(6deg);
 }

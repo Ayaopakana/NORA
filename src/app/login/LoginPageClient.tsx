@@ -54,7 +54,7 @@ export default function LoginPageClient() {
               </label>
               <input
                 id="email"
-                className="h-12 w-full rounded-xl border border-[var(--nora-border)] bg-[var(--nora-surface)] px-3 text-[var(--nora-text)] outline-none ring-sky-400/40 focus:ring-2"
+                className="glass-input h-12 w-full px-3"
                 type="email"
                 autoComplete="email"
                 value={email}
@@ -71,7 +71,7 @@ export default function LoginPageClient() {
               </label>
               <input
                 id="password"
-                className="h-12 w-full rounded-xl border border-[var(--nora-border)] bg-[var(--nora-surface)] px-3 text-[var(--nora-text)] outline-none ring-sky-400/40 focus:ring-2"
+                className="glass-input h-12 w-full px-3"
                 type="password"
                 autoComplete="current-password"
                 value={password}

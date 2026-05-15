@@ -173,7 +173,7 @@ function PassportContent() {
               Имя
             </span>
             <input
-              className="h-11 w-full rounded-xl border border-[var(--nora-border)] bg-[var(--nora-surface)] px-3 text-sm text-[var(--nora-text)] outline-none ring-sky-400/40 focus:ring-2"
+              className="glass-input h-11 w-full px-3 text-sm"
               value={name}
               onChange={(e) => setName(e.target.value)}
               autoComplete="name"
@@ -184,7 +184,7 @@ function PassportContent() {
               Никнейм
             </span>
             <input
-              className="h-11 w-full rounded-xl border border-[var(--nora-border)] bg-[var(--nora-surface)] px-3 text-sm text-[var(--nora-text)] outline-none ring-sky-400/40 focus:ring-2"
+              className="glass-input h-11 w-full px-3 text-sm"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               autoComplete="nickname"
@@ -195,7 +195,7 @@ function PassportContent() {
               Описание профиля
             </span>
             <textarea
-              className="min-h-[88px] w-full resize-y rounded-xl border border-[var(--nora-border)] bg-[var(--nora-surface)] px-3 py-2 text-sm text-[var(--nora-text)] outline-none ring-sky-400/40 focus:ring-2"
+              className="glass-input min-h-[88px] w-full resize-y px-3 py-2 text-sm"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Расскажите о себе: интересы, чем занимаетесь, что ищете в городе…"

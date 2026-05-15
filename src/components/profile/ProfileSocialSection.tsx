@@ -92,7 +92,7 @@ export function ProfileSocialSection() {
             return (
               <li
                 key={peerId}
-                className="flex items-center gap-3 rounded-xl border border-[var(--nora-border)] bg-[var(--nora-surface)]/50 p-3"
+                className="flex items-center gap-3 rounded-glass glass-chip p-3"
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-400/10 text-lg">
                   {peer.avatarEmoji}

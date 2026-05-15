@@ -4,9 +4,10 @@ import dynamic from 'next/dynamic'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Coins, MapPin } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { MapMoodSheet } from '@/components/map/MapMoodSheet'
 import { Slider } from '@/components/ui/slider'
+import { dailyBudgetLabel } from '@/lib/daily-budget'
 import { useAuth } from '@/contexts/useAuth'
-import { cn } from '@/lib/utils'
 import type { MoodPreset, ZoneKey } from '@/types/user'
 import type { NoraMapHandle } from './map-types'
 
@@ -21,41 +22,6 @@ const MapCanvas = dynamic(() => import('./MapCanvas'), {
     </div>
   ),
 })
-
-const MOODS: { id: MoodPreset; emoji: string; label: string; ring: string }[] =
-  [
-    {
-      id: 'calm',
-      emoji: '🧘',
-      label: 'В норме',
-      ring: 'ring-sky-400/50 shadow-[0_0_20px_rgba(56,189,248,0.35)]',
-    },
-    {
-      id: 'energy',
-      emoji: '🔋',
-      label: 'Энергична',
-      ring: 'ring-cyan-300/55 shadow-[0_0_22px_rgba(34,211,238,0.4)]',
-    },
-    {
-      id: 'tired',
-      emoji: '😫',
-      label: 'Устала',
-      ring: 'ring-blue-500/45 shadow-[0_0_18px_rgba(59,130,246,0.35)]',
-    },
-    {
-      id: 'anxious',
-      emoji: '😰',
-      label: 'Тревожно',
-      ring: 'ring-indigo-400/45 shadow-[0_0_20px_rgba(129,140,248,0.35)]',
-    },
-  ]
-
-const BUDGET_LABELS = [
-  'до ~1 500 ₽',
-  '~1 500–3 500 ₽',
-  '~3 500–7 000 ₽',
-  '7 000+ ₽',
-]
 
 function distanceMeters(
   a: { lng: number; lat: number },
@@ -97,6 +63,7 @@ export default function MapHubClient() {
     return 'calm'
   })
   const [budgetIdx, setBudgetIdx] = useState(user?.dailyBudgetIndex ?? 1)
+  const [moodOpen, setMoodOpen] = useState(false)
   const [insight, setInsight] = useState<{
     zone: ZoneKey
     title: string
@@ -197,25 +164,15 @@ export default function MapHubClient() {
     <>
       <MapCanvas onMap={onMap} markers={markers} />
 
+      <MapMoodSheet
+        open={moodOpen}
+        onOpenChange={setMoodOpen}
+        mood={mood}
+        onMoodChange={setMood}
+        mbti={user?.mbti ?? ''}
+      />
+
       <div className="pointer-events-none fixed inset-0 z-10 flex flex-col nora-map-overlay">
-        <div className="pointer-events-auto mx-auto mt-[max(0.75rem,env(safe-area-inset-top))] flex w-[min(96vw,560px)] gap-2 overflow-x-auto rounded-2xl border border-[var(--nora-border)] glass-panel px-2 py-2 shadow-lg">
-          {MOODS.map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setMood(m.id)}
-              className={cn(
-                'flex min-w-[5.5rem] flex-1 flex-col items-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium transition-all',
-                mood === m.id
-                  ? cn('bg-sky-400/15 text-sky-200 ring-2', m.ring)
-                  : 'text-[var(--nora-text-muted)] hover:bg-white/5 hover:text-[var(--nora-text)]',
-              )}
-            >
-              <span className="text-xl">{m.emoji}</span>
-              <span className="leading-tight">{m.label}</span>
-            </button>
-          ))}
-        </div>
 
         <div className="pointer-events-none mt-auto flex w-full flex-col items-center gap-2 px-3 pb-[calc(72px+env(safe-area-inset-bottom,0px))]">
           <a
@@ -240,7 +197,7 @@ export default function MapHubClient() {
                 Бюджет на сегодня
               </p>
               <p className="truncate text-sm text-[var(--nora-text)]">
-                {BUDGET_LABELS[budgetIdx] ?? BUDGET_LABELS[1]}
+                {dailyBudgetLabel(budgetIdx)}
               </p>
               <Slider
                 className="mt-2"

@@ -108,7 +108,7 @@ function ChatContent() {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Сообщение…"
-            className="min-w-0 flex-1 rounded-xl border border-[var(--nora-border)] bg-[var(--nora-surface)] px-3 py-2.5 text-sm text-[var(--nora-text)] outline-none ring-sky-400/40 focus:ring-2"
+            className="glass-input min-w-0 flex-1 px-3 py-2.5 text-sm"
           />
           <Button type="submit" size="icon" disabled={!draft.trim()} aria-label="Отправить">
             <Send className="h-5 w-5" />

@@ -4,19 +4,19 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--nora-bg)] disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-glass text-sm font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--nora-accent)_55%,transparent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--nora-bg-base)] disabled:pointer-events-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
         default:
-          'bg-sky-400 text-slate-950 shadow-neon hover:bg-sky-300 active:bg-sky-500',
+          'border border-sky-300/40 bg-gradient-to-b from-sky-300 to-sky-500 text-slate-950 shadow-neon hover:from-sky-200 hover:to-sky-400 active:scale-[0.98]',
         secondary:
-          'glass-panel text-[var(--nora-text)] hover:bg-[var(--nora-surface-strong)]',
+          'glass-panel text-[var(--nora-text)] hover:shadow-glass-lg active:scale-[0.98]',
         ghost:
-          'text-[var(--nora-text-muted)] hover:bg-[var(--nora-surface)] hover:text-[var(--nora-text)]',
+          'text-[var(--nora-text-muted)] hover:glass-chip hover:text-[var(--nora-text)]',
         outline:
-          'border border-[var(--nora-border)] bg-transparent text-[var(--nora-text)] hover:bg-[var(--nora-surface)]',
-        link: 'text-sky-400 underline-offset-4 hover:underline',
+          'glass-chip border-[var(--nora-border-subtle)] bg-transparent text-[var(--nora-text)] hover:shadow-glass',
+        link: 'text-[var(--nora-accent)] underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-11 px-4 py-2',

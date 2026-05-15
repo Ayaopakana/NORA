@@ -16,7 +16,7 @@ export function SettingsNavButton({ className }: { className?: string }) {
       aria-label="Настройки"
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--nora-border)] glass-panel text-[var(--nora-text)] shadow-none transition-colors hover:bg-[var(--nora-surface-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--nora-bg)]',
+        'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-glass glass-panel text-[var(--nora-text)] shadow-glass transition-all duration-300 hover:shadow-glass-lg active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--nora-accent)_55%,transparent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--nora-bg-base)]',
         active && 'ring-2 ring-sky-400/50 text-sky-400',
         className,
       )}

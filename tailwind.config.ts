@@ -23,9 +23,16 @@ const config: Config = {
         neon: '0 0 0 1px rgba(56, 189, 248, 0.35), 0 0 24px rgba(56, 189, 248, 0.25)',
         'neon-lg':
           '0 0 0 1px rgba(56, 189, 248, 0.45), 0 0 40px rgba(56, 189, 248, 0.35)',
+        glass: 'var(--nora-shadow-glass)',
+        'glass-lg': 'var(--nora-shadow-glass-lg)',
       },
       backdropBlur: {
-        glass: '18px',
+        glass: '22px',
+        'glass-lg': '32px',
+      },
+      borderRadius: {
+        glass: 'var(--nora-radius)',
+        'glass-lg': 'var(--nora-radius-lg)',
       },
       transitionDuration: {
         theme: '320ms',

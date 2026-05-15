@@ -16,10 +16,10 @@ const Slider = React.forwardRef<
     )}
     {...props}
   >
-    <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-slate-800/60 dark:bg-slate-800/80">
-      <SliderPrimitive.Range className="absolute h-full bg-gradient-to-r from-sky-400 to-blue-600" />
+    <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full border border-[var(--nora-border-subtle)] bg-[var(--nora-surface)] shadow-[inset_0_1px_3px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+      <SliderPrimitive.Range className="absolute h-full rounded-full bg-gradient-to-r from-[var(--nora-accent)] to-[var(--nora-accent-2)] shadow-[0_0_12px_var(--nora-glow)]" />
     </SliderPrimitive.Track>
-    <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border border-sky-300/60 bg-sky-400 shadow-neon ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" />
+    <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border border-white/50 bg-gradient-to-b from-sky-300 to-sky-500 shadow-neon ring-offset-[var(--nora-bg-base)] transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--nora-accent)_50%,transparent)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" />
   </SliderPrimitive.Root>
 ))
 Slider.displayName = SliderPrimitive.Root.displayName

@@ -1,13 +1,12 @@
 /**
- * Резервная оболочка: если основной бандл стилей не подгрузился (кэш SW,
- * сбой dev, блокировщик), интерфейс остаётся читаемым, карта — на весь экран.
+ * Резервная оболочка без Tailwind
  */
 html:not(.light) {
   background-color: #020617;
 }
 
 html.light {
-  background-color: #e0f2fe;
+  background-color: #e8f4fc;
 }
 
 body {
@@ -22,7 +21,6 @@ body {
     sans-serif;
 }
 
-/* Дублируем ключевую геометрию без Tailwind */
 .nora-map-viewport {
   position: fixed;
   inset: 0;
@@ -48,15 +46,28 @@ body {
   right: 0;
   bottom: 0;
   z-index: 40;
-  border-top: 1px solid rgba(56, 189, 248, 0.16);
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+}
+
+html:not(.light) .nora-bottom-nav {
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(2, 6, 23, 0.55) 40%
+  );
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
 }
 
 html.light .nora-bottom-nav {
-  background: rgba(255, 255, 255, 0.82);
-  border-top-color: rgba(37, 99, 235, 0.14);
+  border-top: 1px solid rgba(255, 255, 255, 0.7);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.62) 100%
+  );
+  backdrop-filter: blur(28px) saturate(200%);
+  -webkit-backdrop-filter: blur(28px) saturate(200%);
 }
 
 .nora-bottom-nav a {

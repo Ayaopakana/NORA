@@ -16,7 +16,8 @@ import {
 } from '@/lib/map-styles'
 import { cn } from '@/lib/utils'
 
-const DEFAULT_CENTER: [number, number] = [37.6173, 55.7558]
+/** Центр карты по умолчанию — Бишкек */
+const DEFAULT_CENTER: [number, number] = [74.5698, 42.8746]
 
 export type MapboxSurfaceProps = {
   className?: string

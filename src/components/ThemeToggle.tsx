@@ -18,7 +18,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     return (
       <span
         className={cn(
-          'inline-flex h-11 w-11 shrink-0 rounded-xl border border-[var(--nora-border)] glass-panel',
+          'inline-flex h-11 w-11 shrink-0 rounded-glass glass-panel shadow-glass',
           className,
         )}
         aria-hidden
@@ -32,7 +32,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       variant="secondary"
       size="icon"
       className={cn(
-        'relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-[var(--nora-border)] glass-panel shadow-none',
+        'relative h-11 w-11 shrink-0 overflow-hidden rounded-glass glass-panel shadow-glass transition-all duration-300 hover:shadow-glass-lg active:scale-95',
         className,
       )}
       aria-label={isDark ? 'Светлая тема' : 'Тёмная тема'}

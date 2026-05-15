@@ -214,7 +214,7 @@ export function RegisterWizard() {
                 </div>
                 <label className="block text-sm font-medium">Никнейм</label>
                 <input
-                  className="h-12 w-full rounded-xl border border-[var(--nora-border)] bg-[var(--nora-surface)] px-3 text-[var(--nora-text)] outline-none ring-sky-400/40 focus:ring-2"
+                  className="glass-input h-12 w-full px-3"
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   autoComplete="nickname"
@@ -222,7 +222,7 @@ export function RegisterWizard() {
                 />
                 <label className="block text-sm font-medium">Email</label>
                 <input
-                  className="h-12 w-full rounded-xl border border-[var(--nora-border)] bg-[var(--nora-surface)] px-3 text-[var(--nora-text)] outline-none ring-sky-400/40 focus:ring-2"
+                  className="glass-input h-12 w-full px-3"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
@@ -235,7 +235,7 @@ export function RegisterWizard() {
                       Пароль
                     </span>
                     <input
-                      className="h-12 w-full rounded-xl border border-[var(--nora-border)] bg-[var(--nora-surface)] px-3 text-[var(--nora-text)] outline-none ring-sky-400/40 focus:ring-2"
+                      className="glass-input h-12 w-full px-3"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       type="password"
@@ -247,7 +247,7 @@ export function RegisterWizard() {
                       Повтор пароля
                     </span>
                     <input
-                      className="h-12 w-full rounded-xl border border-[var(--nora-border)] bg-[var(--nora-surface)] px-3 text-[var(--nora-text)] outline-none ring-sky-400/40 focus:ring-2"
+                      className="glass-input h-12 w-full px-3"
                       value={confirm}
                       onChange={(e) => setConfirm(e.target.value)}
                       type="password"
