@@ -4,7 +4,9 @@ import type { BudgetComfort, PsychotypeId } from '@/profile/noraProfile'
 import type { MbtiId } from '@/lib/mbti'
 
 export type ProfileUpdate = {
+  name?: string
   nickname?: string
+  bio?: string
   avatarUrl?: string | null
   psychotypeId?: PsychotypeId
   moodNote?: string

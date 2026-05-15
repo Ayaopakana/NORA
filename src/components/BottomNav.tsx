@@ -2,13 +2,25 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { CalendarDays, MapPin, UserRound } from 'lucide-react'
+import {
+  CalendarDays,
+  HelpCircle,
+  MapPin,
+  MessageCircle,
+  Search,
+  Store,
+  UserRound,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const items = [
   { href: '/', label: 'Карта', icon: MapPin },
+  { href: '/partners', label: 'Партнёры', icon: Store },
+  { href: '/search', label: 'Поиск', icon: Search },
+  { href: '/chat', label: 'Чат', icon: MessageCircle },
+  { href: '/faq', label: 'FAQ', icon: HelpCircle },
   { href: '/planner', label: 'Планер', icon: CalendarDays },
-  { href: '/passport', label: 'Паспорт', icon: UserRound },
+  { href: '/passport', label: 'Профиль', icon: UserRound },
 ] as const
 
 export function BottomNav() {
@@ -16,36 +28,38 @@ export function BottomNav() {
 
   return (
     <nav
-      className="nora-bottom-nav fixed bottom-0 left-0 right-0 z-40 flex h-[calc(64px+env(safe-area-inset-bottom,0px))] items-stretch justify-around border-t border-[var(--nora-border)] glass-panel px-2 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-glass"
+      className="nora-bottom-nav fixed bottom-0 left-0 right-0 z-40 border-t border-[var(--nora-border)] glass-panel backdrop-blur-glass"
       aria-label="Основная навигация"
     >
-      {items.map(({ href, label, icon: Icon }) => {
-        const active =
-          href === '/'
-            ? pathname === '/' || pathname === ''
-            : pathname.startsWith(href)
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              'flex flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors',
-              active
-                ? 'text-sky-400'
-                : 'text-[var(--nora-text-muted)] hover:text-[var(--nora-text)]',
-            )}
-          >
-            <Icon
+      <div className="flex h-16 min-w-0 items-stretch overflow-x-auto overflow-y-hidden px-1 pb-[env(safe-area-inset-bottom,0px)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {items.map(({ href, label, icon: Icon }) => {
+          const active =
+            href === '/'
+              ? pathname === '/' || pathname === ''
+              : pathname.startsWith(href)
+          return (
+            <Link
+              key={href}
+              href={href}
               className={cn(
-                'h-6 w-6',
-                active && 'drop-shadow-[0_0_10px_rgba(56,189,248,0.55)]',
+                'flex min-w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0.5 px-1 text-[10px] font-medium transition-colors',
+                active
+                  ? 'text-sky-400'
+                  : 'text-[var(--nora-text-muted)] hover:text-[var(--nora-text)]',
               )}
-              strokeWidth={active ? 2.25 : 1.75}
-            />
-            <span>{label}</span>
-          </Link>
-        )
-      })}
+            >
+              <Icon
+                className={cn(
+                  'h-5 w-5',
+                  active && 'drop-shadow-[0_0_10px_rgba(56,189,248,0.55)]',
+                )}
+                strokeWidth={active ? 2.25 : 1.75}
+              />
+              <span className="max-w-[4.5rem] truncate">{label}</span>
+            </Link>
+          )
+        })}
+      </div>
     </nav>
   )
 }

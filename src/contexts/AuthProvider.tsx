@@ -120,8 +120,15 @@ function mergeZones(prev: UserZones, patch?: UserZones): UserZones {
 function applyProfilePatch(prev: User, patch: ProfileUpdate): User {
   let next: User = { ...prev }
 
+  if (patch.name !== undefined) {
+    const name = patch.name.trim()
+    if (name.length >= 2) next = { ...next, name }
+  }
   if (patch.nickname !== undefined) {
     next = { ...next, nickname: patch.nickname.trim() || prev.name }
+  }
+  if (patch.bio !== undefined) {
+    next = { ...next, bio: patch.bio.trim() }
   }
   if (patch.avatarUrl !== undefined) {
     next = { ...next, avatarUrl: patch.avatarUrl }
@@ -238,6 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email: email.trim(),
         name: name.trim(),
         nickname: trimmedNickname,
+        bio: '',
         avatarUrl: avatarDataUrl,
         psychotypeId: '',
         moodNote: extras?.moodNote?.trim() ?? '',

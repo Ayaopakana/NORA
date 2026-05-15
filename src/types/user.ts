@@ -18,6 +18,8 @@ export type User = {
   email: string
   name: string
   nickname: string
+  /** Описание профиля — о себе */
+  bio: string
   avatarUrl: string | null
   psychotypeId: PsychotypeId
   moodNote: string
@@ -90,6 +92,7 @@ export function normalizeUser(raw: unknown): User | null {
     avatarUrl = o.avatarUrl
   }
 
+  const bio = typeof o.bio === 'string' ? o.bio : ''
   const psychotypeId = isPsychotypeId(o.psychotypeId) ? o.psychotypeId : ''
   const moodNote = typeof o.moodNote === 'string' ? o.moodNote : ''
   const budgetComfort = isBudgetComfort(o.budgetComfort)
@@ -118,6 +121,7 @@ export function normalizeUser(raw: unknown): User | null {
     email: String(o.email).trim(),
     name,
     nickname,
+    bio,
     avatarUrl,
     psychotypeId,
     moodNote,

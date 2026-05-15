@@ -48,11 +48,6 @@ body {
   right: 0;
   bottom: 0;
   z-index: 40;
-  display: flex;
-  height: calc(64px + env(safe-area-inset-bottom, 0px));
-  align-items: stretch;
-  justify-content: space-around;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
   border-top: 1px solid rgba(56, 189, 248, 0.16);
   background: rgba(15, 23, 42, 0.75);
   backdrop-filter: blur(18px);
