@@ -1,3 +1,6 @@
+import type { Locale } from '@/i18n/config'
+import { getMessages } from '@/i18n/messages'
+
 /** Шкала «бюджет на сегодня» для Бишкека (сом). */
 export const DAILY_BUDGET_LABELS = [
   'до ~500 сом',
@@ -6,9 +9,13 @@ export const DAILY_BUDGET_LABELS = [
   '3 500+ сом',
 ] as const
 
-export function dailyBudgetLabel(index: number): string {
-  return DAILY_BUDGET_LABELS[Math.max(0, Math.min(3, Math.round(index)))] ??
-    DAILY_BUDGET_LABELS[1]
+export function getDailyBudgetLabels(locale: Locale = 'ru'): readonly string[] {
+  return getMessages(locale).budget.tiers
+}
+
+export function dailyBudgetLabel(index: number, locale: Locale = 'ru'): string {
+  const labels = getDailyBudgetLabels(locale)
+  return labels[Math.max(0, Math.min(3, Math.round(index)))] ?? labels[1]
 }
 
 export function normalizeBudgetIndex(index: number | undefined): number {

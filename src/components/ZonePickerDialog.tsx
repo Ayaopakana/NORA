@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { useI18n } from '@/hooks/useI18n'
 import type { ZoneKey, ZonePoint } from '@/types/user'
 
 type ZonePickerDialogProps = {
@@ -23,24 +24,6 @@ type ZonePickerDialogProps = {
   onSave: (point: ZonePoint) => void
 }
 
-const zoneCopy: Record<
-  ZoneKey,
-  { title: string; description: string }
-> = {
-  home: {
-    title: 'Дом',
-    description: 'Нажмите на карту, чтобы отметить, где вы живёте.',
-  },
-  school: {
-    title: 'Учёба',
-    description: 'Отметьте кампус или место, где вы учитесь.',
-  },
-  work: {
-    title: 'Работа',
-    description: 'Отметьте офис или основную рабочую точку.',
-  },
-}
-
 export function ZonePickerDialog({
   open,
   onOpenChange,
@@ -49,8 +32,16 @@ export function ZonePickerDialog({
   initial,
   onSave,
 }: ZonePickerDialogProps) {
+  const { t } = useI18n()
   const [picked, setPicked] = useState<ZonePoint | null>(null)
   const mapRef = useRef<MapLibreMap | null>(null)
+
+  const zoneDescription =
+    zone === 'home'
+      ? t('zones.homeDesc')
+      : zone === 'school'
+        ? t('zones.schoolDesc')
+        : t('zones.workDesc')
 
   const handlePick = useCallback((p: { lng: number; lat: number }) => {
     setPicked(p)
@@ -64,15 +55,13 @@ export function ZonePickerDialog({
     setPicked(initial ?? null)
   }, [open, initial])
 
-  const copy = zoneCopy[zone]
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg gap-0 overflow-hidden p-0 sm:max-w-lg">
         <div className="p-6 pb-2">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>{copy.description}</DialogDescription>
+            <DialogDescription>{zoneDescription}</DialogDescription>
           </DialogHeader>
         </div>
         <div className="h-[min(52vh,360px)] w-full border-y border-[var(--nora-border)]">
@@ -113,7 +102,7 @@ export function ZonePickerDialog({
         </div>
         <DialogFooter className="flex flex-row items-center justify-between gap-2 p-4">
           <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-            Отмена
+            {t('common.cancel')}
           </Button>
           <Button
             type="button"
@@ -124,7 +113,7 @@ export function ZonePickerDialog({
               onOpenChange(false)
             }}
           >
-            Сохранить точку
+            {t('zones.savePoint')}
           </Button>
         </DialogFooter>
       </DialogContent>

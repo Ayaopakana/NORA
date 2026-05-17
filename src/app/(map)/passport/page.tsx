@@ -1,8 +1,10 @@
 'use client'
 
-import { Camera, Home, Briefcase, GraduationCap, LogOut } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { Camera, Home, Briefcase, GraduationCap, Settings } from 'lucide-react'
+import Link from 'next/link'
+import { useMemo, useRef, useState } from 'react'
 import { AvatarFace } from '@/components/AvatarFace'
+import { CityCombobox } from '@/components/CityCombobox'
 import { CountryCombobox } from '@/components/CountryCombobox'
 import { MbtiGrid } from '@/components/MbtiGrid'
 import { ProfileSocialSection } from '@/components/profile/ProfileSocialSection'
@@ -11,7 +13,8 @@ import { ZonePickerDialog } from '@/components/ZonePickerDialog'
 import { Button } from '@/components/ui/button'
 import { PageShell } from '@/components/PageShell'
 import { useAuth } from '@/contexts/useAuth'
-import { COUNTRIES } from '@/lib/countries'
+import { useI18n } from '@/hooks/useI18n'
+import { getCountries } from '@/lib/countries'
 import { readFileAsDataURL, validateAvatarFile } from '@/lib/readImage'
 import type { MbtiId } from '@/lib/mbti'
 import { cn } from '@/lib/utils'
@@ -27,7 +30,9 @@ export default function PassportPage() {
 }
 
 function PassportContent() {
-  const { user, updateProfile, logout } = useAuth()
+  const { user, updateProfile } = useAuth()
+  const { locale, t } = useI18n()
+  const countries = useMemo(() => getCountries(locale), [locale])
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [name, setName] = useState(user?.name ?? '')
@@ -35,6 +40,7 @@ function PassportContent() {
   const [bio, setBio] = useState(user?.bio ?? '')
   const [origin, setOrigin] = useState(user?.countryOrigin ?? '')
   const [current, setCurrent] = useState(user?.countryCurrent ?? '')
+  const [city, setCity] = useState(user?.cityIntent ?? '')
   const [mbti, setMbti] = useState<MbtiId | ''>(user?.mbti ?? '')
   const [status, setStatus] = useState<UserStatus>(user?.userStatus ?? '')
   const [zoneOpen, setZoneOpen] = useState(false)
@@ -47,19 +53,19 @@ function PassportContent() {
   const shown = displayName({ nickname, name })
 
   const STATUSES: { id: UserStatus; label: string }[] = [
-    { id: 'student', label: 'Студент' },
-    { id: 'tourist', label: 'Турист' },
-    { id: 'expat', label: 'Экспат' },
-    { id: 'local', label: 'Местный' },
+    { id: 'student', label: t('status.student') },
+    { id: 'tourist', label: t('status.tourist') },
+    { id: 'expat', label: t('status.expat') },
+    { id: 'local', label: t('status.local') },
   ]
 
   function onSaveProfile() {
     if (name.trim().length < 2) {
-      setAvatarError('Имя не короче 2 символов')
+      setAvatarError(t('passportForm.nameTooShort'))
       return
     }
     if (nickname.trim().length < 2) {
-      setAvatarError('Никнейм не короче 2 символов')
+      setAvatarError(t('passportForm.nickTooShort'))
       return
     }
     setAvatarError(null)
@@ -69,6 +75,7 @@ function PassportContent() {
       bio: bio.trim(),
       countryOrigin: origin,
       countryCurrent: current,
+      cityIntent: city,
       mbti,
       userStatus: status,
     })
@@ -87,7 +94,7 @@ function PassportContent() {
       const dataUrl = await readFileAsDataURL(file)
       updateProfile({ avatarUrl: dataUrl })
     } catch {
-      setAvatarError('Не удалось загрузить фото')
+      setAvatarError(t('passportForm.photoFailed'))
     }
   }
 
@@ -97,29 +104,30 @@ function PassportContent() {
   }
 
   return (
-    <PageShell className="pr-[6.25rem] sm:pr-4">
+    <PageShell>
       <header className="mb-6 flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-sky-400">
-            Mental Passport
+            {t('passportForm.subtitle')}
           </p>
-          <h1 className="mt-1 text-2xl font-semibold">Профиль</h1>
+          <h1 className="mt-1 text-2xl font-semibold">{t('passport.title')}</h1>
         </div>
         <Button
-          type="button"
-          variant="ghost"
+          asChild
+          variant="secondary"
           size="icon"
           className="shrink-0"
-          aria-label="Выйти"
-          onClick={logout}
+          aria-label={t('passport.settings')}
         >
-          <LogOut className="h-5 w-5" />
+          <Link href="/settings">
+            <Settings className="h-5 w-5" />
+          </Link>
         </Button>
       </header>
 
-      <section className="mb-6 rounded-2xl border border-[var(--nora-border)] glass-panel p-4">
+      <section className="mb-6 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-4">
         <h2 className="text-sm font-semibold text-[var(--nora-text)]">
-          Фото и описание
+          {t('passportForm.photoSection')}
         </h2>
 
         <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
@@ -149,7 +157,7 @@ function PassportContent() {
               onClick={() => fileRef.current?.click()}
             >
               <Camera className="h-4 w-4" />
-              {user.avatarUrl ? 'Сменить фото' : 'Загрузить фото'}
+              {user.avatarUrl ? t('passportForm.changePhoto') : t('passportForm.uploadPhoto')}
             </Button>
             {user.avatarUrl ? (
               <Button
@@ -158,11 +166,11 @@ function PassportContent() {
                 className="text-sm"
                 onClick={() => updateProfile({ avatarUrl: null })}
               >
-                Убрать фото
+                {t('passportForm.removePhoto')}
               </Button>
             ) : null}
             <p className="text-[11px] text-[var(--nora-text-muted)]">
-              JPEG, PNG, WebP до 2 МБ
+              {t('passportForm.photoFormats')}
             </p>
           </div>
         </div>
@@ -170,7 +178,7 @@ function PassportContent() {
         <div className="mt-4 space-y-3">
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-[var(--nora-text-muted)]">
-              Имя
+              {t('passportForm.nameLabel')}
             </span>
             <input
               className="glass-input h-11 w-full px-3 text-sm"
@@ -181,7 +189,7 @@ function PassportContent() {
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-[var(--nora-text-muted)]">
-              Никнейм
+              {t('passportForm.nicknameLabel')}
             </span>
             <input
               className="glass-input h-11 w-full px-3 text-sm"
@@ -192,13 +200,13 @@ function PassportContent() {
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-medium text-[var(--nora-text-muted)]">
-              Описание профиля
+              {t('passportForm.bioLabel')}
             </span>
             <textarea
               className="glass-input min-h-[88px] w-full resize-y px-3 py-2 text-sm"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              placeholder="Расскажите о себе: интересы, чем занимаетесь, что ищете в городе…"
+              placeholder={t('passportForm.bioPlaceholder')}
               rows={3}
             />
           </label>
@@ -214,37 +222,51 @@ function PassportContent() {
 
       <ProfileSocialSection />
 
-      <section className="mb-6 space-y-4 rounded-2xl border border-[var(--nora-border)] glass-panel p-4">
+      <section className="mb-6 space-y-4 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-4">
         <h2 className="text-sm font-semibold text-[var(--nora-text)]">
-          Локации
+          {t('passportForm.locationsTitle')}
         </h2>
         <div>
           <span className="mb-1 block text-xs font-medium text-[var(--nora-text-muted)]">
-            Страна, где я выросла
+            {t('passportForm.countryOriginField')}
           </span>
           <CountryCombobox
-            countries={COUNTRIES}
+            countries={countries}
             value={origin}
             onChange={setOrigin}
-            placeholder="Выберите страну"
-            label="Страна происхождения"
+            placeholder={t('passportForm.countryPlaceholder')}
+            label={t('passportForm.countryOrigin')}
           />
         </div>
         <div>
           <span className="mb-1 block text-xs font-medium text-[var(--nora-text-muted)]">
-            Где я сейчас
+            {t('passportForm.countryNowField')}
           </span>
           <CountryCombobox
-            countries={COUNTRIES}
+            countries={countries}
             value={current}
             onChange={setCurrent}
-            placeholder="Текущая страна"
-            label="Текущая страна"
+            placeholder={t('passportForm.countryCurrent')}
+            label={t('passportForm.countryCurrent')}
           />
         </div>
         <div>
           <span className="mb-1 block text-xs font-medium text-[var(--nora-text-muted)]">
-            Статус
+            {t('passportForm.cityShortLabel')}
+          </span>
+          <CityCombobox
+            value={city}
+            onChange={setCity}
+            placeholder={t('passportForm.cityPlaceholder')}
+            label={t('passportForm.cityLabel')}
+          />
+          <p className="mt-1 text-[11px] text-[var(--nora-text-muted)]">
+            {t('passportForm.cityHint')}
+          </p>
+        </div>
+        <div>
+          <span className="mb-1 block text-xs font-medium text-[var(--nora-text-muted)]">
+            {t('passportForm.statusLabel')}
           </span>
           <div className="flex flex-wrap gap-2">
             {STATUSES.map((s) => (
@@ -266,16 +288,18 @@ function PassportContent() {
         </div>
       </section>
 
-      <section className="mb-6 rounded-2xl border border-[var(--nora-border)] glass-panel p-4">
-        <h2 className="text-sm font-semibold text-[var(--nora-text)]">MBTI</h2>
+      <section className="mb-6 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-4">
+        <h2 className="text-sm font-semibold text-[var(--nora-text)]">
+          {t('passportForm.mbtiTitle')}
+        </h2>
         <div className="mt-4">
           <MbtiGrid value={mbti} onChange={setMbti} />
         </div>
       </section>
 
-      <section className="mb-8 rounded-2xl border border-[var(--nora-border)] glass-panel p-4">
+      <section className="mb-8 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-4">
         <h2 className="text-sm font-semibold text-[var(--nora-text)]">
-          Smart Zones
+          {t('passportForm.smartZonesTitle')}
         </h2>
         <div className="mt-4 flex flex-col gap-2">
           <Button
@@ -285,7 +309,7 @@ function PassportContent() {
             onClick={() => openZone('home')}
           >
             <Home className="h-4 w-4 text-sky-300" />
-            Дом
+            {t('passportForm.zoneHome')}
             {user.zones.home ? (
               <span className="ml-auto text-[11px] text-emerald-400">✓</span>
             ) : null}
@@ -297,7 +321,7 @@ function PassportContent() {
             onClick={() => openZone('school')}
           >
             <GraduationCap className="h-4 w-4 text-sky-300" />
-            Учёба
+            {t('passportForm.zoneStudy')}
             {user.zones.school ? (
               <span className="ml-auto text-[11px] text-emerald-400">✓</span>
             ) : null}
@@ -309,7 +333,7 @@ function PassportContent() {
             onClick={() => openZone('work')}
           >
             <Briefcase className="h-4 w-4 text-sky-300" />
-            Работа
+            {t('passportForm.zoneWork')}
             {user.zones.work ? (
               <span className="ml-auto text-[11px] text-emerald-400">✓</span>
             ) : null}
@@ -319,11 +343,11 @@ function PassportContent() {
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="button" onClick={onSaveProfile}>
-          Сохранить профиль
+          {t('passportForm.saveProfile')}
         </Button>
         {saved ? (
           <span className="text-sm text-emerald-400" role="status">
-            Сохранено
+            {t('passport.saved')}
           </span>
         ) : null}
       </div>
@@ -334,10 +358,10 @@ function PassportContent() {
         zone={zoneKey}
         title={
           zoneKey === 'home'
-            ? 'Дом'
+            ? t('passportForm.zoneHome')
             : zoneKey === 'school'
-              ? 'Учёба'
-              : 'Работа'
+              ? t('passportForm.zoneStudy')
+              : t('passportForm.zoneWork')
         }
         initial={user.zones[zoneKey] ?? null}
         onSave={(point) => {

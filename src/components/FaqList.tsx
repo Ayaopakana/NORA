@@ -2,13 +2,17 @@
 
 import { motion } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
-import { FAQ_ITEMS } from '@/lib/faq'
+import { useI18n } from '@/hooks/useI18n'
+import { getFaqItems } from '@/i18n/content/faq'
 import { cn } from '@/lib/utils'
 
 export function FaqList() {
+  const { locale } = useI18n()
+  const items = getFaqItems(locale)
+
   return (
     <ul className="space-y-3">
-      {FAQ_ITEMS.map((item, i) => (
+      {items.map((item, i) => (
         <motion.li
           key={item.id}
           initial={{ opacity: 0, y: 10 }}

@@ -2,7 +2,9 @@
 
 import { motion } from 'framer-motion'
 import { MbtiHelpDialog } from '@/components/MbtiHelpDialog'
-import { MBTI_TYPES, type MbtiId } from '@/lib/mbti'
+import { useI18n } from '@/hooks/useI18n'
+import { getMbtiTypes } from '@/i18n/content/mbti-types'
+import type { MbtiId } from '@/lib/mbti'
 import { cn } from '@/lib/utils'
 
 type MbtiGridProps = {
@@ -11,18 +13,21 @@ type MbtiGridProps = {
 }
 
 export function MbtiGrid({ value, onChange }: MbtiGridProps) {
+  const { locale, t } = useI18n()
+  const types = getMbtiTypes(locale)
+
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {MBTI_TYPES.map((t) => {
-          const active = value === t.id
+        {types.map((mbtiType) => {
+          const active = value === mbtiType.id
           return (
             <motion.button
-              key={t.id}
+              key={mbtiType.id}
               type="button"
               layout
               whileTap={{ scale: 0.97 }}
-              onClick={() => onChange(t.id)}
+              onClick={() => onChange(mbtiType.id)}
               className={cn(
                 'rounded-xl border px-2 py-3 text-left transition-colors',
                 active
@@ -31,17 +36,17 @@ export function MbtiGrid({ value, onChange }: MbtiGridProps) {
               )}
             >
               <p className="text-sm font-semibold text-[var(--nora-text)]">
-                {t.title}
+                {mbtiType.title}
               </p>
               <p className="mt-0.5 text-[11px] text-[var(--nora-text-muted)]">
-                {t.subtitle}
+                {mbtiType.subtitle}
               </p>
             </motion.button>
           )
         })}
       </div>
 
-      <MbtiHelpDialog triggerLabel="Я не знаю свой тип" />
+      <MbtiHelpDialog triggerLabel={t('mbti.unknownType')} />
     </div>
   )
 }

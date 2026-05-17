@@ -5,30 +5,24 @@ import { Briefcase, GraduationCap, Home } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { CityCombobox } from '@/components/CityCombobox'
 import { CountryCombobox } from '@/components/CountryCombobox'
 import { MbtiGrid } from '@/components/MbtiGrid'
 import { MapboxSurface } from '@/components/map/MapboxSurface'
 import { Button } from '@/components/ui/button'
 import { DailyBudgetSlider } from '@/components/DailyBudgetSlider'
 import { useAuth } from '@/contexts/useAuth'
-import { COUNTRIES } from '@/lib/countries'
+import { useI18n } from '@/hooks/useI18n'
+import {
+  getPlannerMoodMeta,
+  type PlannerMood,
+} from '@/lib/planner-recommendations'
+import { getCountries } from '@/lib/countries'
 import type { MbtiId } from '@/lib/mbti'
 import { cn } from '@/lib/utils'
 import type { MoodPreset, UserStatus, UserZones, ZoneKey } from '@/types/user'
 
-const STATUSES: { id: UserStatus; label: string }[] = [
-  { id: 'student', label: 'Студент' },
-  { id: 'tourist', label: 'Турист' },
-  { id: 'expat', label: 'Экспат' },
-  { id: 'local', label: 'Местный' },
-]
-
-const MOODS: { id: MoodPreset; emoji: string; label: string }[] = [
-  { id: 'energy', emoji: '🔋', label: 'Энергична' },
-  { id: 'calm', emoji: '🧘', label: 'В норме' },
-  { id: 'tired', emoji: '😫', label: 'Устала' },
-  { id: 'anxious', emoji: '😰', label: 'Тревожно' },
-]
+const MOOD_IDS: PlannerMood[] = ['energy', 'calm', 'tired', 'anxious']
 
 const BUDGET_LABELS = [
   'до ~1 500 ₽',
@@ -50,7 +44,21 @@ function emailOk(v: string) {
 
 export function RegisterWizard() {
   const { register } = useAuth()
+  const { locale, t } = useI18n()
   const router = useRouter()
+  const moodMeta = getPlannerMoodMeta(locale)
+  const statuses: { id: UserStatus; label: string }[] = [
+    { id: 'student', label: t('status.student') },
+    { id: 'tourist', label: t('status.tourist') },
+    { id: 'expat', label: t('status.expat') },
+    { id: 'local', label: t('status.local') },
+  ]
+  const moods = MOOD_IDS.map((id) => ({
+    id,
+    emoji: moodMeta[id].emoji,
+    label: moodMeta[id].label,
+  }))
+  const countries = useMemo(() => getCountries(locale), [locale])
 
   const [step, setStep] = useState(0)
   const [leaving, setLeaving] = useState(false)
@@ -63,6 +71,7 @@ export function RegisterWizard() {
   const [confirm, setConfirm] = useState('')
   const [origin, setOrigin] = useState('')
   const [current, setCurrent] = useState('')
+  const [city, setCity] = useState('')
   const [status, setStatus] = useState<UserStatus>('')
 
   const [mbti, setMbti] = useState<MbtiId | ''>('')
@@ -120,14 +129,14 @@ export function RegisterWizard() {
       const extras = {
         countryOrigin: origin,
         countryCurrent: current,
+        cityIntent: city,
         userStatus: status,
         mbti: mbti || undefined,
         zones,
         initialMood: mood,
         dailyBudgetIndex: budgetIdx,
         moodNote:
-          MOODS.find((m) => m.id === mood)?.label ??
-          'Стартовое настроение из регистрации',
+          moods.find((m) => m.id === mood)?.label ?? t('register.moodHint'),
         budgetComfort: BUDGET_COMFORT_MAP[budgetIdx] ?? 'moderate',
       }
       await register(
@@ -143,7 +152,7 @@ export function RegisterWizard() {
         router.replace('/')
       }, 520)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Ошибка регистрации')
+      setError(e instanceof Error ? e.message : t('authErrors.registerFailed'))
     } finally {
       setPending(false)
     }
@@ -218,7 +227,7 @@ export function RegisterWizard() {
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   autoComplete="nickname"
-                  placeholder="Например, ayana_n"
+                  placeholder={t('register.nicknamePlaceholder')}
                 />
                 <label className="block text-sm font-medium">Email</label>
                 <input
@@ -260,11 +269,11 @@ export function RegisterWizard() {
                     Откуда ты?
                   </span>
                   <CountryCombobox
-                    countries={COUNTRIES}
+                    countries={countries}
                     value={origin}
                     onChange={setOrigin}
-                    placeholder="Страна, где выросла"
-                    label="Страна происхождения"
+                    placeholder={t('passportForm.countryOrigin')}
+                    label={t('passportForm.countryOrigin')}
                   />
                 </div>
                 <div>
@@ -272,17 +281,29 @@ export function RegisterWizard() {
                     Где ты сейчас?
                   </span>
                   <CountryCombobox
-                    countries={COUNTRIES}
+                    countries={countries}
                     value={current}
                     onChange={setCurrent}
-                    placeholder="Текущая страна"
-                    label="Текущая страна"
+                    placeholder={t('passportForm.countryCurrent')}
+                    label={t('passportForm.countryCurrent')}
                   />
+                </div>
+                <div>
+                  <span className="mb-1 block text-sm font-medium">Город</span>
+                  <CityCombobox
+                    value={city}
+                    onChange={setCity}
+                    placeholder={t('passportForm.cityPlaceholder')}
+                    label={t('passportForm.cityLabel')}
+                  />
+                  <p className="mt-1 text-[11px] text-[var(--nora-text-muted)]">
+                    Выберите из списка, введите свой и нажмите Enter
+                  </p>
                 </div>
                 <div>
                   <span className="mb-1 block text-sm font-medium">Статус</span>
                   <div className="flex flex-wrap gap-2">
-                    {STATUSES.map((s) => (
+                    {statuses.map((s) => (
                       <button
                         key={s.id}
                         type="button"
@@ -327,15 +348,15 @@ export function RegisterWizard() {
                 <div className="flex flex-wrap gap-2">
                   {(
                     [
-                      { id: 'home' as const, label: 'Где живёшь?', icon: Home },
+                      { id: 'home' as const, label: t('register.zoneHome'), icon: Home },
                       {
                         id: 'school' as const,
-                        label: 'Где учишься?',
+                        label: t('register.zoneSchool'),
                         icon: GraduationCap,
                       },
                       {
                         id: 'work' as const,
-                        label: 'Где работаешь?',
+                        label: t('register.zoneWork'),
                         icon: Briefcase,
                       },
                     ] as const
@@ -382,7 +403,7 @@ export function RegisterWizard() {
                 </div>
                 <p className="text-sm font-medium">Настроение</p>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  {MOODS.map((m) => (
+                  {moods.map((m) => (
                     <button
                       key={m.id}
                       type="button"
@@ -441,7 +462,7 @@ export function RegisterWizard() {
                   disabled={disableNext || pending || leaving}
                   onClick={finish}
                 >
-                  {pending ? 'Создаём профиль…' : 'Завершить и открыть карту'}
+                  {pending ? t('register.finishing') : t('register.finish')}
                 </Button>
               )}
             </div>

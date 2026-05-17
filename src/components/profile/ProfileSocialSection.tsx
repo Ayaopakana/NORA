@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { Check, MessageCircle, UserMinus, X } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/hooks/useI18n'
 import { useSocialRefresh } from '@/hooks/useSocialRefresh'
 import { findDemoUser } from '@/lib/demoUsers'
 import {
@@ -21,17 +22,21 @@ type Tab = 'friends' | 'incoming' | 'outgoing'
 
 export function ProfileSocialSection() {
   useSocialRefresh()
+  const { t } = useI18n()
   const [tab, setTab] = useState<Tab>('friends')
 
   const friends = getFriendIds()
   const incoming = getIncomingRequestIds()
   const outgoing = getOutgoingRequestIds()
 
-  const tabs: { id: Tab; label: string; count: number }[] = [
-    { id: 'friends', label: 'Друзья', count: friends.length },
-    { id: 'incoming', label: 'Запросы', count: incoming.length },
-    { id: 'outgoing', label: 'Исходящие', count: outgoing.length },
-  ]
+  const tabs = useMemo(
+    (): { id: Tab; label: string; count: number }[] => [
+      { id: 'friends', label: t('social.tabFriends'), count: friends.length },
+      { id: 'incoming', label: t('social.tabIncoming'), count: incoming.length },
+      { id: 'outgoing', label: t('social.tabOutgoing'), count: outgoing.length },
+    ],
+    [t, friends.length, incoming.length, outgoing.length],
+  )
 
   const list =
     tab === 'friends' ? friends : tab === 'incoming' ? incoming : outgoing
@@ -39,29 +44,29 @@ export function ProfileSocialSection() {
   return (
     <section className="mb-6 rounded-2xl border border-[var(--nora-border)] glass-panel p-4">
       <h2 className="text-sm font-semibold text-[var(--nora-text)]">
-        Друзья и заявки
+        {t('social.title')}
       </h2>
       <p className="mt-1 text-xs text-[var(--nora-text-muted)]">
-        Подтверждённые друзья, входящие и отправленные заявки.
+        {t('social.desc')}
       </p>
 
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-        {tabs.map((t) => (
+        {tabs.map((item) => (
           <button
-            key={t.id}
+            key={item.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => setTab(item.id)}
             className={cn(
               'shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors',
-              tab === t.id
+              tab === item.id
                 ? 'border-sky-400/70 bg-sky-400/15 text-sky-100'
                 : 'border-[var(--nora-border)] text-[var(--nora-text-muted)]',
             )}
           >
-            {t.label}
-            {t.count > 0 ? (
+            {item.label}
+            {item.count > 0 ? (
               <span className="ml-1.5 rounded-full bg-sky-400/25 px-1.5 text-[11px]">
-                {t.count}
+                {item.count}
               </span>
             ) : null}
           </button>
@@ -71,15 +76,15 @@ export function ProfileSocialSection() {
       {list.length === 0 ? (
         <p className="mt-4 text-center text-sm text-[var(--nora-text-muted)]">
           {tab === 'friends'
-            ? 'Пока нет друзей.'
+            ? t('social.noFriends')
             : tab === 'incoming'
-              ? 'Нет входящих заявок.'
-              : 'Нет исходящих заявок.'}
+              ? t('social.noIncoming')
+              : t('social.noOutgoing')}
           {tab === 'friends' ? (
             <>
               {' '}
               <Link href="/search" className="text-sky-400 hover:underline">
-                Найти людей
+                {t('social.findPeople')}
               </Link>
             </>
           ) : null}
@@ -109,14 +114,14 @@ export function ProfileSocialSection() {
                   {tab === 'friends' ? (
                     <>
                       <Button size="icon" variant="secondary" asChild>
-                        <Link href="/chat" aria-label="Чат">
+                        <Link href="/chat" aria-label={t('social.chat')}>
                           <MessageCircle className="h-4 w-4" />
                         </Link>
                       </Button>
                       <Button
                         size="icon"
                         variant="ghost"
-                        aria-label="Удалить из друзей"
+                        aria-label={t('social.removeFriend')}
                         onClick={() => removeFriend(peerId)}
                       >
                         <UserMinus className="h-4 w-4" />
@@ -126,7 +131,7 @@ export function ProfileSocialSection() {
                     <>
                       <Button
                         size="icon"
-                        aria-label="Принять"
+                        aria-label={t('search.accept')}
                         onClick={() => acceptIncomingRequest(peerId)}
                       >
                         <Check className="h-4 w-4" />
@@ -134,7 +139,7 @@ export function ProfileSocialSection() {
                       <Button
                         size="icon"
                         variant="ghost"
-                        aria-label="Отклонить"
+                        aria-label={t('search.reject')}
                         onClick={() => rejectIncomingRequest(peerId)}
                       >
                         <X className="h-4 w-4" />
@@ -146,7 +151,7 @@ export function ProfileSocialSection() {
                       variant="secondary"
                       onClick={() => cancelOutgoingRequest(peerId)}
                     >
-                      Отменить
+                      {t('social.cancel')}
                     </Button>
                   )}
                 </div>

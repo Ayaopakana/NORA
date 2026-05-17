@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react'
 import { normalizeBudgetIndex } from '@/lib/daily-budget'
+import { useI18n } from '@/hooks/useI18n'
 import { cn } from '@/lib/utils'
 
 const MIN = 0
@@ -28,6 +29,7 @@ export function BudgetStepSlider({
   className,
   tickLabels,
 }: BudgetStepSliderProps) {
+  const { t } = useI18n()
   const trackRef = useRef<HTMLDivElement>(null)
   const [dragging, setDragging] = useState(false)
   const [dragRatio, setDragRatio] = useState<number | null>(null)
@@ -85,7 +87,7 @@ export function BudgetStepSlider({
         aria-valuemin={MIN}
         aria-valuemax={MAX}
         aria-valuenow={index}
-        aria-label="Бюджет на сегодня"
+        aria-label={t('budget.title')}
         className={cn(
           'relative mx-2.5 h-2 touch-none rounded-full border border-[var(--nora-border-subtle)] bg-[var(--nora-surface)] shadow-[inset_0_1px_3px_rgba(15,23,42,0.08)]',
           dragging ? 'cursor-grabbing' : 'cursor-pointer',

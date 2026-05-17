@@ -1,3 +1,6 @@
+import type { Locale } from '@/i18n/config'
+import { getMessages } from '@/i18n/messages'
+import { localizePlannerPool } from '@/i18n/planner-text'
 import type { MbtiId } from '@/lib/mbti'
 import { dailyBudgetLabel, normalizeBudgetIndex } from '@/lib/daily-budget'
 import type { MoodPreset } from '@/types/user'
@@ -248,33 +251,57 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
   ],
 }
 
+export function findPlannerRecommendation(
+  id: string,
+  locale: Locale = 'ru',
+): PlannerRecommendation | null {
+  const pools = localizePlannerPool(PLANNER_BY_MOOD, locale)
+  for (const mood of Object.keys(pools) as PlannerMood[]) {
+    const hit = pools[mood].find((r) => r.id === id)
+    if (hit) return hit
+  }
+  return null
+}
+
 export function normalizePlannerMood(m: MoodPreset | undefined): PlannerMood {
   if (m === 'energy' || m === 'tired' || m === 'anxious') return m
   return 'calm'
+}
+
+export function getPlannerMoodMeta(locale: Locale) {
+  const m = getMessages(locale).moods
+  return {
+    calm: { emoji: '🧘', label: m.calm.label, hint: m.calm.hint },
+    energy: { emoji: '🔋', label: m.energy.label, hint: m.energy.hint },
+    tired: { emoji: '😫', label: m.tired.label, hint: m.tired.hint },
+    anxious: { emoji: '😰', label: m.anxious.label, hint: m.anxious.hint },
+  } satisfies Record<PlannerMood, { emoji: string; label: string; hint: string }>
 }
 
 /** Места, которые помещаются в выбранный дневной бюджет. */
 export function getRecommendationsForMoodAndBudget(
   mood: PlannerMood,
   budgetIndex: number,
+  locale: Locale = 'ru',
 ): PlannerRecommendation[] {
   const budget = normalizeBudgetIndex(budgetIndex)
-  const pool = PLANNER_BY_MOOD[mood]
+  const pools = localizePlannerPool(PLANNER_BY_MOOD, locale)
+  const pool = pools[mood]
 
   const affordable = pool.filter((r) => r.budgetTier <= budget)
   const sorted = [...affordable].sort((a, b) => b.budgetTier - a.budgetTier)
 
-  if (sorted.length >= 3) return sorted.slice(0, 3)
+  if (sorted.length >= 4) return sorted.slice(0, 4)
 
   const extra = pool
     .filter((r) => r.budgetTier > budget && !sorted.some((s) => s.id === r.id))
     .sort((a, b) => a.budgetTier - b.budgetTier)
 
-  return [...sorted, ...extra].slice(0, 3)
+  return [...sorted, ...extra].slice(0, 4)
 }
 
-export function budgetLabelForTier(tier: number): string {
-  return dailyBudgetLabel(tier)
+export function budgetLabelForTier(tier: number, locale: Locale = 'ru'): string {
+  return dailyBudgetLabel(tier, locale)
 }
 
 export function fitsUserBudget(
@@ -288,19 +315,21 @@ export function recommendationInsight(
   rec: PlannerRecommendation,
   mbti: MbtiId | '',
   budgetIndex: number,
+  locale: Locale = 'ru',
 ): string {
+  const budget = getMessages(locale).budget
   const parts: string[] = []
 
   if (!fitsUserBudget(rec, budgetIndex)) {
-    parts.push('Чуть выше вашего бюджета на сегодня')
+    parts.push(budget.aboveBudget)
   } else {
     parts.push(rec.badge)
   }
 
   if (mbti && rec.mbtiFit?.includes(mbti)) {
-    parts.push(`идеально для ${mbti}`)
+    parts.push(budget.idealMbti.replace('{mbti}', mbti))
   } else if (mbti) {
-    parts.push(`тип ${mbti}`)
+    parts.push(budget.typeMbti.replace('{mbti}', mbti))
   }
 
   return parts.join(' · ')

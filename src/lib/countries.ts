@@ -1,67 +1,29 @@
-/** Список стран для комбобоксов (RU подписи). */
+import type { Locale } from '@/i18n/config'
+import {
+  findCountryByAnyName,
+  findCountryInList,
+  getCountries,
+  searchCountriesList,
+} from '@/i18n/content/geo-countries'
+
+/** @deprecated use getCountries(locale) */
 export type Country = { code: string; name: string }
 
-export const COUNTRIES: Country[] = [
-  { code: 'RU', name: 'Россия' },
-  { code: 'KZ', name: 'Казахстан' },
-  { code: 'BY', name: 'Беларусь' },
-  { code: 'UA', name: 'Украина' },
-  { code: 'UZ', name: 'Узбекистан' },
-  { code: 'TJ', name: 'Таджикистан' },
-  { code: 'KG', name: 'Кыргызстан' },
-  { code: 'AM', name: 'Армения' },
-  { code: 'AZ', name: 'Азербайджан' },
-  { code: 'GE', name: 'Грузия' },
-  { code: 'MD', name: 'Молдова' },
-  { code: 'DE', name: 'Германия' },
-  { code: 'FR', name: 'Франция' },
-  { code: 'ES', name: 'Испания' },
-  { code: 'IT', name: 'Италия' },
-  { code: 'PL', name: 'Польша' },
-  { code: 'NL', name: 'Нидерланды' },
-  { code: 'BE', name: 'Бельгия' },
-  { code: 'AT', name: 'Австрия' },
-  { code: 'CH', name: 'Швейцария' },
-  { code: 'SE', name: 'Швеция' },
-  { code: 'NO', name: 'Норвегия' },
-  { code: 'FI', name: 'Финляндия' },
-  { code: 'DK', name: 'Дания' },
-  { code: 'GB', name: 'Великобритания' },
-  { code: 'IE', name: 'Ирландия' },
-  { code: 'PT', name: 'Португалия' },
-  { code: 'GR', name: 'Греция' },
-  { code: 'TR', name: 'Турция' },
-  { code: 'AE', name: 'ОАЭ' },
-  { code: 'SA', name: 'Саудовская Аравия' },
-  { code: 'EG', name: 'Египет' },
-  { code: 'US', name: 'США' },
-  { code: 'CA', name: 'Канада' },
-  { code: 'MX', name: 'Мексика' },
-  { code: 'BR', name: 'Бразилия' },
-  { code: 'AR', name: 'Аргентина' },
-  { code: 'CL', name: 'Чили' },
-  { code: 'CN', name: 'Китай' },
-  { code: 'JP', name: 'Япония' },
-  { code: 'KR', name: 'Республика Корея' },
-  { code: 'IN', name: 'Индия' },
-  { code: 'TH', name: 'Таиланд' },
-  { code: 'VN', name: 'Вьетнам' },
-  { code: 'ID', name: 'Индонезия' },
-  { code: 'MY', name: 'Малайзия' },
-  { code: 'SG', name: 'Сингапур' },
-  { code: 'AU', name: 'Австралия' },
-  { code: 'NZ', name: 'Новая Зеландия' },
-  { code: 'ZA', name: 'ЮАР' },
-  { code: 'NG', name: 'Нигерия' },
-  { code: 'IL', name: 'Израиль' },
-  { code: 'CZ', name: 'Чехия' },
-  { code: 'SK', name: 'Словакия' },
-  { code: 'HU', name: 'Венгрия' },
-  { code: 'RO', name: 'Румыния' },
-  { code: 'BG', name: 'Болгария' },
-  { code: 'HR', name: 'Хорватия' },
-  { code: 'RS', name: 'Сербия' },
-  { code: 'EE', name: 'Эстония' },
-  { code: 'LV', name: 'Латвия' },
-  { code: 'LT', name: 'Литва' },
-].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+export const COUNTRIES = getCountries('ru')
+
+export { getCountries, findCountryByAnyName }
+
+export function searchCountries(
+  query: string,
+  limit = 10,
+  locale: Locale = 'ru',
+): Country[] {
+  return searchCountriesList(getCountries(locale), query, limit)
+}
+
+export function findCountryByName(
+  name: string,
+  locale: Locale = 'ru',
+): Country | undefined {
+  return findCountryInList(getCountries(locale), name)
+}

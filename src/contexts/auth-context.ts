@@ -24,6 +24,7 @@ export type ProfileUpdate = {
 export type RegisterExtras = {
   countryOrigin?: string
   countryCurrent?: string
+  cityIntent?: string
   userStatus?: UserStatus
   mbti?: MbtiId | ''
   zones?: UserZones
@@ -47,6 +48,8 @@ export type AuthContextValue = {
     extras?: RegisterExtras,
   ) => Promise<void>
   updateProfile: (patch: ProfileUpdate) => void
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>
+  deleteAccount: (password: string) => Promise<void>
   logout: () => void
 }
 

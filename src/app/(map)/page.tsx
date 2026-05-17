@@ -1,5 +1,10 @@
+import { Suspense } from 'react'
 import MapHubClient from './MapHubClient'
 
 export default function HomeMapPage() {
-  return <MapHubClient />
+  return (
+    <Suspense fallback={null}>
+      <MapHubClient />
+    </Suspense>
+  )
 }

@@ -16,6 +16,7 @@ import {
   type User,
   type UserZones,
 } from '@/types/user'
+import { translateKey } from '@/i18n/locale-storage'
 import {
   AuthContext,
   type AuthContextValue,
@@ -211,11 +212,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (a) => a.email.toLowerCase() === normalized,
     )
     if (!account || account.password !== password) {
-      throw new Error('Неверный email или пароль')
+      throw new Error(translateKey('authErrors.invalidCredentials'))
     }
     const sessionUser = normalizeUser(account)
     if (!sessionUser) {
-      throw new Error('Ошибка данных пользователя')
+      throw new Error(translateKey('authErrors.userDataError'))
     }
     saveSession({ token: 'mock-token', user: sessionUser })
     setUser(sessionUser)
@@ -232,12 +233,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ) => {
       const trimmedNickname = nickname.trim()
       if (trimmedNickname.length < 2) {
-        throw new Error('Никнейм не короче 2 символов')
+        throw new Error(translateKey('authErrors.nickTooShort'))
       }
       const normalized = email.trim().toLowerCase()
       const accounts = loadAccounts()
       if (accounts.some((a) => a.email.toLowerCase() === normalized)) {
-        throw new Error('Пользователь с таким email уже есть')
+        throw new Error(translateKey('authErrors.emailExists'))
       }
       const id =
         typeof crypto !== 'undefined' && crypto.randomUUID
@@ -253,7 +254,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         psychotypeId: '',
         moodNote: extras?.moodNote?.trim() ?? '',
         budgetComfort: extras?.budgetComfort ?? '',
-        cityIntent: '',
+        cityIntent: extras?.cityIntent?.trim() ?? '',
         mbti: extras?.mbti && isMbtiId(extras.mbti) ? extras.mbti : '',
         countryOrigin: extras?.countryOrigin ?? '',
         countryCurrent: extras?.countryCurrent ?? '',
@@ -274,7 +275,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       saveAccounts([...accounts, next])
       const sessionUser = normalizeUser(next)
       if (!sessionUser) {
-        throw new Error('Не удалось создать профиль')
+        throw new Error(translateKey('authErrors.createProfileFailed'))
       }
       saveSession({ token: 'mock-token', user: sessionUser })
       setUser(sessionUser)
@@ -298,6 +299,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      if (!user) throw new Error(translateKey('authErrors.loginRequired'))
+      const next = newPassword.trim()
+      if (next.length < 4) {
+        throw new Error(translateKey('authErrors.passwordTooShort'))
+      }
+      const accounts = loadAccounts()
+      const idx = accounts.findIndex((a) => a.id === user.id)
+      if (idx < 0) throw new Error(translateKey('authErrors.accountNotFound'))
+      if (accounts[idx].password !== currentPassword) {
+        throw new Error(translateKey('authErrors.wrongPassword'))
+      }
+      accounts[idx] = { ...accounts[idx], password: next }
+      saveAccounts(accounts)
+    },
+    [user],
+  )
+
+  const deleteAccount = useCallback(async (password: string) => {
+    const current = user
+    if (!current) throw new Error(translateKey('authErrors.loginRequired'))
+    const accounts = loadAccounts()
+    const acc = accounts.find((a) => a.id === current.id)
+    if (!acc || acc.password !== password) {
+      throw new Error(translateKey('authErrors.wrongDeletePassword'))
+    }
+    saveAccounts(accounts.filter((a) => a.id !== current.id))
+    storageRemove('nora_friends')
+    storageRemove('nora_outgoing_requests')
+    storageRemove('nora_incoming_requests')
+    storageRemove('nora_chats')
+    storageRemove('nora_social_seeded')
+    clearSession()
+    setUser(null)
+  }, [user])
+
   const logout = useCallback(() => {
     clearSession()
     setUser(null)
@@ -310,9 +348,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       updateProfile,
+      changePassword,
+      deleteAccount,
       logout,
     }),
-    [user, authReady, login, register, updateProfile, logout],
+    [
+      user,
+      authReady,
+      login,
+      register,
+      updateProfile,
+      changePassword,
+      deleteAccount,
+      logout,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

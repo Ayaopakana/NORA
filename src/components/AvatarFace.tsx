@@ -1,6 +1,7 @@
 'use client'
 
 import { initialsFromDisplay } from '@/types/user'
+import { useI18n } from '@/hooks/useI18n'
 import { cn } from '@/lib/utils'
 
 type AvatarFaceProps = {
@@ -16,7 +17,8 @@ export function AvatarFace({
   size = 40,
   className,
 }: AvatarFaceProps) {
-  const label = displayName.trim() || 'Профиль'
+  const { t } = useI18n()
+  const label = displayName.trim() || t('passport.title')
   const initials = initialsFromDisplay(label)
 
   return (

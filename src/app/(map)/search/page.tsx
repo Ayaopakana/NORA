@@ -15,6 +15,7 @@ import { PageShell } from '@/components/PageShell'
 import { RequireAuth } from '@/components/RequireAuth'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/useAuth'
+import { useI18n } from '@/hooks/useI18n'
 import { useSocialRefresh } from '@/hooks/useSocialRefresh'
 import { DEMO_USERS } from '@/lib/demoUsers'
 import {
@@ -39,6 +40,7 @@ export default function SearchPage() {
 
 function SearchContent() {
   const { user } = useAuth()
+  const { t } = useI18n()
   const [query, setQuery] = useState('')
   useSocialRefresh()
 
@@ -60,12 +62,11 @@ function SearchContent() {
     <PageShell>
       <header className="mb-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-sky-400">
-          Сообщество
+          {t('search.community')}
         </p>
-        <h1 className="mt-1 text-2xl font-semibold">Поиск людей</h1>
+        <h1 className="mt-1 text-2xl font-semibold">{t('search.title')}</h1>
         <p className="mt-2 text-sm text-[var(--nora-text-muted)]">
-          Найдите людей с похожими интересами и отправьте заявку в друзья. После
-          подтверждения можно писать в чат.
+          {t('search.subtitle')}
         </p>
       </header>
 
@@ -75,16 +76,16 @@ function SearchContent() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Никнейм, интересы, город…"
+          placeholder={t('search.placeholder')}
           className="min-w-0 flex-1 bg-transparent text-sm text-[var(--nora-text)] outline-none placeholder:text-[var(--nora-text-muted)]"
         />
       </label>
 
       {friendIds.length > 0 ? (
         <p className="mb-3 text-xs text-[var(--nora-text-muted)]">
-          В друзьях: {friendIds.length} ·{' '}
+          {t('search.friendsCount', { count: String(friendIds.length) })} ·{' '}
           <Link href="/chat" className="text-sky-400 hover:underline">
-            открыть чат
+            {t('search.openChat')}
           </Link>
         </p>
       ) : null}
@@ -97,7 +98,7 @@ function SearchContent() {
 
       {results.length === 0 ? (
         <p className="mt-6 text-center text-sm text-[var(--nora-text-muted)]">
-          Никого не найдено. Попробуйте другой запрос.
+          {t('search.empty')}
         </p>
       ) : null}
     </PageShell>
@@ -155,6 +156,8 @@ function FriendActionButton({
   outgoing: boolean
   incoming: boolean
 }) {
+  const { t } = useI18n()
+
   if (friend) {
     return (
       <Button
@@ -165,7 +168,7 @@ function FriendActionButton({
         onClick={() => removeFriend(peerId)}
       >
         <UserCheck className="h-4 w-4" />
-        В друзьях
+        {t('search.inFriends')}
       </Button>
     )
   }
@@ -180,13 +183,13 @@ function FriendActionButton({
           onClick={() => acceptIncomingRequest(peerId)}
         >
           <Check className="h-4 w-4" />
-          Принять
+          {t('search.accept')}
         </Button>
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="Отклонить"
+          aria-label={t('search.reject')}
           onClick={() => rejectIncomingRequest(peerId)}
         >
           <X className="h-4 w-4" />
@@ -205,7 +208,7 @@ function FriendActionButton({
         onClick={() => cancelOutgoingRequest(peerId)}
       >
         <Clock className="h-4 w-4" />
-        Заявка
+        {t('search.outgoing')}
       </Button>
     )
   }
@@ -218,7 +221,7 @@ function FriendActionButton({
       onClick={() => sendFriendRequest(peerId)}
     >
       <UserPlus className="h-4 w-4" />
-      Добавить
+      {t('search.add')}
     </Button>
   )
 }

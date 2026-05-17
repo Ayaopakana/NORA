@@ -3,12 +3,13 @@
 import { type FormEvent, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/useAuth'
+import { useI18n } from '@/hooks/useI18n'
 
 export default function LoginPageClient() {
   const { login } = useAuth()
+  const { t } = useI18n()
   const router = useRouter()
   const search = useSearchParams()
   const next = search?.get('next') ?? '/'
@@ -26,7 +27,7 @@ export default function LoginPageClient() {
       await login(email, password)
       router.replace(next.startsWith('/') ? next : '/')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Не удалось войти')
+      setError(err instanceof Error ? err.message : t('auth.loginFailed'))
     } finally {
       setPending(false)
     }
@@ -34,23 +35,17 @@ export default function LoginPageClient() {
 
   return (
     <div className="relative min-h-dvh bg-[var(--nora-bg)] px-4 py-10 text-[var(--nora-text)]">
-      <div className="pointer-events-none fixed right-3 top-0 z-50 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="pointer-events-auto">
-          <ThemeToggle />
-        </div>
-      </div>
-
       <div className="mx-auto w-full max-w-md pt-[max(0.5rem,env(safe-area-inset-top))]">
-        <div className="rounded-2xl border border-[var(--nora-border)] glass-panel-strong p-6 shadow-2xl">
-          <h1 className="text-xl font-semibold">Вход в NORA</h1>
+        <div className="rounded-2xl border border-[var(--nora-border-strong)] glass-panel-strong p-6 shadow-2xl">
+          <h1 className="text-xl font-semibold">{t('auth.loginTitle')}</h1>
           <p className="mt-2 text-sm text-[var(--nora-text-muted)]">
-            Локальная демо-авторизация без сервера — данные хранятся в браузере.
+            {t('auth.loginSubtitle')}
           </p>
 
           <form className="mt-6 space-y-4" onSubmit={onSubmit} noValidate>
             <div>
               <label className="mb-1 block text-sm font-medium" htmlFor="email">
-                Email
+                {t('auth.email')}
               </label>
               <input
                 id="email"
@@ -67,7 +62,7 @@ export default function LoginPageClient() {
                 className="mb-1 block text-sm font-medium"
                 htmlFor="password"
               >
-                Пароль
+                {t('auth.password')}
               </label>
               <input
                 id="password"
@@ -86,14 +81,14 @@ export default function LoginPageClient() {
               </p>
             ) : null}
             <Button type="submit" className="w-full" disabled={pending}>
-              {pending ? 'Вход…' : 'Войти'}
+              {pending ? t('auth.loggingIn') : t('auth.login')}
             </Button>
           </form>
 
           <p className="mt-4 text-center text-sm text-[var(--nora-text-muted)]">
-            Нет аккаунта?{' '}
+            {t('auth.noAccount')}{' '}
             <Link href="/register" className="text-sky-400 hover:underline">
-              Пройти регистрацию
+              {t('auth.registerLink')}
             </Link>
           </p>
         </div>

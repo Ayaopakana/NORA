@@ -5,25 +5,29 @@ import Link from 'next/link'
 import { MapPin, Sparkles } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { useI18n } from '@/hooks/useI18n'
 import {
-  PARTNER_CATEGORIES,
-  PARTNERS,
+  getPartnerCategories,
+  getPartners,
   type PartnerCategory,
-} from '@/lib/partners'
+} from '@/i18n/content/partners'
 import { cn } from '@/lib/utils'
 
 export function PartnersList() {
+  const { locale, t } = useI18n()
   const [category, setCategory] = useState<PartnerCategory | 'all'>('all')
+  const categories = useMemo(() => getPartnerCategories(locale), [locale])
+  const partners = useMemo(() => getPartners(locale), [locale])
 
   const list = useMemo(() => {
-    if (category === 'all') return PARTNERS
-    return PARTNERS.filter((p) => p.category === category)
-  }, [category])
+    if (category === 'all') return partners
+    return partners.filter((p) => p.category === category)
+  }, [category, partners])
 
   return (
     <>
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {PARTNER_CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <button
             key={c.id}
             type="button"
@@ -79,7 +83,7 @@ export function PartnersList() {
               </div>
             </div>
             <Button asChild variant="secondary" className="mt-4 w-full">
-              <Link href="/">Показать на карте</Link>
+              <Link href="/">{t('common.showOnMap')}</Link>
             </Button>
           </motion.li>
         ))}

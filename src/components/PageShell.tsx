@@ -5,12 +5,12 @@ type PageShellProps = {
   className?: string
 }
 
-/** Отступ под верхний toggle и нижнюю навигацию. */
+/** Отступ под профиль сверху и островки снизу. */
 export function PageShell({ children, className }: PageShellProps) {
   return (
     <div
       className={cn(
-        'mx-auto w-full max-w-lg px-4 pb-nav-only pt-[max(4.5rem,env(safe-area-inset-top))]',
+        'mx-auto w-full max-w-lg px-4 pb-island-dock pt-[max(4.25rem,env(safe-area-inset-top))]',
         className,
       )}
     >

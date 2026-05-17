@@ -16,6 +16,8 @@ import {
   mapFallbackForTheme,
   mapStyleForTheme,
 } from '@/lib/map-styles'
+import { useI18n } from '@/hooks/useI18n'
+import { translateKey } from '@/i18n/locale-storage'
 import { cn } from '@/lib/utils'
 
 /** Центр карты по умолчанию — Бишкек */
@@ -43,6 +45,7 @@ export function MapboxSurface({
   pickPoint,
   markers,
 }: MapboxSurfaceProps) {
+  const { t } = useI18n()
   const { theme, resolvedTheme } = useTheme()
   const mapScheme = mapAppearanceScheme(theme, resolvedTheme)
   const isDark = mapScheme === 'dark'
@@ -165,7 +168,7 @@ export function MapboxSurface({
         if (cancelled) return
         const msg =
           e.error?.message ??
-          (typeof e.error === 'string' ? e.error : 'Ошибка загрузки тайлов')
+          (typeof e.error === 'string' ? e.error : translateKey('mapSurface.tileError'))
         setTileError(msg)
       })
     }
@@ -187,7 +190,7 @@ export function MapboxSurface({
         zoom: view?.zoom ?? 12,
         bearing: view?.bearing ?? -18,
         pitch: view?.pitch ?? 56,
-        attributionControl: { compact: true },
+        attributionControl: false,
         /* Быстрее показывать тайлы, без долгого «растворения» пустой подложки */
         fadeDuration: 0,
         maxPitch: 85,
@@ -451,7 +454,7 @@ export function MapboxSurface({
               : 'bg-[#edf2f6] text-slate-500',
           )}
           aria-busy
-          aria-label="Загрузка карты"
+          aria-label={t('mapSurface.loadingAria')}
         >
           <span
             className={cn(
@@ -461,7 +464,7 @@ export function MapboxSurface({
           >
             NORA
           </span>
-          <p className="text-xs">Карта загружается…</p>
+          <p className="text-xs">{t('map.loading')}</p>
           <span
             className={cn(
               'mt-2 block h-1 w-28 rounded-full motion-safe:animate-pulse',

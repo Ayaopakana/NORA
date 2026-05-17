@@ -2,6 +2,8 @@
 
 import { ThemeProvider } from 'next-themes'
 import { AuthProvider } from '@/contexts/AuthProvider'
+import { LocaleProvider } from '@/contexts/LocaleProvider'
+import { HtmlLangSync } from '@/components/HtmlLangSync'
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +13,10 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       enableSystem
       disableTransitionOnChange={false}
     >
-      <AuthProvider>{children}</AuthProvider>
+      <LocaleProvider>
+        <HtmlLangSync />
+        <AuthProvider>{children}</AuthProvider>
+      </LocaleProvider>
     </ThemeProvider>
   )
 }

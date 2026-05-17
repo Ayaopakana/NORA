@@ -1,6 +1,5 @@
-import { BottomNav } from '@/components/BottomNav'
+import { IslandDock } from '@/components/IslandDock'
 import { MapShellPageTransition } from '@/components/MapShellPageTransition'
-import { MapShellTopBar } from '@/components/MapShellTopBar'
 
 export default function MapShellLayout({
   children,
@@ -9,11 +8,10 @@ export default function MapShellLayout({
 }) {
   return (
     <div className="flex min-h-dvh flex-col bg-transparent text-[var(--nora-text)]">
-      <MapShellTopBar />
-      <main className="relative z-0 flex min-h-0 flex-1 flex-col pb-nav-only">
+      <main className="relative z-0 flex min-h-0 flex-1 flex-col">
         <MapShellPageTransition>{children}</MapShellPageTransition>
       </main>
-      <BottomNav />
+      <IslandDock />
     </div>
   )
 }
