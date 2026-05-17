@@ -18,6 +18,7 @@ import {
 } from '@/lib/map-styles'
 import { useI18n } from '@/hooks/useI18n'
 import { translateKey } from '@/i18n/locale-storage'
+import { syncMapRouteLayer, type MapRoutePoint } from '@/lib/map-route-layer'
 import { cn } from '@/lib/utils'
 
 /** Центр карты по умолчанию — Бишкек */
@@ -29,7 +30,16 @@ export type MapboxSurfaceProps = {
   blueMono?: boolean
   onMap?: (map: MapLibreMap) => void
   pickPoint?: (coords: { lng: number; lat: number }) => void
-  markers?: { id: string; lng: number; lat: number; color?: string }[]
+  markers?: {
+    id: string
+    lng: number
+    lat: number
+    color?: string
+    /** Номер остановки на маршруте */
+    label?: string | number
+  }[]
+  /** Точки маршрута по порядку — линия на карте (демо, до бэкенд-роутинга) */
+  routePath?: MapRoutePoint[]
 }
 
 type MapViewState = {
@@ -44,6 +54,7 @@ export function MapboxSurface({
   onMap,
   pickPoint,
   markers,
+  routePath,
 }: MapboxSurfaceProps) {
   const { t } = useI18n()
   const { theme, resolvedTheme } = useTheme()
@@ -405,34 +416,59 @@ export function MapboxSurface({
 
   useEffect(() => {
     const map = mapRef.current
-    if (!map || !markers) return
+    if (!map) return
 
-    const syncMarkers = () => {
+    const syncOverlays = () => {
       markerObjs.current.forEach((m) => m.remove())
       markerObjs.current = []
 
-      for (const m of markers) {
-        const el = document.createElement('div')
-        el.style.width = '14px'
-        el.style.height = '14px'
-        el.style.borderRadius = '999px'
-        el.style.background = m.color ?? '#38bdf8'
-        el.style.boxShadow =
-          '0 1px 3px rgba(15,23,42,0.35), 0 0 14px rgba(56,189,248,0.55), 0 0 2px rgba(14,165,233,0.9)'
-        el.style.border = '2px solid rgba(241,245,249,0.92)'
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat([m.lng, m.lat])
-          .addTo(map)
-        markerObjs.current.push(marker)
+      if (markers) {
+        for (const m of markers) {
+          const el = document.createElement('div')
+          const hasLabel = m.label !== undefined && m.label !== null
+          const size = hasLabel ? 24 : 14
+          el.style.width = `${size}px`
+          el.style.height = `${size}px`
+          el.style.borderRadius = '999px'
+          el.style.background = m.color ?? '#38bdf8'
+          el.style.boxShadow =
+            '0 1px 3px rgba(15,23,42,0.35), 0 0 14px rgba(56,189,248,0.55), 0 0 2px rgba(14,165,233,0.9)'
+          el.style.border = '2px solid rgba(241,245,249,0.92)'
+          if (hasLabel) {
+            el.style.display = 'flex'
+            el.style.alignItems = 'center'
+            el.style.justifyContent = 'center'
+            el.style.fontSize = '11px'
+            el.style.fontWeight = '700'
+            el.style.color = '#0f172a'
+            el.textContent = String(m.label)
+          }
+          const marker = new maplibregl.Marker({ element: el })
+            .setLngLat([m.lng, m.lat])
+            .addTo(map)
+          markerObjs.current.push(marker)
+        }
       }
+
+      syncMapRouteLayer(map, routePath)
     }
 
     if (map.isStyleLoaded()) {
-      syncMarkers()
+      syncOverlays()
     } else {
-      map.once('load', syncMarkers)
+      map.once('load', syncOverlays)
     }
-  }, [markers])
+
+    const onStyleData = () => {
+      if (!map.isStyleLoaded()) return
+      syncOverlays()
+    }
+    map.on('styledata', onStyleData)
+
+    return () => {
+      map.off('styledata', onStyleData)
+    }
+  }, [markers, routePath])
 
   return (
     <div

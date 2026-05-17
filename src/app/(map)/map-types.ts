@@ -10,4 +10,13 @@ export type NoraMapHandle = {
     bearing?: number
     duration?: number
   }) => void
+  fitBounds: (
+    bounds: [[number, number], [number, number]],
+    options?: {
+      padding?: number
+      duration?: number
+      pitch?: number
+      maxZoom?: number
+    },
+  ) => void
 }

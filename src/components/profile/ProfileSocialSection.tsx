@@ -83,7 +83,7 @@ export function ProfileSocialSection() {
           {tab === 'friends' ? (
             <>
               {' '}
-              <Link href="/search" className="text-sky-400 hover:underline">
+              <Link href="/?search=open" className="text-sky-400 hover:underline">
                 {t('social.findPeople')}
               </Link>
             </>

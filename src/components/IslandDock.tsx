@@ -2,19 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  MapPin,
-  MessageCircle,
-  Search,
-  UserRound,
-} from 'lucide-react'
+import { MapPin, MessageCircle, UserRound } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useI18n } from '@/hooks/useI18n'
 import { cn } from '@/lib/utils'
 
 const tabKeys = [
   { href: '/', key: 'nav.map', icon: MapPin },
-  { href: '/search', key: 'nav.search', icon: Search },
   { href: '/chat', key: 'nav.chat', icon: MessageCircle },
   { href: '/passport', key: 'nav.profile', icon: UserRound },
 ] as const

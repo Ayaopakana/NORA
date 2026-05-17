@@ -185,7 +185,7 @@ function ChatContent() {
         <p className="mt-2 text-sm text-[var(--nora-text-muted)]">
           {t('chat.subtitle')}{' '}
           {t('chat.findFriendsPrefix')}{' '}
-          <Link href="/search" className="text-sky-400 hover:underline">
+          <Link href="/?search=open" className="text-sky-400 hover:underline">
             {t('chat.findFriends')}
           </Link>
           .
@@ -219,7 +219,7 @@ function ChatContent() {
         <div className="rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-6 text-center text-sm text-[var(--nora-text-muted)]">
           <p>{t('chat.noFriends')}</p>
           <Button asChild className="mt-4">
-            <Link href="/search">{t('chat.findPeople')}</Link>
+            <Link href="/?search=open">{t('chat.findPeople')}</Link>
           </Button>
         </div>
       ) : filteredFriendIds.length === 0 ? (

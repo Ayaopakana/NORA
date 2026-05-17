@@ -1,6 +1,8 @@
 import type { Locale } from '@/i18n/config'
 import { getMessages } from '@/i18n/messages'
 import { localizePlannerPool } from '@/i18n/planner-text'
+import { filterRecommendationsByAge } from '@/lib/age-policy'
+import type { VenueTag } from '@/lib/age-policy'
 import type { MbtiId } from '@/lib/mbti'
 import { dailyBudgetLabel, normalizeBudgetIndex } from '@/lib/daily-budget'
 import type { MoodPreset } from '@/types/user'
@@ -19,6 +21,10 @@ export type PlannerRecommendation = {
   budgetTier: number
   badge: string
   mbtiFit?: MbtiId[]
+  /** Теги для фильтра по возрасту */
+  venueTags?: VenueTag[]
+  /** Минимальный возраст (бары, клубы — 18+) */
+  minAge?: number
 }
 
 export const PLANNER_MOOD_META: Record<
@@ -61,6 +67,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 1,
       badge: 'Мягкий темп — хорошо для восстановления фокуса',
       mbtiFit: ['INFP', 'INFJ', 'ISFP'],
+      venueTags: ['cafe', 'food'],
     },
     {
       id: 'calm-2',
@@ -73,6 +80,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 0,
       badge: 'Ровный маршрут и открытое пространство',
       mbtiFit: ['ISTJ', 'ISFJ', 'INTJ'],
+      venueTags: ['park', 'wellness'],
     },
     {
       id: 'calm-3',
@@ -85,6 +93,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 1,
       badge: 'Тишина и привычный сценарий дня',
       mbtiFit: ['INTP', 'INFJ'],
+      venueTags: ['culture', 'cafe'],
     },
     {
       id: 'calm-4',
@@ -97,6 +106,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 0,
       badge: 'Бесплатная прогулка в центре',
       mbtiFit: ['ISFP', 'INFJ'],
+      venueTags: ['park', 'culture'],
     },
   ],
   energy: [
@@ -111,6 +121,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 1,
       badge: 'Живые впечатления и лёгкий драйв',
       mbtiFit: ['ENFP', 'ESFP', 'ENTP'],
+      venueTags: ['market', 'food'],
     },
     {
       id: 'energy-2',
@@ -123,6 +134,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 0,
       badge: 'Много пространства — заряд бодрости',
       mbtiFit: ['ENTJ', 'ESTP', 'ENFJ'],
+      venueTags: ['park', 'culture'],
     },
     {
       id: 'energy-3',
@@ -135,6 +147,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 0,
       badge: 'Длинная прогулка с видами на город',
       mbtiFit: ['ESTJ', 'ESFJ'],
+      venueTags: ['park'],
     },
     {
       id: 'energy-4',
@@ -147,6 +160,22 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 3,
       badge: 'Яркий вечер — если бюджет позволяет',
       mbtiFit: ['ENFJ', 'ENTJ'],
+      venueTags: ['food', 'culture', 'nightlife'],
+      minAge: 18,
+    },
+    {
+      id: 'energy-5',
+      title: 'Коктейли и музыка',
+      place: 'Bar 12',
+      address: 'ул. Киевская, 77',
+      lng: 74.6178,
+      lat: 42.8689,
+      duration: '1 ч 30 мин',
+      budgetTier: 2,
+      badge: 'Вечерняя тусовка — только 18+',
+      mbtiFit: ['ESTP', 'ESFP'],
+      venueTags: ['bar', 'nightlife'],
+      minAge: 18,
     },
   ],
   tired: [
@@ -161,6 +190,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 0,
       badge: 'Близко, без лишних переходов',
       mbtiFit: ['ISFP', 'INFP', 'ISFJ'],
+      venueTags: ['cafe', 'food'],
     },
     {
       id: 'tired-2',
@@ -173,6 +203,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 0,
       badge: 'Можно остановиться, когда устанете',
       mbtiFit: ['ISTP', 'INFJ'],
+      venueTags: ['park', 'wellness'],
     },
     {
       id: 'tired-3',
@@ -185,6 +216,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 1,
       badge: 'Спокойная еда — меньше решений',
       mbtiFit: ['ISFJ', 'ISTJ'],
+      venueTags: ['food', 'family'],
     },
     {
       id: 'tired-4',
@@ -197,6 +229,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 2,
       badge: 'Сесть и отдохнуть без спешки',
       mbtiFit: ['ISFJ', 'INFJ'],
+      venueTags: ['cafe', 'food'],
     },
   ],
   anxious: [
@@ -211,6 +244,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 0,
       badge: 'Предсказуемая тропа и мало шума',
       mbtiFit: ['INFJ', 'INFP', 'ISFJ'],
+      venueTags: ['park', 'wellness'],
     },
     {
       id: 'anxious-2',
@@ -223,6 +257,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 0,
       badge: 'Уютный дворик в центре',
       mbtiFit: ['INTJ', 'ISTJ', 'INTP'],
+      venueTags: ['park', 'culture'],
     },
     {
       id: 'anxious-3',
@@ -235,6 +270,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 1,
       badge: 'Монотонное движение успокаивает',
       mbtiFit: ['ISFP', 'INFJ'],
+      venueTags: ['park', 'wellness', 'culture'],
     },
     {
       id: 'anxious-4',
@@ -247,6 +283,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 2,
       badge: 'Мало людей в межсезонье',
       mbtiFit: ['INFP', 'INTP'],
+      venueTags: ['cafe', 'food'],
     },
   ],
 }
@@ -283,10 +320,11 @@ export function getRecommendationsForMoodAndBudget(
   mood: PlannerMood,
   budgetIndex: number,
   locale: Locale = 'ru',
+  birthYear: number | null = null,
 ): PlannerRecommendation[] {
   const budget = normalizeBudgetIndex(budgetIndex)
   const pools = localizePlannerPool(PLANNER_BY_MOOD, locale)
-  const pool = pools[mood]
+  const pool = filterRecommendationsByAge(pools[mood], birthYear)
 
   const affordable = pool.filter((r) => r.budgetTier <= budget)
   const sorted = [...affordable].sort((a, b) => b.budgetTier - a.budgetTier)

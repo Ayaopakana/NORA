@@ -5,7 +5,9 @@ import { CalendarDays, Coins, Sparkles, X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { MbtiHelpDialog } from '@/components/MbtiHelpDialog'
+import { SavedRoutesList } from '@/components/map/SavedRoutesList'
 import { PlannerRecommendationsList } from '@/components/planner/PlannerRecommendationsList'
+import type { SavedDayRoute } from '@/lib/saved-routes-storage'
 import { DailyBudgetLabel } from '@/components/DailyBudgetLabel'
 import { BudgetStepSlider } from '@/components/BudgetStepSlider'
 import { MAP_MOODS } from '@/components/map/map-moods'
@@ -31,6 +33,10 @@ type PlannerHubPanelProps = {
   defaultOpen?: boolean
   onOpenChange?: (open: boolean) => void
   onSelectPlace?: (place: PlannerRecommendation) => void
+  savedRoutes?: SavedDayRoute[]
+  activeRouteId?: string | null
+  onSelectSavedRoute?: (route: SavedDayRoute) => void
+  onDeleteSavedRoute?: (routeId: string) => void
 }
 
 /** Кнопка — нижняя часть верхней половины; панель тянется до навбара */
@@ -48,6 +54,10 @@ export function PlannerHubPanel({
   defaultOpen = false,
   onOpenChange,
   onSelectPlace,
+  savedRoutes = [],
+  activeRouteId = null,
+  onSelectSavedRoute,
+  onDeleteSavedRoute,
 }: PlannerHubPanelProps) {
   const [open, setOpen] = useState(defaultOpen)
   const { locale, t } = useI18n()
@@ -80,6 +90,11 @@ export function PlannerHubPanel({
     setPanelOpen(false)
   }
 
+  function handleSelectSavedRoute(route: SavedDayRoute) {
+    onSelectSavedRoute?.(route)
+    setPanelOpen(false)
+  }
+
   return (
     <>
       <button
@@ -90,7 +105,7 @@ export function PlannerHubPanel({
         aria-label={open ? t('planner.close') : t('planner.open')}
         className={cn(
           'pointer-events-auto fixed z-20 flex items-center justify-center',
-          'left-[max(0.65rem,env(safe-area-inset-left))]',
+          'right-[max(0.65rem,env(safe-area-inset-right))]',
           PLANNER_TOP,
           'h-[3.35rem] w-[3.35rem] rounded-2xl border transition-all duration-300',
           'glass-panel shadow-glass backdrop-blur-xl',
@@ -119,16 +134,16 @@ export function PlannerHubPanel({
               role="dialog"
               aria-modal="true"
               aria-labelledby="planner-hub-title"
-              initial={{ x: '-100%' }}
+              initial={{ x: '100%' }}
               animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
+              exit={{ x: '100%' }}
               transition={{ type: 'spring', stiffness: 280, damping: 32 }}
               className={cn(
                 'pointer-events-auto fixed z-40 flex min-h-0 w-[min(20rem,92vw)] flex-col',
-                'left-0',
+                'right-0',
                 PLANNER_TOP,
                 PLANNER_PANEL_BOTTOM,
-                'border-r border-[var(--nora-border-strong)] glass-panel-strong shadow-glass-lg',
+                'border-l border-[var(--nora-border-strong)] glass-panel-strong shadow-glass-lg',
               )}
             >
               <header className="flex shrink-0 items-start justify-between gap-2 border-b border-[var(--nora-border-subtle)] px-3 py-3">
@@ -244,6 +259,15 @@ export function PlannerHubPanel({
                     {t('planner.editPassport')}
                   </Link>
                 </section>
+
+                {onSelectSavedRoute && onDeleteSavedRoute ? (
+                  <SavedRoutesList
+                    routes={savedRoutes}
+                    activeRouteId={activeRouteId}
+                    onSelect={handleSelectSavedRoute}
+                    onDelete={onDeleteSavedRoute}
+                  />
+                ) : null}
 
                 <div className="mt-4 border-t border-[var(--nora-border-subtle)] pt-3 pb-1">
                   <PlannerRecommendationsList

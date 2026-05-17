@@ -2,6 +2,7 @@ import type { BudgetComfort, PsychotypeId } from '@/profile/noraProfile'
 import { isBudgetComfort, isPsychotypeId } from '@/profile/noraProfile'
 import type { MbtiId } from '@/lib/mbti'
 import { isMbtiId } from '@/lib/mbti'
+import { emptyRoutine, normalizeRoutine, type UserRoutine } from '@/types/routine'
 
 export type UserStatus = '' | 'student' | 'tourist' | 'expat' | 'local'
 
@@ -33,6 +34,10 @@ export type User = {
   /** 0–3: шаг бюджета «на сегодня» для слайдера */
   dailyBudgetIndex: number
   initialMood: MoodPreset
+  /** Год рождения — для фильтра баров/клубов и т.п. */
+  birthYear: number | null
+  /** Где и когда обычно бывает пользователь (для будущей ИИ) */
+  routine: UserRoutine
 }
 
 export function isUserStatus(v: unknown): v is UserStatus {
@@ -115,6 +120,14 @@ export function normalizeUser(raw: unknown): User | null {
       ? Math.round(dailyBudgetIndexRaw)
       : 1
   const initialMood = isMoodPreset(o.initialMood) ? o.initialMood : ''
+  const birthYearRaw = Number(o.birthYear)
+  const birthYear =
+    Number.isFinite(birthYearRaw) &&
+    birthYearRaw >= 1920 &&
+    birthYearRaw <= new Date().getFullYear()
+      ? Math.round(birthYearRaw)
+      : null
+  const routine = normalizeRoutine(o.routine)
 
   return {
     id: o.id,
@@ -134,8 +147,13 @@ export function normalizeUser(raw: unknown): User | null {
     zones,
     dailyBudgetIndex,
     initialMood,
+    birthYear,
+    routine,
   }
 }
+
+export { emptyRoutine }
+export type { UserRoutine }
 
 /** Безопасно для «битых» данных из storage */
 export function displayName(user: Pick<User, 'nickname' | 'name'>): string {

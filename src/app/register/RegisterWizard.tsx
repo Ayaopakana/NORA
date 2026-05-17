@@ -19,7 +19,10 @@ import {
 } from '@/lib/planner-recommendations'
 import { getCountries } from '@/lib/countries'
 import type { MbtiId } from '@/lib/mbti'
+import { ZoneRoutineEditor } from '@/components/profile/ZoneRoutineEditor'
+import { isValidBirthYear } from '@/lib/age-policy'
 import { cn } from '@/lib/utils'
+import { emptyRoutine, type UserRoutine } from '@/types/routine'
 import type { MoodPreset, UserStatus, UserZones, ZoneKey } from '@/types/user'
 
 const MOOD_IDS: PlannerMood[] = ['energy', 'calm', 'tired', 'anxious']
@@ -73,10 +76,12 @@ export function RegisterWizard() {
   const [current, setCurrent] = useState('')
   const [city, setCity] = useState('')
   const [status, setStatus] = useState<UserStatus>('')
+  const [birthYear, setBirthYear] = useState('')
 
   const [mbti, setMbti] = useState<MbtiId | ''>('')
 
   const [zones, setZones] = useState<UserZones>({})
+  const [routine, setRoutine] = useState<UserRoutine>(emptyRoutine())
   const [activeZone, setActiveZone] = useState<ZoneKey | null>(null)
   const activeZoneRef = useRef<ZoneKey | null>(null)
   activeZoneRef.current = activeZone
@@ -106,6 +111,8 @@ export function RegisterWizard() {
 
   const progress = useMemo(() => ((step + 1) / 4) * 100, [step])
 
+  const birthYearNum = Number(birthYear)
+
   const canNext0 =
     nickname.trim().length >= 2 &&
     emailOk(email) &&
@@ -113,7 +120,8 @@ export function RegisterWizard() {
     password === confirm &&
     origin.length > 0 &&
     current.length > 0 &&
-    status !== ''
+    status !== '' &&
+    isValidBirthYear(birthYearNum)
 
   const canNext1 = mbti !== ''
 
@@ -133,6 +141,8 @@ export function RegisterWizard() {
         userStatus: status,
         mbti: mbti || undefined,
         zones,
+        birthYear: birthYearNum,
+        routine,
         initialMood: mood,
         dailyBudgetIndex: budgetIdx,
         moodNote:
@@ -301,6 +311,24 @@ export function RegisterWizard() {
                   </p>
                 </div>
                 <div>
+                  <span className="mb-1 block text-sm font-medium">
+                    {t('register.birthYearLabel')}
+                  </span>
+                  <input
+                    className="glass-input h-12 w-full px-3"
+                    type="number"
+                    inputMode="numeric"
+                    min={1920}
+                    max={new Date().getFullYear()}
+                    value={birthYear}
+                    onChange={(e) => setBirthYear(e.target.value)}
+                    placeholder="2000"
+                  />
+                  <p className="mt-1 text-[11px] text-[var(--nora-text-muted)]">
+                    {t('register.birthYearHint')}
+                  </p>
+                </div>
+                <div>
                   <span className="mb-1 block text-sm font-medium">Статус</span>
                   <div className="flex flex-wrap gap-2">
                     {statuses.map((s) => (
@@ -389,6 +417,18 @@ export function RegisterWizard() {
                     Сначала выбери тип зоны (дом, учёба или работа).
                   </p>
                 ) : null}
+                <div className="border-t border-[var(--nora-border-subtle)] pt-4">
+                  <p className="text-sm font-medium">{t('register.routineTitle')}</p>
+                  <p className="mt-1 text-xs text-[var(--nora-text-muted)]">
+                    {t('register.routineHint')}
+                  </p>
+                  <ZoneRoutineEditor
+                    className="mt-3"
+                    zones={zones}
+                    routine={routine}
+                    onChange={setRoutine}
+                  />
+                </div>
               </div>
             ) : null}
 

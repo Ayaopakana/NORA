@@ -5,7 +5,19 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { MapLoadingFallback } from '@/components/map/MapLoadingFallback'
+import { DayRouteCard } from '@/components/map/DayRouteCard'
+import { MapTopBar } from '@/components/map/MapTopBar'
 import { PlannerHubPanel } from '@/components/map/PlannerHubPanel'
+import type { DayRoute } from '@/lib/build-day-route'
+import {
+  findSavedRouteMatch,
+  getSavedRoutes,
+  isDayRouteSaved,
+  rehydrateDayRoute,
+  removeSavedRoute,
+  saveDayRoute,
+  type SavedDayRoute,
+} from '@/lib/saved-routes-storage'
 import { useAuth } from '@/contexts/useAuth'
 import { useI18n } from '@/hooks/useI18n'
 import {
@@ -17,6 +29,8 @@ import type { MoodPreset, ZoneKey } from '@/types/user'
 import type { NoraMapHandle } from './map-types'
 
 type MapForDwell = NoraMapHandle
+
+const ROUTE_MARKER_COLORS = ['#f59e0b', '#fb923c', '#fbbf24', '#a3e635'] as const
 
 const MapCanvas = dynamic(() => import('./MapCanvas'), {
   ssr: false,
@@ -51,6 +65,8 @@ function zoneAt(
 export default function MapHubClient() {
   const searchParams = useSearchParams()
   const plannerOpenDefault = searchParams?.get('planner') === 'open'
+  const searchOpenDefault = searchParams?.get('search') === 'open'
+  const routeOpenDefault = searchParams?.get('route') === 'open'
   const { user, updateProfile } = useAuth()
   const { locale, t } = useI18n()
   const userRef = useRef(user)
@@ -68,6 +84,8 @@ export default function MapHubClient() {
   const [budgetIdx, setBudgetIdx] = useState(user?.dailyBudgetIndex ?? 1)
   const [statePanelOpen, setStatePanelOpen] = useState(false)
   const [focusPlaceId, setFocusPlaceId] = useState<string | null>(null)
+  const [dayRoute, setDayRoute] = useState<DayRoute | null>(null)
+  const [savedRoutes, setSavedRoutes] = useState<SavedDayRoute[]>([])
   const [insightZone, setInsightZone] = useState<'home' | 'work' | null>(null)
 
   const focusPlace = useMemo(
@@ -99,7 +117,13 @@ export default function MapHubClient() {
   }, [insightZone, user?.mbti, t])
 
   const markers = useMemo(() => {
-    const out: { id: string; lng: number; lat: number; color?: string }[] = []
+    const out: {
+      id: string
+      lng: number
+      lat: number
+      color?: string
+      label?: number
+    }[] = []
     const colors: Record<ZoneKey, string> = {
       home: '#38bdf8',
       work: '#2563eb',
@@ -111,7 +135,17 @@ export default function MapHubClient() {
         if (z) out.push({ id: k, lng: z.lng, lat: z.lat, color: colors[k] })
       })
     }
-    if (focusPlace) {
+    if (dayRoute) {
+      dayRoute.stops.forEach((stop, i) => {
+        out.push({
+          id: `route-${stop.id}`,
+          lng: stop.lng,
+          lat: stop.lat,
+          color: ROUTE_MARKER_COLORS[i % ROUTE_MARKER_COLORS.length],
+          label: i + 1,
+        })
+      })
+    } else if (focusPlace) {
       out.push({
         id: `plan-${focusPlace.id}`,
         lng: focusPlace.lng,
@@ -120,7 +154,24 @@ export default function MapHubClient() {
       })
     }
     return out
-  }, [user?.zones, focusPlace])
+  }, [user?.zones, focusPlace, dayRoute])
+
+  const routePath = useMemo(
+    () =>
+      dayRoute?.stops.map((s) => ({ lng: s.lng, lat: s.lat })) ?? undefined,
+    [dayRoute],
+  )
+
+  const activeSavedRouteId = useMemo(() => {
+    if (!dayRoute || !user?.id) return null
+    if (savedRoutes.some((r) => r.id === dayRoute.id)) return dayRoute.id
+    return findSavedRouteMatch(user.id, dayRoute)?.id ?? null
+  }, [dayRoute, savedRoutes, user?.id])
+
+  const dayRouteIsSaved = useMemo(
+    () => (user?.id && dayRoute ? isDayRouteSaved(user.id, dayRoute) : false),
+    [user?.id, dayRoute, savedRoutes],
+  )
 
   const flyToPlace = useCallback((rec: PlannerRecommendation) => {
     const map = mapRef.current
@@ -134,13 +185,53 @@ export default function MapHubClient() {
     })
   }, [])
 
+  const flyToRoute = useCallback((route: DayRoute) => {
+    const map = mapRef.current
+    if (!map || !route.stops.length) return
+    if (route.stops.length === 1) {
+      flyToPlace(route.stops[0]!)
+      return
+    }
+    const lngs = route.stops.map((s) => s.lng)
+    const lats = route.stops.map((s) => s.lat)
+    map.fitBounds(
+      [
+        [Math.min(...lngs), Math.min(...lats)],
+        [Math.max(...lngs), Math.max(...lats)],
+      ],
+      { padding: 88, duration: 1400, pitch: 48, maxZoom: 15.5 },
+    )
+  }, [flyToPlace])
+
   const handleSelectPlace = useCallback(
     (rec: PlannerRecommendation) => {
+      setDayRoute(null)
       setFocusPlaceId(rec.id)
       setInsightZone(null)
       flyToPlace(rec)
     },
     [flyToPlace],
+  )
+
+  const handleRouteBuilt = useCallback(
+    (route: DayRoute) => {
+      setDayRoute(route)
+      setFocusPlaceId(null)
+      focusPlaceRef.current = null
+      setInsightZone(null)
+      flyToRoute(route)
+    },
+    [flyToRoute],
+  )
+
+  const handleSelectRouteStop = useCallback(
+    (stopId: string) => {
+      const stop = dayRoute?.stops.find((s) => s.id === stopId)
+      if (!stop) return
+      setFocusPlaceId(stop.id)
+      flyToPlace(stop)
+    },
+    [dayRoute, flyToPlace],
   )
 
   const clearDwell = useCallback(() => {
@@ -210,9 +301,61 @@ export default function MapHubClient() {
     return () => window.clearTimeout(handle)
   }, [mood, budgetIdx, user?.id, updateProfile])
 
+  useEffect(() => {
+    if (!user?.id) {
+      setSavedRoutes([])
+      return
+    }
+    setSavedRoutes(getSavedRoutes(user.id))
+  }, [user?.id])
+
+  useEffect(() => {
+    if (!user?.id) return
+    const refresh = () => setSavedRoutes(getSavedRoutes(user.id))
+    window.addEventListener('nora-routes-change', refresh)
+    return () => window.removeEventListener('nora-routes-change', refresh)
+  }, [user?.id])
+
+  const handleSaveDayRoute = useCallback(() => {
+    if (!user?.id || !dayRoute) return false
+    return saveDayRoute(user.id, dayRoute)
+  }, [user?.id, dayRoute])
+
+  const handleSelectSavedRoute = useCallback(
+    (saved: SavedDayRoute) => {
+      const route = rehydrateDayRoute(saved, locale)
+      setDayRoute(route)
+      setFocusPlaceId(null)
+      focusPlaceRef.current = null
+      setInsightZone(null)
+      flyToRoute(route)
+    },
+    [flyToRoute, locale],
+  )
+
+  const handleDeleteSavedRoute = useCallback(
+    (routeId: string) => {
+      if (!user?.id) return
+      removeSavedRoute(user.id, routeId)
+      if (dayRoute?.id === routeId) setDayRoute(null)
+    },
+    [user?.id, dayRoute?.id],
+  )
+
   return (
     <>
-      <MapCanvas onMap={onMap} markers={markers} />
+      <MapCanvas onMap={onMap} markers={markers} routePath={routePath} />
+
+      <MapTopBar
+        defaultSearchOpen={searchOpenDefault}
+        defaultRouteOpen={routeOpenDefault}
+        mood={mood}
+        budgetIdx={budgetIdx}
+        mbti={user?.mbti ?? ''}
+        onMoodChange={setMood}
+        onBudgetChange={setBudgetIdx}
+        onRouteBuilt={handleRouteBuilt}
+      />
 
       <PlannerHubPanel
         mood={mood}
@@ -223,10 +366,34 @@ export default function MapHubClient() {
         defaultOpen={plannerOpenDefault}
         onOpenChange={setStatePanelOpen}
         onSelectPlace={handleSelectPlace}
+        savedRoutes={user?.id ? savedRoutes : []}
+        activeRouteId={user?.id ? activeSavedRouteId : null}
+        onSelectSavedRoute={user?.id ? handleSelectSavedRoute : undefined}
+        onDeleteSavedRoute={user?.id ? handleDeleteSavedRoute : undefined}
       />
 
       <AnimatePresence>
-        {focusPlace ? (
+        {dayRoute ? (
+          <DayRouteCard
+            key={dayRoute.id}
+            route={dayRoute}
+            onSelectStop={handleSelectRouteStop}
+            onSave={user?.id ? handleSaveDayRoute : undefined}
+            isSaved={dayRouteIsSaved}
+            onClear={() => {
+              setDayRoute(null)
+              setFocusPlaceId(null)
+              focusPlaceRef.current = null
+            }}
+            className={cn(
+              'fixed z-[25] w-full max-w-[min(20rem,92vw)]',
+              statePanelOpen
+                ? 'left-[max(0.5rem,env(safe-area-inset-left))] right-[max(calc(min(20rem,92vw)+0.75rem),env(safe-area-inset-right))]'
+                : 'inset-x-[max(0.5rem,env(safe-area-inset-left))] mx-auto',
+              'bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))]',
+            )}
+          />
+        ) : focusPlace ? (
           <motion.div
             key={`${focusPlace.id}-${locale}`}
             initial={{ opacity: 0, y: 8 }}
@@ -235,7 +402,7 @@ export default function MapHubClient() {
             className={cn(
               'pointer-events-auto fixed z-[25] w-full max-w-[min(18rem,88vw)]',
               statePanelOpen
-                ? 'left-[max(calc(min(20rem,92vw)+0.75rem),env(safe-area-inset-left))] right-[max(0.5rem,env(safe-area-inset-right))]'
+                ? 'left-[max(0.5rem,env(safe-area-inset-left))] right-[max(calc(min(20rem,92vw)+0.75rem),env(safe-area-inset-right))]'
                 : 'inset-x-[max(0.5rem,env(safe-area-inset-left))] mx-auto',
               'bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))]',
             )}
@@ -274,7 +441,7 @@ export default function MapHubClient() {
             className={cn(
               'pointer-events-none fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-[max(0.5rem,env(safe-area-inset-right))] z-30',
               statePanelOpen
-                ? 'left-[max(calc(min(20rem,92vw)+0.5rem),env(safe-area-inset-left))]'
+                ? 'right-[max(calc(min(20rem,92vw)+0.5rem),env(safe-area-inset-right))]'
                 : 'left-[max(0.5rem,env(safe-area-inset-left))]',
             )}
           >

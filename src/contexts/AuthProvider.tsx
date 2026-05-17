@@ -9,6 +9,7 @@ import {
 } from 'react'
 import { isBudgetComfort, isPsychotypeId } from '@/profile/noraProfile'
 import { isMbtiId } from '@/lib/mbti'
+import { clearSavedRoutesForUser } from '@/lib/saved-routes-storage'
 import {
   isMoodPreset,
   isUserStatus,
@@ -191,6 +192,20 @@ function applyProfilePatch(prev: User, patch: ProfileUpdate): User {
         : prev.initialMood,
     }
   }
+  if (patch.birthYear !== undefined) {
+    next = {
+      ...next,
+      birthYear:
+        patch.birthYear === null
+          ? null
+          : Number.isFinite(patch.birthYear)
+            ? Math.round(patch.birthYear)
+            : prev.birthYear,
+    }
+  }
+  if (patch.routine !== undefined) {
+    next = { ...next, routine: patch.routine }
+  }
 
   return next
 }
@@ -270,6 +285,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           extras?.initialMood && isMoodPreset(extras.initialMood)
             ? extras.initialMood
             : '',
+        birthYear:
+          extras?.birthYear !== undefined && extras.birthYear !== null
+            ? Math.round(extras.birthYear)
+            : null,
+        routine: extras?.routine ?? { slots: [] },
         password,
       }
       saveAccounts([...accounts, next])
@@ -332,6 +352,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     storageRemove('nora_incoming_requests')
     storageRemove('nora_chats')
     storageRemove('nora_social_seeded')
+    clearSavedRoutesForUser(current.id)
     clearSession()
     setUser(null)
   }, [user])

@@ -1,5 +1,11 @@
 import { createContext } from 'react'
-import type { User, UserStatus, UserZones, MoodPreset } from '@/types/user'
+import type {
+  User,
+  UserStatus,
+  UserZones,
+  MoodPreset,
+  UserRoutine,
+} from '@/types/user'
 import type { BudgetComfort, PsychotypeId } from '@/profile/noraProfile'
 import type { MbtiId } from '@/lib/mbti'
 
@@ -19,6 +25,8 @@ export type ProfileUpdate = {
   zones?: UserZones
   dailyBudgetIndex?: number
   initialMood?: MoodPreset
+  birthYear?: number | null
+  routine?: UserRoutine
 }
 
 export type RegisterExtras = {
@@ -32,6 +40,8 @@ export type RegisterExtras = {
   dailyBudgetIndex?: number
   moodNote?: string
   budgetComfort?: BudgetComfort
+  birthYear?: number | null
+  routine?: UserRoutine
 }
 
 export type AuthContextValue = {

@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { Coins, MapPin, Sparkles } from 'lucide-react'
+import { useAuth } from '@/contexts/useAuth'
 import { useI18n } from '@/hooks/useI18n'
 import {
   budgetLabelForTier,
@@ -30,11 +31,13 @@ export function PlannerRecommendationsList({
   onSelect,
   compact = false,
 }: PlannerRecommendationsListProps) {
+  const { user } = useAuth()
   const { locale, t } = useI18n()
   const recommendations = getRecommendationsForMoodAndBudget(
     mood,
     budgetIdx,
     locale,
+    user?.birthYear ?? null,
   )
   const moodMeta = getPlannerMoodMeta(locale)[mood]
 

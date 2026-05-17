@@ -8,6 +8,8 @@ import { CityCombobox } from '@/components/CityCombobox'
 import { CountryCombobox } from '@/components/CountryCombobox'
 import { MbtiGrid } from '@/components/MbtiGrid'
 import { ProfileSocialSection } from '@/components/profile/ProfileSocialSection'
+import { ZoneRoutineEditor } from '@/components/profile/ZoneRoutineEditor'
+import { isValidBirthYear } from '@/lib/age-policy'
 import { RequireAuth } from '@/components/RequireAuth'
 import { ZonePickerDialog } from '@/components/ZonePickerDialog'
 import { Button } from '@/components/ui/button'
@@ -43,6 +45,10 @@ function PassportContent() {
   const [city, setCity] = useState(user?.cityIntent ?? '')
   const [mbti, setMbti] = useState<MbtiId | ''>(user?.mbti ?? '')
   const [status, setStatus] = useState<UserStatus>(user?.userStatus ?? '')
+  const [birthYear, setBirthYear] = useState(
+    user?.birthYear ? String(user.birthYear) : '',
+  )
+  const [routine, setRoutine] = useState(user?.routine ?? { slots: [] })
   const [zoneOpen, setZoneOpen] = useState(false)
   const [zoneKey, setZoneKey] = useState<ZoneKey>('home')
   const [saved, setSaved] = useState(false)
@@ -68,6 +74,11 @@ function PassportContent() {
       setAvatarError(t('passportForm.nickTooShort'))
       return
     }
+    const birthYearNum = Number(birthYear)
+    if (!isValidBirthYear(birthYearNum)) {
+      setAvatarError(t('passportForm.birthYearInvalid'))
+      return
+    }
     setAvatarError(null)
     updateProfile({
       name: name.trim(),
@@ -78,6 +89,8 @@ function PassportContent() {
       cityIntent: city,
       mbti,
       userStatus: status,
+      birthYear: birthYearNum,
+      routine,
     })
     setSaved(true)
     window.setTimeout(() => setSaved(false), 2000)
@@ -297,7 +310,24 @@ function PassportContent() {
         </div>
       </section>
 
-      <section className="mb-8 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-4">
+      <section className="mb-6 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-4">
+        <h2 className="text-sm font-semibold text-[var(--nora-text)]">
+          {t('passportForm.birthYearLabel')}
+        </h2>
+        <input
+          type="number"
+          className="glass-input mt-3 h-11 w-full max-w-xs px-3 text-sm"
+          min={1920}
+          max={new Date().getFullYear()}
+          value={birthYear}
+          onChange={(e) => setBirthYear(e.target.value)}
+        />
+        <p className="mt-1 text-[11px] text-[var(--nora-text-muted)]">
+          {t('passportForm.birthYearHint')}
+        </p>
+      </section>
+
+      <section className="mb-6 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-4">
         <h2 className="text-sm font-semibold text-[var(--nora-text)]">
           {t('passportForm.smartZonesTitle')}
         </h2>
@@ -339,6 +369,18 @@ function PassportContent() {
             ) : null}
           </Button>
         </div>
+      </section>
+
+      <section className="mb-8 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-4">
+        <h2 className="text-sm font-semibold text-[var(--nora-text)]">
+          {t('routine.title')}
+        </h2>
+        <ZoneRoutineEditor
+          className="mt-3"
+          zones={user.zones}
+          routine={routine}
+          onChange={setRoutine}
+        />
       </section>
 
       <div className="flex flex-wrap items-center gap-3">
