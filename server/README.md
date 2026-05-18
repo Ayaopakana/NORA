@@ -1,47 +1,31 @@
-# NORA API
+# NORA API (`server/`)
 
-Отдельный бэкенд для фронта Next.js (`http://localhost:3000`).
+HTTP API для фронтенда NORA. Общее описание проекта, установка и архитектура — в [корневом README](../README.md).
 
-## Быстрый старт
+## Запуск
 
 ```bash
-cd server
 cp .env.example .env
 npm install
 npm run db:push
 npm run dev
 ```
 
-API: `http://localhost:3001`  
 Проверка: `curl http://localhost:3001/health`
 
-## Фронт
+## Переменные окружения
 
-В корне проекта в `.env.local`:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
-```
-
-Запуск обоих процессов (два терминала):
-
-```bash
-# терминал 1
-cd server && npm run dev
-
-# терминал 2
-npm run dev
-```
+См. [README → Переменные окружения](../README.md#переменные-окружения) и `.env.example`.
 
 ## Эндпоинты
 
 | Метод | Путь | Описание |
 |-------|------|----------|
-| GET | `/health` | Проверка сервиса |
+| GET | `/health` | Статус сервиса |
 | POST | `/auth/register` | Регистрация |
-| POST | `/auth/login` | Вход |
-| GET | `/auth/me` | Текущий пользователь (Bearer) |
-| PATCH | `/users/me` | Обновление профиля |
+| POST | `/auth/login` | Вход (JWT) |
+| GET | `/auth/me` | Текущий пользователь |
+| PATCH | `/users/me` | Профиль |
 | GET/PATCH | `/users/me/settings` | Уведомления |
 | POST | `/users/me/password` | Смена пароля |
 | DELETE | `/users/me` | Удаление аккаунта |
@@ -49,35 +33,23 @@ npm run dev
 | GET | `/users/:id/profile` | Публичный профиль |
 | GET/POST/DELETE | `/routes` | Сохранённые маршруты |
 | GET/POST | `/social/*` | Друзья, заявки, чат |
-| GET/POST/PUT | `/places/*` | Отзывы и лайки мест |
-| GET | `/map/places/coords` | Кэш координат мест (2GIS geocode) |
-| POST | `/map/route` | Пешеходная геометрия маршрута (2GIS) |
-| POST | `/map/places/refresh` | Прогнать геокодер по каталогу (только dev) |
+| GET/POST/PUT | `/places/*` | Отзывы и предпочтения мест |
+| GET | `/map/places/coords` | Кэш координат (JSON) |
+| GET | `/map/places/catalog` | Каталог POI с координатами |
+| POST | `/map/route` | Пешеходная геометрия (2GIS → OSRM → прямая) |
+| POST | `/map/places/refresh` | Прогон геокодера (dev) |
 
-## 2GIS (гибрид)
+## 2GIS
 
-Карта на фронте остаётся **MapLibre + OpenFreeMap**. 2GIS используется только на бэкенде:
+Карта на клиенте — **MapLibre** (OpenFreeMap). 2GIS на сервере:
 
-1. **Геокодинг** мест планера → `server/data/place-coords.json`
-2. **Маршрут по дорогам** (пешком) для линии на карте
-
-В `server/.env`:
-
-```env
-DGIS_API_KEY=ваш_ключ_из_platform.2gis.ru
-```
-
-Один раз заполнить координаты (~20 запросов, пауза 1 с):
+- геокодинг каталога → `data/place-coords.json`;
+- маршруты пешком для `POST /map/route`.
 
 ```bash
-cd server
-npm run geocode:places
+npm run geocode:places          # первичное заполнение
+npm run geocode:places:force    # перезапись всех id
+npm run coords:fix              # ручные корректировки
 ```
 
-Или через API (dev): `POST http://localhost:3001/map/places/refresh`
-
-Без ключа приложение работает как раньше: демо-координаты и прямые линии маршрута.
-
-## База данных
-
-По умолчанию SQLite (`server/prisma/dev.db`). Для PostgreSQL смените `provider` в `prisma/schema.prisma` и `DATABASE_URL` в `.env`.
+Без `DGIS_API_KEY` координаты и линии маршрута работают в упрощённом режиме.
