@@ -1,6 +1,6 @@
 import type { User } from '@/types/user'
 import type { RoutineSlot, WeekdayId } from '@/types/routine'
-import { getAgeFromBirthYear } from '@/lib/age-policy'
+import { getAgeFromBirthDate } from '@/lib/age-policy'
 
 const WEEKDAY_INDEX: Record<WeekdayId, number> = {
   sun: 0,
@@ -46,7 +46,11 @@ export function getActiveRoutineZone(
 /** Текстовый контекст для будущего ИИ-ассистента. */
 export function buildRoutineAiContext(user: User): string {
   const lines: string[] = []
-  const age = getAgeFromBirthYear(user.birthYear)
+  const age = getAgeFromBirthDate({
+    birthDay: user.birthDay,
+    birthMonth: user.birthMonth,
+    birthYear: user.birthYear,
+  })
   if (age !== null) lines.push(`Возраст: ${age} лет.`)
 
   if (user.routine.slots.length === 0) {

@@ -2,7 +2,7 @@ import type { Locale } from '@/i18n/config'
 import { normalizeBudgetIndex } from '@/lib/daily-budget'
 import type { MbtiId } from '@/lib/mbti'
 import { localizePlannerPool } from '@/i18n/planner-text'
-import { filterRecommendationsByAge } from '@/lib/age-policy'
+import { filterRecommendationsByAge, type BirthDateInput } from '@/lib/age-policy'
 import { getDislikedPlaceIds } from '@/lib/place-preferences-storage'
 import {
   clampStopCount,
@@ -38,7 +38,7 @@ export type DayRouteInput = {
   areaKey: RouteAreaKey
   areaCustom: string
   mbti?: MbtiId | ''
-  birthYear?: number | null
+  birthDate?: BirthDateInput
   userId?: string
   /** Учитывать дизлайки всех участников */
   dislikeUserIds?: string[]
@@ -121,13 +121,13 @@ export function buildDayRoute(
   const vibe = input.vibe
   const mood = vibeToPlannerMood(vibe)
   const budget = normalizeBudgetIndex(input.budgetIdx)
-  const birthYear = input.birthYear ?? null
+  const birthDate = input.birthDate ?? null
   const stopCount = clampStopCount(input.stopCount)
   const areaKey = input.areaKey
   const pools = localizePlannerPool(PLANNER_BY_MOOD, locale)
   const affordable = filterRecommendationsByAge(
     pools[mood].filter((r) => r.budgetTier <= budget),
-    birthYear,
+    birthDate,
   )
 
   const dislikeIds = [
@@ -144,7 +144,7 @@ export function buildDayRoute(
       mood,
       input.budgetIdx,
       locale,
-      birthYear,
+      birthDate,
       input.userId,
       input.mbti,
     ),

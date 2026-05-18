@@ -35,9 +35,12 @@ function userToPublic(u: User): PublicProfile {
     mbti: u.mbti,
     avatarUrl: u.avatarUrl,
     avatarEmoji: '✨',
+    avatarPrivacy: u.avatarPrivacy ?? 'open',
     userStatus: u.userStatus,
     usualMood: u.initialMood,
     dailyBudgetIndex: u.dailyBudgetIndex ?? 1,
+    birthDay: u.birthDay ?? null,
+    birthMonth: u.birthMonth ?? null,
     birthYear: u.birthYear ?? null,
   }
 }
@@ -54,9 +57,12 @@ function demoToPublic(id: string): PublicProfile | null {
     mbti: d.mbti && isMbtiId(d.mbti) ? d.mbti : '',
     avatarUrl: d.avatarUrl ?? null,
     avatarEmoji: d.avatarEmoji,
+    avatarPrivacy: 'open',
     userStatus: d.userStatus ?? '',
     usualMood: d.usualMood ?? '',
     dailyBudgetIndex: d.dailyBudgetIndex ?? 1,
+    birthDay: null,
+    birthMonth: null,
     birthYear: null,
   }
 }

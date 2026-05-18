@@ -39,7 +39,13 @@ export function PlannerRecommendationsList({
     mood,
     budgetIdx,
     locale,
-    user?.birthYear ?? null,
+    user
+      ? {
+          birthDay: user.birthDay,
+          birthMonth: user.birthMonth,
+          birthYear: user.birthYear,
+        }
+      : null,
     user?.id,
     mbti,
   )

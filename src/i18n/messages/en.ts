@@ -33,6 +33,14 @@ export const en: Messages = {
     idealMbti: 'ideal for {mbti}',
     typeMbti: 'type {mbti}',
   },
+  birthDate: {
+    label: 'Date of birth',
+    day: 'Day',
+    month: 'Month',
+    year: 'Year',
+    hint: 'Used to hide bars, clubs, and risky places for minors',
+    invalid: 'Enter a valid date (age 13–100)',
+  },
   planner: {
     open: 'Open planner: mood and routes',
     close: 'Close planner',
@@ -204,6 +212,12 @@ export const en: Messages = {
     passwordChangeFailed: 'Could not change password',
     deleteFailed: 'Could not delete account',
     passwordPlaceholder: 'Password',
+    avatarPrivacyTitle: 'Profile photo',
+    avatarPrivacyDesc: 'Who can open your photo full size',
+    avatarOpen: 'Can open',
+    avatarOpenDesc: 'Others tap the avatar to view it large',
+    avatarPreview: 'Thumbnail only',
+    avatarPreviewDesc: 'Visible on profile, but cannot be opened full size',
   },
   passport: {
     title: 'Profile',
@@ -312,6 +326,9 @@ export const en: Messages = {
   avatar: {
     notImage: 'Please choose an image file',
     tooLarge: 'Max size is 2 MB',
+    viewTitle: 'Photo of {name}',
+    openPhoto: 'Open photo of {name}',
+    previewOnlyHint: 'Thumbnail only — full view is disabled',
   },
   search: {
     community: 'Community',

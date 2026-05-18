@@ -20,7 +20,8 @@ import {
 import { getCountries } from '@/lib/countries'
 import type { MbtiId } from '@/lib/mbti'
 import { ZoneRoutineEditor } from '@/components/profile/ZoneRoutineEditor'
-import { isValidBirthYear } from '@/lib/age-policy'
+import { BirthDateFields } from '@/components/BirthDateFields'
+import { isValidBirthDate } from '@/lib/age-policy'
 import { motionGpuClass, spring, tween } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { emptyRoutine, type UserRoutine } from '@/types/routine'
@@ -77,6 +78,8 @@ export function RegisterWizard() {
   const [current, setCurrent] = useState('')
   const [city, setCity] = useState('')
   const [status, setStatus] = useState<UserStatus>('')
+  const [birthDay, setBirthDay] = useState('')
+  const [birthMonth, setBirthMonth] = useState('')
   const [birthYear, setBirthYear] = useState('')
 
   const [mbti, setMbti] = useState<MbtiId | ''>('')
@@ -112,6 +115,8 @@ export function RegisterWizard() {
 
   const progress = useMemo(() => ((step + 1) / 4) * 100, [step])
 
+  const birthDayNum = Number(birthDay)
+  const birthMonthNum = Number(birthMonth)
   const birthYearNum = Number(birthYear)
 
   const canNext0 =
@@ -122,7 +127,7 @@ export function RegisterWizard() {
     origin.length > 0 &&
     current.length > 0 &&
     status !== '' &&
-    isValidBirthYear(birthYearNum)
+    isValidBirthDate(birthDayNum, birthMonthNum, birthYearNum)
 
   const canNext1 = mbti !== ''
 
@@ -142,6 +147,8 @@ export function RegisterWizard() {
         userStatus: status,
         mbti: mbti || undefined,
         zones,
+        birthDay: birthDayNum,
+        birthMonth: birthMonthNum,
         birthYear: birthYearNum,
         routine,
         initialMood: mood,
@@ -317,24 +324,14 @@ export function RegisterWizard() {
                     Выберите из списка, введите свой и нажмите Enter
                   </p>
                 </div>
-                <div>
-                  <span className="mb-1 block text-sm font-medium">
-                    {t('register.birthYearLabel')}
-                  </span>
-                  <input
-                    className="glass-input h-12 w-full px-3"
-                    type="number"
-                    inputMode="numeric"
-                    min={1920}
-                    max={new Date().getFullYear()}
-                    value={birthYear}
-                    onChange={(e) => setBirthYear(e.target.value)}
-                    placeholder="2000"
-                  />
-                  <p className="mt-1 text-[11px] text-[var(--nora-text-muted)]">
-                    {t('register.birthYearHint')}
-                  </p>
-                </div>
+                <BirthDateFields
+                  day={birthDay}
+                  month={birthMonth}
+                  year={birthYear}
+                  onDayChange={setBirthDay}
+                  onMonthChange={setBirthMonth}
+                  onYearChange={setBirthYear}
+                />
                 <div>
                   <span className="mb-1 block text-sm font-medium">Статус</span>
                   <div className="flex flex-wrap gap-2">

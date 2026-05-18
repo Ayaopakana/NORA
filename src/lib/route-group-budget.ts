@@ -1,6 +1,8 @@
+import { strictestBirthDateInGroup } from '@/lib/age-policy'
 import { dailyBudgetLabel, normalizeBudgetIndex } from '@/lib/daily-budget'
 import { getNoraUserProfile } from '@/lib/nora-users'
 import type { Locale } from '@/i18n/config'
+import type { BirthDateInput } from '@/types/birth-date'
 
 export type RouteGroupBudgetMember = {
   id: string
@@ -94,18 +96,20 @@ export function formatGroupBudgetSummary(
   }
 }
 
-/** Самый «молодой» участник для фильтра 18+ */
-export function strictestBirthYearInGroup(
-  organizerId: string,
+/** Самая «молодая» дата рождения в группе — для фильтра 18+ и опасных мест. */
+export function strictestBirthDateForRouteGroup(
+  organizer: BirthDateInput,
   participantIds: string[],
-  organizerBirthYear: number | null,
-): number | null {
-  const years: number[] = []
-  if (organizerBirthYear) years.push(organizerBirthYear)
+): BirthDateInput {
+  const participants: BirthDateInput[] = []
   for (const id of participantIds) {
     const p = getNoraUserProfile(id)
-    if (p?.birthYear) years.push(p.birthYear)
+    if (!p) continue
+    participants.push({
+      birthDay: p.birthDay ?? null,
+      birthMonth: p.birthMonth ?? null,
+      birthYear: p.birthYear ?? null,
+    })
   }
-  if (!years.length) return organizerBirthYear
-  return Math.max(...years)
+  return strictestBirthDateInGroup(organizer, participants)
 }

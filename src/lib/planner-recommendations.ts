@@ -1,7 +1,7 @@
 import type { Locale } from '@/i18n/config'
 import { getMessages } from '@/i18n/messages'
 import { localizePlannerPool } from '@/i18n/planner-text'
-import { filterRecommendationsByAge } from '@/lib/age-policy'
+import { filterRecommendationsByAge, type BirthDateInput } from '@/lib/age-policy'
 import { getPlannerEvents } from '@/lib/planner-events'
 import {
   getDislikedPlaceIds,
@@ -179,7 +179,7 @@ export const PLANNER_BY_MOOD: Record<PlannerMood, PlannerRecommendation[]> = {
       budgetTier: 2,
       badge: 'Вечерняя тусовка — только 18+',
       mbtiFit: ['ESTP', 'ESFP'],
-      venueTags: ['bar', 'nightlife'],
+      venueTags: ['bar', 'club', 'nightlife'],
       minAge: 18,
     },
   ],
@@ -345,7 +345,7 @@ export function getRecommendationsForMoodAndBudget(
   mood: PlannerMood,
   budgetIndex: number,
   locale: Locale = 'ru',
-  birthYear: number | null = null,
+  birth: BirthDateInput = null,
   userId?: string,
   mbti?: MbtiId | '',
 ): PlannerRecommendation[] {
@@ -353,7 +353,7 @@ export function getRecommendationsForMoodAndBudget(
   const pools = localizePlannerPool(PLANNER_BY_MOOD, locale)
   const pool = filterRecommendationsByAge(
     [...pools[mood], ...getPlannerEvents(mood, locale)],
-    birthYear,
+    birth,
   )
 
   const affordable = pool.filter((r) => r.budgetTier <= budget)

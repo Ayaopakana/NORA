@@ -1,3 +1,5 @@
+import type { AvatarPrivacy } from '@/types/avatar-privacy'
+import { isAvatarPrivacy } from '@/types/avatar-privacy'
 import type { BudgetComfort, PsychotypeId } from '@/profile/noraProfile'
 import { isBudgetComfort, isPsychotypeId } from '@/profile/noraProfile'
 import type { MbtiId } from '@/lib/mbti'
@@ -22,6 +24,8 @@ export type User = {
   /** Описание профиля — о себе */
   bio: string
   avatarUrl: string | null
+  /** Кто может открыть фото профиля в полном размере */
+  avatarPrivacy: AvatarPrivacy
   psychotypeId: PsychotypeId
   moodNote: string
   budgetComfort: BudgetComfort
@@ -34,7 +38,9 @@ export type User = {
   /** 0–3: шаг бюджета «на сегодня» для слайдера */
   dailyBudgetIndex: number
   initialMood: MoodPreset
-  /** Год рождения — для фильтра баров/клубов и т.п. */
+  /** Дата рождения — фильтр баров, клубов и опасных мест */
+  birthDay: number | null
+  birthMonth: number | null
   birthYear: number | null
   /** Где и когда обычно бывает пользователь (для будущей ИИ) */
   routine: UserRoutine
@@ -127,7 +133,24 @@ export function normalizeUser(raw: unknown): User | null {
     birthYearRaw <= new Date().getFullYear()
       ? Math.round(birthYearRaw)
       : null
+  const birthMonthRaw = Number(o.birthMonth)
+  const birthMonth =
+    birthYear !== null &&
+    Number.isFinite(birthMonthRaw) &&
+    birthMonthRaw >= 1 &&
+    birthMonthRaw <= 12
+      ? Math.round(birthMonthRaw)
+      : null
+  const birthDayRaw = Number(o.birthDay)
+  const birthDay =
+    birthYear !== null &&
+    Number.isFinite(birthDayRaw) &&
+    birthDayRaw >= 1 &&
+    birthDayRaw <= 31
+      ? Math.round(birthDayRaw)
+      : null
   const routine = normalizeRoutine(o.routine)
+  const avatarPrivacy = isAvatarPrivacy(o.avatarPrivacy) ? o.avatarPrivacy : 'open'
 
   return {
     id: o.id,
@@ -136,6 +159,7 @@ export function normalizeUser(raw: unknown): User | null {
     nickname,
     bio,
     avatarUrl,
+    avatarPrivacy,
     psychotypeId,
     moodNote,
     budgetComfort,
@@ -147,6 +171,8 @@ export function normalizeUser(raw: unknown): User | null {
     zones,
     dailyBudgetIndex,
     initialMood,
+    birthDay,
+    birthMonth,
     birthYear,
     routine,
   }

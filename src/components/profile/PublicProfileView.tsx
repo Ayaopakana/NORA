@@ -3,7 +3,7 @@
 import { ArrowLeft, MapPin, MessageCircle, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo } from 'react'
-import { AvatarFace } from '@/components/AvatarFace'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { FriendActionButton } from '@/components/profile/FriendActionButton'
 import { Button } from '@/components/ui/button'
 import { PageShell } from '@/components/PageShell'
@@ -86,20 +86,23 @@ export function PublicProfileView({ peerId }: PublicProfileViewProps) {
 
       <section className="mb-6 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-5">
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-          {profile.avatarUrl ? (
-            <AvatarFace
-              src={profile.avatarUrl}
+          <div className="flex shrink-0 flex-col items-center gap-2 sm:items-start">
+            <ProfileAvatar
+              avatarUrl={profile.avatarUrl}
+              avatarEmoji={profile.avatarEmoji}
               displayName={profile.nickname}
               size={112}
+              avatarPrivacy={profile.avatarPrivacy}
+              isOwner={user?.id === profile.id}
             />
-          ) : (
-            <span
-              className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full border border-[var(--nora-border)] bg-sky-400/10 text-5xl"
-              aria-hidden
-            >
-              {profile.avatarEmoji}
-            </span>
-          )}
+            {profile.avatarUrl &&
+            profile.avatarPrivacy === 'preview' &&
+            user?.id !== profile.id ? (
+              <p className="max-w-[7rem] text-center text-[10px] leading-snug text-[var(--nora-text-muted)] sm:max-w-none sm:text-left">
+                {t('avatar.previewOnlyHint')}
+              </p>
+            ) : null}
+          </div>
           <div className="min-w-0 flex-1 text-center sm:text-left">
             {profile.mbti ? (
               <p className="text-sm font-semibold text-sky-400">

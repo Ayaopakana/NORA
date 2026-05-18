@@ -135,6 +135,9 @@ function applyProfilePatch(prev: User, patch: ProfileUpdate): User {
   if (patch.avatarUrl !== undefined) {
     next = { ...next, avatarUrl: patch.avatarUrl }
   }
+  if (patch.avatarPrivacy !== undefined) {
+    next = { ...next, avatarPrivacy: patch.avatarPrivacy }
+  }
   if (patch.psychotypeId !== undefined) {
     next = {
       ...next,
@@ -190,6 +193,28 @@ function applyProfilePatch(prev: User, patch: ProfileUpdate): User {
       initialMood: isMoodPreset(patch.initialMood)
         ? patch.initialMood
         : prev.initialMood,
+    }
+  }
+  if (patch.birthDay !== undefined) {
+    next = {
+      ...next,
+      birthDay:
+        patch.birthDay === null
+          ? null
+          : Number.isFinite(patch.birthDay)
+            ? Math.round(patch.birthDay)
+            : prev.birthDay,
+    }
+  }
+  if (patch.birthMonth !== undefined) {
+    next = {
+      ...next,
+      birthMonth:
+        patch.birthMonth === null
+          ? null
+          : Number.isFinite(patch.birthMonth)
+            ? Math.round(patch.birthMonth)
+            : prev.birthMonth,
     }
   }
   if (patch.birthYear !== undefined) {
@@ -266,6 +291,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         nickname: trimmedNickname,
         bio: '',
         avatarUrl: avatarDataUrl,
+        avatarPrivacy: 'open',
         psychotypeId: '',
         moodNote: extras?.moodNote?.trim() ?? '',
         budgetComfort: extras?.budgetComfort ?? '',
@@ -285,6 +311,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           extras?.initialMood && isMoodPreset(extras.initialMood)
             ? extras.initialMood
             : '',
+        birthDay:
+          extras?.birthDay !== undefined && extras.birthDay !== null
+            ? Math.round(extras.birthDay)
+            : null,
+        birthMonth:
+          extras?.birthMonth !== undefined && extras.birthMonth !== null
+            ? Math.round(extras.birthMonth)
+            : null,
         birthYear:
           extras?.birthYear !== undefined && extras.birthYear !== null
             ? Math.round(extras.birthYear)

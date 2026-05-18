@@ -8,12 +8,14 @@ import type {
 } from '@/types/user'
 import type { BudgetComfort, PsychotypeId } from '@/profile/noraProfile'
 import type { MbtiId } from '@/lib/mbti'
+import type { AvatarPrivacy } from '@/types/avatar-privacy'
 
 export type ProfileUpdate = {
   name?: string
   nickname?: string
   bio?: string
   avatarUrl?: string | null
+  avatarPrivacy?: AvatarPrivacy
   psychotypeId?: PsychotypeId
   moodNote?: string
   budgetComfort?: BudgetComfort
@@ -25,6 +27,8 @@ export type ProfileUpdate = {
   zones?: UserZones
   dailyBudgetIndex?: number
   initialMood?: MoodPreset
+  birthDay?: number | null
+  birthMonth?: number | null
   birthYear?: number | null
   routine?: UserRoutine
 }
@@ -40,6 +44,8 @@ export type RegisterExtras = {
   dailyBudgetIndex?: number
   moodNote?: string
   budgetComfort?: BudgetComfort
+  birthDay?: number | null
+  birthMonth?: number | null
   birthYear?: number | null
   routine?: UserRoutine
 }

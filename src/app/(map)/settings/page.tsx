@@ -10,6 +10,7 @@ import { RequireAuth } from '@/components/RequireAuth'
 import { SettingsBlock } from '@/components/settings/SettingsBlock'
 import { SettingsToggleRow } from '@/components/settings/SettingsToggleRow'
 import { LanguagePicker } from '@/components/settings/LanguagePicker'
+import { AvatarPrivacyPicker } from '@/components/settings/AvatarPrivacyPicker'
 import { ThemePicker } from '@/components/settings/ThemePicker'
 import { useI18n } from '@/hooks/useI18n'
 import { SettingsSection } from '@/components/SettingsSection'
@@ -222,6 +223,13 @@ function SettingsContent() {
               {t('settings.deleteHint')}
             </p>
           </div>
+        </SettingsBlock>
+
+        <SettingsBlock
+          title={t('settings.avatarPrivacyTitle')}
+          description={t('settings.avatarPrivacyDesc')}
+        >
+          <AvatarPrivacyPicker />
         </SettingsBlock>
 
         <SettingsBlock

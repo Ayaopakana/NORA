@@ -33,6 +33,14 @@ export const ky: Messages = {
     idealMbti: '{mbti} үчүн идеалдуу',
     typeMbti: '{mbti} типи',
   },
+  birthDate: {
+    label: 'Туулган күнү',
+    day: 'Күн',
+    month: 'Ай',
+    year: 'Жыл',
+    hint: 'Барларды, клубдарды жана коркунучтуу жерлерди жаштарга сунуштамайбыз',
+    invalid: 'Туура датаны көрсөтүңүз (13–100 жаш)',
+  },
   planner: {
     open: 'Планерди ачуу: абал жана маршруттар',
     close: 'Планерди жабуу',
@@ -200,6 +208,12 @@ export const ky: Messages = {
     passwordChangeFailed: 'Сырсөздү алмаштырууга мүмкүн болгон жок',
     deleteFailed: 'Аккаунтту өчүрүүгө мүмкүн болгон жок',
     passwordPlaceholder: 'Сырсөз',
+    avatarPrivacyTitle: 'Профиль сүрөтү',
+    avatarPrivacyDesc: 'Ким сүрөттү толук ачып көрө алат',
+    avatarOpen: 'Ачууга болот',
+    avatarOpenDesc: 'Башкалар аватарды басып, чоң көрүшөт',
+    avatarPreview: 'Гана миниатюра',
+    avatarPreviewDesc: 'Профилде көрүнөт, бирок толук ачылбайт',
   },
   passport: {
     title: 'Профиль',
@@ -307,6 +321,9 @@ export const ky: Messages = {
   avatar: {
     notImage: 'Сүрөт файлы керек',
     tooLarge: 'Өлчөмү 2 МБдан ашпашы керек',
+    viewTitle: '{name} сүрөтү',
+    openPhoto: '{name} сүрөтүн ачуу',
+    previewOnlyHint: 'Гана миниатюра — толук көрүү жабык',
   },
   search: {
     community: 'Коомчулук',

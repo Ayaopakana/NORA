@@ -3,13 +3,14 @@
 import { Camera, Home, Briefcase, GraduationCap, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useRef, useState } from 'react'
-import { AvatarFace } from '@/components/AvatarFace'
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { CityCombobox } from '@/components/CityCombobox'
 import { CountryCombobox } from '@/components/CountryCombobox'
 import { MbtiGrid } from '@/components/MbtiGrid'
 import { ProfileSocialSection } from '@/components/profile/ProfileSocialSection'
 import { ZoneRoutineEditor } from '@/components/profile/ZoneRoutineEditor'
-import { isValidBirthYear } from '@/lib/age-policy'
+import { BirthDateFields } from '@/components/BirthDateFields'
+import { isValidBirthDate } from '@/lib/age-policy'
 import { RequireAuth } from '@/components/RequireAuth'
 import { ZonePickerDialog } from '@/components/ZonePickerDialog'
 import { Button } from '@/components/ui/button'
@@ -45,6 +46,12 @@ function PassportContent() {
   const [city, setCity] = useState(user?.cityIntent ?? '')
   const [mbti, setMbti] = useState<MbtiId | ''>(user?.mbti ?? '')
   const [status, setStatus] = useState<UserStatus>(user?.userStatus ?? '')
+  const [birthDay, setBirthDay] = useState(
+    user?.birthDay ? String(user.birthDay) : '',
+  )
+  const [birthMonth, setBirthMonth] = useState(
+    user?.birthMonth ? String(user.birthMonth) : '',
+  )
   const [birthYear, setBirthYear] = useState(
     user?.birthYear ? String(user.birthYear) : '',
   )
@@ -74,9 +81,11 @@ function PassportContent() {
       setAvatarError(t('passportForm.nickTooShort'))
       return
     }
+    const birthDayNum = Number(birthDay)
+    const birthMonthNum = Number(birthMonth)
     const birthYearNum = Number(birthYear)
-    if (!isValidBirthYear(birthYearNum)) {
-      setAvatarError(t('passportForm.birthYearInvalid'))
+    if (!isValidBirthDate(birthDayNum, birthMonthNum, birthYearNum)) {
+      setAvatarError(t('birthDate.invalid'))
       return
     }
     setAvatarError(null)
@@ -89,6 +98,8 @@ function PassportContent() {
       cityIntent: city,
       mbti,
       userStatus: status,
+      birthDay: birthDayNum,
+      birthMonth: birthMonthNum,
       birthYear: birthYearNum,
       routine,
     })
@@ -145,10 +156,13 @@ function PassportContent() {
 
         <div className="mt-4 flex flex-col items-center gap-4 sm:flex-row sm:items-start">
           <div className="relative">
-            <AvatarFace
-              src={user.avatarUrl}
+            <ProfileAvatar
+              avatarUrl={user.avatarUrl}
+              avatarEmoji="✨"
               displayName={shown}
               size={96}
+              avatarPrivacy={user.avatarPrivacy}
+              isOwner
             />
             <input
               ref={fileRef}
@@ -311,20 +325,15 @@ function PassportContent() {
       </section>
 
       <section className="mb-6 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-4">
-        <h2 className="text-sm font-semibold text-[var(--nora-text)]">
-          {t('passportForm.birthYearLabel')}
-        </h2>
-        <input
-          type="number"
-          className="glass-input mt-3 h-11 w-full max-w-xs px-3 text-sm"
-          min={1920}
-          max={new Date().getFullYear()}
-          value={birthYear}
-          onChange={(e) => setBirthYear(e.target.value)}
+        <BirthDateFields
+          day={birthDay}
+          month={birthMonth}
+          year={birthYear}
+          onDayChange={setBirthDay}
+          onMonthChange={setBirthMonth}
+          onYearChange={setBirthYear}
+          inputClassName="h-11"
         />
-        <p className="mt-1 text-[11px] text-[var(--nora-text-muted)]">
-          {t('passportForm.birthYearHint')}
-        </p>
       </section>
 
       <section className="mb-6 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-4">

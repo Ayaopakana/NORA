@@ -33,6 +33,14 @@ export const ko: Messages = {
     idealMbti: '{mbti}에 이상적',
     typeMbti: '{mbti} 유형',
   },
+  birthDate: {
+    label: '생년월일',
+    day: '일',
+    month: '월',
+    year: '년',
+    hint: '미성년자에게 바, 클럽, 위험한 장소를 추천하지 않기 위해 필요합니다',
+    invalid: '올바른 날짜를 입력하세요 (13–100세)',
+  },
   planner: {
     open: '플래너 열기: 기분과 경로',
     close: '플래너 닫기',
@@ -200,6 +208,12 @@ export const ko: Messages = {
     passwordChangeFailed: '비밀번호를 변경할 수 없습니다',
     deleteFailed: '계정을 삭제할 수 없습니다',
     passwordPlaceholder: '비밀번호',
+    avatarPrivacyTitle: '프로필 사진',
+    avatarPrivacyDesc: '누가 사진을 전체 크기로 볼 수 있는지',
+    avatarOpen: '열기 허용',
+    avatarOpenDesc: '다른 사람이 아바타를 눌러 크게 볼 수 있음',
+    avatarPreview: '썸네일만',
+    avatarPreviewDesc: '프로필에만 보이고 전체 보기는 불가',
   },
   passport: {
     title: '프로필',
@@ -307,6 +321,9 @@ export const ko: Messages = {
   avatar: {
     notImage: '이미지 파일이 필요합니다',
     tooLarge: '최대 2MB까지',
+    viewTitle: '{name}의 사진',
+    openPhoto: '{name} 사진 열기',
+    previewOnlyHint: '썸네일만 — 전체 보기 비활성화됨',
   },
   search: {
     community: '커뮤니티',

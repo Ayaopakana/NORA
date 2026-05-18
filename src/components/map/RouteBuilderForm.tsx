@@ -9,7 +9,7 @@ import { useI18n } from '@/hooks/useI18n'
 import { buildDayRoute, type DayRoute } from '@/lib/build-day-route'
 import {
   analyzeRouteGroup,
-  strictestBirthYearInGroup,
+  strictestBirthDateForRouteGroup,
 } from '@/lib/route-group-budget'
 import type { MbtiId } from '@/lib/mbti'
 import {
@@ -91,10 +91,13 @@ export function RouteBuilderForm({ mbti, onBuilt }: RouteBuilderFormProps) {
         : organizerBudgetIdx
 
     const dislikeUserIds = [user.id, ...friendParticipantIds]
-    const birthYear = strictestBirthYearInGroup(
-      user.id,
+    const birthDate = strictestBirthDateForRouteGroup(
+      {
+        birthDay: user.birthDay,
+        birthMonth: user.birthMonth,
+        birthYear: user.birthYear,
+      },
       friendParticipantIds,
-      user.birthYear ?? null,
     )
 
     const route = buildDayRoute(
@@ -106,7 +109,7 @@ export function RouteBuilderForm({ mbti, onBuilt }: RouteBuilderFormProps) {
         areaKey,
         areaCustom,
         mbti,
-        birthYear,
+        birthDate,
         userId: user.id,
         dislikeUserIds,
         groupSize,

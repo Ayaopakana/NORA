@@ -31,6 +31,14 @@ export const ru = {
     idealMbti: 'идеально для {mbti}',
     typeMbti: 'тип {mbti}',
   },
+  birthDate: {
+    label: 'Дата рождения',
+    day: 'День',
+    month: 'Месяц',
+    year: 'Год',
+    hint: 'Нужна, чтобы не предлагать бары, клубы и опасные места несовершеннолетним',
+    invalid: 'Укажите корректную дату (возраст 13–100 лет)',
+  },
   planner: {
     open: 'Открыть планер: состояние и маршруты',
     close: 'Закрыть планер',
@@ -205,6 +213,12 @@ export const ru = {
     passwordChangeFailed: 'Не удалось сменить пароль',
     deleteFailed: 'Не удалось удалить аккаунт',
     passwordPlaceholder: 'Пароль',
+    avatarPrivacyTitle: 'Фото профиля',
+    avatarPrivacyDesc: 'Кто может открыть ваше фото в полном размере',
+    avatarOpen: 'Можно открыть',
+    avatarOpenDesc: 'Другие нажимают на аватар и смотрят фото крупно',
+    avatarPreview: 'Только миниатюра',
+    avatarPreviewDesc: 'Видно в профиле, но открыть в полном размере нельзя',
   },
   passport: {
     title: 'Профиль',
@@ -314,6 +328,9 @@ export const ru = {
   avatar: {
     notImage: 'Нужен файл изображения',
     tooLarge: 'Размер не больше 2 МБ',
+    viewTitle: 'Фото {name}',
+    openPhoto: 'Открыть фото {name}',
+    previewOnlyHint: 'Только миниатюра — автор скрыл полный просмотр',
   },
   search: {
     community: 'Сообщество',
