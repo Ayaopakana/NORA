@@ -1,3 +1,6 @@
+import { isApiEnabled } from '@/api/config'
+import { apiAddPlaceReview, apiGetPlaceReviews } from '@/api/places'
+
 const REVIEWS_KEY = 'nora_place_reviews'
 const SEEDED_KEY = 'nora_place_reviews_seeded'
 
@@ -30,6 +33,7 @@ function writeReviews(reviews: PlaceReview[]) {
 }
 
 function ensureDemoReviews() {
+  if (isApiEnabled()) return
   if (typeof window === 'undefined') return
   if (localStorage.getItem(SEEDED_KEY)) return
   const seed: PlaceReview[] = [
@@ -78,6 +82,18 @@ export function getReviewsForPlace(placeId: string): PlaceReview[] {
     .sort((a, b) => b.at - a.at)
 }
 
+export async function fetchReviewsForPlace(placeId: string): Promise<{
+  reviews: PlaceReview[]
+  avg: number | null
+}> {
+  if (isApiEnabled()) {
+    return apiGetPlaceReviews(placeId)
+  }
+  const reviews = getReviewsForPlace(placeId)
+  const avg = getAverageRating(placeId)
+  return { reviews, avg }
+}
+
 export function getAverageRating(placeId: string): number | null {
   const list = getReviewsForPlace(placeId)
   if (!list.length) return null
@@ -85,13 +101,23 @@ export function getAverageRating(placeId: string): number | null {
   return Math.round((sum / list.length) * 10) / 10
 }
 
-export function addPlaceReview(input: {
+export async function addPlaceReview(input: {
   placeId: string
   userId: string
   nickname: string
   rating: number
   text: string
-}): PlaceReview {
+}): Promise<PlaceReview> {
+  if (isApiEnabled()) {
+    const review = await apiAddPlaceReview({
+      placeId: input.placeId,
+      rating: input.rating,
+      text: input.text,
+    })
+    notifyPlaceFeedbackChange()
+    return review
+  }
+
   ensureDemoReviews()
   const rating = Math.min(5, Math.max(1, Math.round(input.rating)))
   const text = input.text.trim()
@@ -117,4 +143,15 @@ export function hasUserReviewedPlace(
   placeId: string,
 ): boolean {
   return getReviewsForPlace(placeId).some((r) => r.userId === userId)
+}
+
+export async function hasUserReviewedPlaceAsync(
+  userId: string,
+  placeId: string,
+): Promise<boolean> {
+  if (isApiEnabled()) {
+    const { reviews } = await apiGetPlaceReviews(placeId)
+    return reviews.some((r) => r.userId === userId)
+  }
+  return hasUserReviewedPlace(userId, placeId)
 }

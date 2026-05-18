@@ -5,7 +5,9 @@ import { Plus, Search, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { RouteBuilderForm } from '@/components/map/RouteBuilderForm'
 import { PeopleSearchResults } from '@/components/search/PeopleSearchResults'
+import { PlacesSearchResults } from '@/components/search/PlacesSearchResults'
 import type { DayRoute } from '@/lib/build-day-route'
+import type { PlannerRecommendation } from '@/lib/planner-recommendations'
 import { useI18n } from '@/hooks/useI18n'
 import type { MbtiId } from '@/lib/mbti'
 import type { MoodPreset } from '@/types/user'
@@ -23,6 +25,9 @@ type MapTopBarProps = {
   onMoodChange: (mood: MoodPreset) => void
   onBudgetChange: (idx: number) => void
   onRouteBuilt: (route: DayRoute) => void
+  onSelectPlace?: (place: PlannerRecommendation) => void
+  /** После открытия/закрытия панелей — пересчитать размер canvas карты */
+  onOverlayChange?: () => void
 }
 
 const SEARCH_TOP =
@@ -43,6 +48,8 @@ export function MapTopBar({
   onMoodChange,
   onBudgetChange,
   onRouteBuilt,
+  onSelectPlace,
+  onOverlayChange,
 }: MapTopBarProps) {
   const { t } = useI18n()
   const [panel, setPanel] = useState<Panel>(
@@ -81,7 +88,16 @@ export function MapTopBar({
   function closePanel() {
     setPanel(null)
     setQuery('')
+    onOverlayChange?.()
+    window.setTimeout(() => onOverlayChange?.(), 320)
   }
+
+  useEffect(() => {
+    if (panel === null) return
+    onOverlayChange?.()
+    const t = window.setTimeout(() => onOverlayChange?.(), 320)
+    return () => window.clearTimeout(t)
+  }, [panel, onOverlayChange])
 
   function openSearch() {
     setPanel('search')
@@ -186,7 +202,14 @@ export function MapTopBar({
                       PANEL_MAX_H,
                     )}
                   >
-                    <PeopleSearchResults query={query} />
+                    <PlacesSearchResults
+                      query={query}
+                      onSelect={(place) => {
+                        onSelectPlace?.(place)
+                        closePanel()
+                      }}
+                    />
+                    <PeopleSearchResults query={query} compact />
                   </motion.div>
                 ) : null}
               </AnimatePresence>
@@ -227,7 +250,11 @@ export function MapTopBar({
                   PANEL_MAX_H,
                 )}
               >
-                <RouteBuilderForm mbti={mbti} onBuilt={handleRouteBuilt} />
+                <RouteBuilderForm
+                  mbti={mbti}
+                  profileMood={mood}
+                  onBuilt={handleRouteBuilt}
+                />
               </motion.div>
             ) : null}
           </AnimatePresence>

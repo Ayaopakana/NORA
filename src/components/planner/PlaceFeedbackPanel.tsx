@@ -1,20 +1,20 @@
 'use client'
 
 import { ThumbsDown, ThumbsUp } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { StarRating } from '@/components/ui/star-rating'
 import { useAuth } from '@/contexts/useAuth'
 import { useI18n } from '@/hooks/useI18n'
 import { usePlaceFeedbackRefresh } from '@/hooks/usePlaceFeedbackRefresh'
 import {
-  getAverageRating,
-  getReviewsForPlace,
-  hasUserReviewedPlace,
   addPlaceReview,
+  fetchReviewsForPlace,
+  hasUserReviewedPlaceAsync,
+  type PlaceReview,
 } from '@/lib/place-reviews-storage'
 import {
-  getPlacePreference,
+  getPlacePreferenceAsync,
   setPlacePreference,
   type PlacePreference,
 } from '@/lib/place-preferences-storage'
@@ -36,27 +36,40 @@ export function PlaceFeedbackPanel({
   const [rating, setRating] = useState(5)
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [pref, setPref] = useState<PlacePreference | null>(null)
+  const [reviews, setReviews] = useState<PlaceReview[]>([])
+  const [avg, setAvg] = useState<number | null>(null)
+  const [alreadyReviewed, setAlreadyReviewed] = useState(false)
+
+  const load = useCallback(async () => {
+    if (!user) return
+    const [data, p, reviewed] = await Promise.all([
+      fetchReviewsForPlace(placeId),
+      getPlacePreferenceAsync(user.id, placeId),
+      hasUserReviewedPlaceAsync(user.id, placeId),
+    ])
+    setReviews(data.reviews)
+    setAvg(data.avg)
+    setPref(p)
+    setAlreadyReviewed(reviewed)
+  }, [placeId, user])
+
+  useEffect(() => {
+    void load()
+  }, [load])
 
   if (!user) return null
 
-  const pref = getPlacePreference(user.id, placeId)
-  const reviews = getReviewsForPlace(placeId)
-  const avg = getAverageRating(placeId)
-  const alreadyReviewed = hasUserReviewedPlace(user.id, placeId)
-
-  function setPref(next: PlacePreference | null) {
-    const current = getPlacePreference(user!.id, placeId)
-    if (current === next) {
-      setPlacePreference(user!.id, placeId, null)
-    } else {
-      setPlacePreference(user!.id, placeId, next)
-    }
+  async function setPrefHandler(next: PlacePreference | null) {
+    const value = pref === next ? null : next
+    await setPlacePreference(user!.id, placeId, value)
+    setPref(value)
   }
 
-  function submitReview() {
+  async function submitReview() {
     setError(null)
     try {
-      addPlaceReview({
+      await addPlaceReview({
         placeId,
         userId: user!.id,
         nickname: user!.nickname,
@@ -64,6 +77,7 @@ export function PlaceFeedbackPanel({
         text,
       })
       setText('')
+      await load()
     } catch {
       setError(t('places.reviewEmpty'))
     }
@@ -80,7 +94,7 @@ export function PlaceFeedbackPanel({
           size="sm"
           variant={pref === 'like' ? 'default' : 'secondary'}
           className="gap-1"
-          onClick={() => setPref('like')}
+          onClick={() => void setPrefHandler('like')}
           aria-pressed={pref === 'like'}
         >
           <ThumbsUp className="h-3.5 w-3.5" />
@@ -91,7 +105,7 @@ export function PlaceFeedbackPanel({
           size="sm"
           variant={pref === 'dislike' ? 'default' : 'secondary'}
           className="gap-1"
-          onClick={() => setPref('dislike')}
+          onClick={() => void setPrefHandler('dislike')}
           aria-pressed={pref === 'dislike'}
         >
           <ThumbsDown className="h-3.5 w-3.5" />
@@ -165,7 +179,7 @@ export function PlaceFeedbackPanel({
                   {error}
                 </p>
               ) : null}
-              <Button type="button" size="sm" onClick={submitReview}>
+              <Button type="button" size="sm" onClick={() => void submitReview()}>
                 {t('places.addReview')}
               </Button>
             </div>

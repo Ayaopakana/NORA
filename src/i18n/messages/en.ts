@@ -134,7 +134,15 @@ export const en: Messages = {
     stopN: 'Stop {n}',
     routePreview: 'Route preview',
     routePreviewHint:
-      'The dashed line shows stop order. Road-accurate routing will come from the backend.',
+      'The line is the walking path from you to the first stop, then on in order.',
+    routeFromYou: 'Start: your location',
+    legFromYou: 'From you → {place}',
+    startNavigation: 'Start route',
+    stopNavigation: 'Exit navigation',
+    collapseRoute: 'Collapse route',
+    expandRoute: 'Expand route',
+    navigationActive: 'Navigation',
+    tapToExpandNav: 'Tap to expand route',
     legTo: '→ {place}',
     saveRoute: 'Save route',
     savedRoute: 'Saved to planner',
@@ -153,6 +161,21 @@ export const en: Messages = {
     homeBody: '{line} Easier to restore your daily rhythm and ease background tension.',
     workBody:
       '{line} A short screen break or walk around the spot helps restore energy.',
+    geolocate: 'My location',
+    geolocateCenter: 'Go to my location',
+    geolocateLocating: 'Getting location…',
+    geolocateAlertTitle: 'Turn on location',
+    geolocateAlertDismiss: 'Close',
+    geolocateActive: 'Live location on',
+    geolocateDenied:
+      'Allow location: lock icon in the address bar → Location.',
+    geolocateTimeout:
+      'Location timed out. Move near a window, turn on GPS, and try again.',
+    geolocatePositionOff:
+      'Turn on Location Services in system settings and allow the browser.',
+    geolocateInsecure:
+      'Location only works on HTTPS or localhost — use https://… or http://localhost:3000',
+    geolocateUnavailable: 'This browser does not support geolocation',
   },
   auth: {
     loginTitle: 'Sign in to NORA',
@@ -335,7 +358,13 @@ export const en: Messages = {
     title: 'Find people',
     subtitle:
       'Find people with similar interests and send a friend request. After acceptance you can chat.',
-    placeholder: 'Nickname, interests, city…',
+    placeholder: 'Place, park, café, nickname…',
+    placesTitle: 'Places',
+    placesSubtitle: 'Parks, cafés, hotels and bars in Bishkek',
+    placesSuggested: 'Popular',
+    placesEmpty: 'No places found. Try another name.',
+    placesLoading: 'Loading places…',
+    peopleTitle: 'People',
     friendsCount: 'Friends: {count}',
     openChat: 'open chat',
     empty: 'No one found. Try another query.',

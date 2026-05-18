@@ -23,6 +23,9 @@ const MINOR_BLOCKED_TAGS: VenueTag[] = [...ADULT_VENUE_TAGS, 'dangerous']
 
 const ADULT_MIN_AGE = 18
 
+const ADULT_TEXT =
+  /\b(бар|bar|клуб|club|паб|pub|nightclub|night\s*club|18\+)\b/i
+
 function isRealCalendarDate(day: number, month: number, year: number): boolean {
   const d = new Date(year, month - 1, day)
   return (
@@ -30,6 +33,12 @@ function isRealCalendarDate(day: number, month: number, year: number): boolean {
     d.getMonth() === month - 1 &&
     d.getDate() === day
   )
+}
+
+function looksLikeAdultVenue(rec: PlannerRecommendation): boolean {
+  if (/^poi-bar-/.test(rec.id)) return true
+  const hay = `${rec.title} ${rec.place} ${rec.badge ?? ''}`.toLowerCase()
+  return ADULT_TEXT.test(hay)
 }
 
 /** Полный возраст с учётом дня рождения в этом году. */
@@ -83,8 +92,9 @@ export function isVenueAllowedForAge(
     (tags.some((t) => ADULT_VENUE_TAGS.includes(t)) ? ADULT_MIN_AGE : 0)
 
   if (age < minAge) return false
-  if (isMinorAge(age) && tags.some((t) => MINOR_BLOCKED_TAGS.includes(t))) {
-    return false
+  if (isMinorAge(age)) {
+    if (tags.some((t) => MINOR_BLOCKED_TAGS.includes(t))) return false
+    if (looksLikeAdultVenue(rec)) return false
   }
   if (age >= 60 && tags.includes('nightlife')) return false
   if (age >= 65 && tags.includes('bar')) return false

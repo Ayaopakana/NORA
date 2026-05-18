@@ -1,5 +1,9 @@
 import type { Locale } from '@/i18n/config'
 import { getMessages } from '@/i18n/messages'
+import {
+  isCoordInRouteArea,
+  routeAreaSeed,
+} from '@/lib/route-area-bounds'
 import type {
   PlannerMood,
   PlannerRecommendation,
@@ -40,18 +44,6 @@ export const ROUTE_AREA_KEYS = [
 ] as const
 
 export type RouteAreaKey = (typeof ROUTE_AREA_KEYS)[number]
-
-const AREA_SEARCH: Record<
-  Exclude<RouteAreaKey, 'custom'>,
-  string[]
-> = {
-  center: ['чуй', 'ала-тоо', 'центр', 'center', 'downtown', 'площадь'],
-  osh: ['ош', 'айни', 'osh', 'базар'],
-  countryside: ['загород', 'кашка', 'иссык', 'пригород', 'село', 'озеро'],
-  parks: ['парк', 'park', 'дубов', 'бульвар', 'эркиндик'],
-  north: ['север', 'медер', 'meder', 'джал'],
-  south: ['юг', 'south', 'кара'],
-}
 
 /** Пул рекомендаций планера для подбора остановок маршрута. */
 export function vibeToPlannerMood(vibe: RouteVibe): PlannerMood {
@@ -113,6 +105,11 @@ export function routeAreaLabel(
   return getRouteAreaMeta(locale)[areaKey]
 }
 
+function hasValidCoords(r: PlannerRecommendation) {
+  return Number.isFinite(r.lng) && Number.isFinite(r.lat)
+}
+
+/** Только места в выбранном районе по координатам, без отката на весь город. */
 export function filterByRouteArea(
   pool: PlannerRecommendation[],
   areaKey: RouteAreaKey,
@@ -120,18 +117,30 @@ export function filterByRouteArea(
 ): PlannerRecommendation[] {
   if (areaKey === 'custom') {
     const q = customText.trim().toLowerCase()
-    if (!q) return pool
+    if (!q) return []
     return pool.filter((r) =>
       `${r.title} ${r.place} ${r.address}`.toLowerCase().includes(q),
     )
   }
-  const keys = AREA_SEARCH[areaKey]
-  const matched = pool.filter((r) => {
-    const hay = `${r.title} ${r.place} ${r.address}`.toLowerCase()
-    return keys.some((k) => hay.includes(k))
-  })
-  return matched.length ? matched : pool
+
+  return uniqueRecommendations(
+    pool.filter(
+      (r) =>
+        hasValidCoords(r) && isCoordInRouteArea(r.lng, r.lat, areaKey),
+    ),
+  )
 }
+
+function uniqueRecommendations(items: PlannerRecommendation[]) {
+  const seen = new Set<string>()
+  return items.filter((r) => {
+    if (seen.has(r.id)) return false
+    seen.add(r.id)
+    return true
+  })
+}
+
+export { routeAreaSeed }
 
 /** Старые сохранённые маршруты: mood → vibe */
 export function legacyMoodToVibe(mood: PlannerMood): RouteVibe {

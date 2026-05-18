@@ -39,6 +39,11 @@ export function PlaceMapDialog({
       lng: place.lng,
       lat: place.lat,
       color: '#38bdf8',
+      popup: {
+        title: place.title,
+        subtitle: place.place,
+        detail: place.badge,
+      },
     },
   ]
 

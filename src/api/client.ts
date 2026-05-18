@@ -1,4 +1,4 @@
-const SESSION_KEY = 'nora_session'
+export const SESSION_KEY = 'nora_session'
 
 function resolveUrl(path: string): string {
   const base = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '')

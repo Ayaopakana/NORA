@@ -1,3 +1,5 @@
+import { isApiEnabled } from '@/api/config'
+import { apiGetPublicProfile, apiSearchProfiles } from '@/api/users-public'
 import { DEMO_USERS, findDemoUser } from '@/lib/demoUsers'
 import { isMbtiId } from '@/lib/mbti'
 import { normalizeUser, type User } from '@/types/user'
@@ -15,9 +17,7 @@ function loadRegisteredUsers(): User[] {
     return parsed
       .map((row) => {
         if (!row || typeof row !== 'object') return null
-        const o = row as Record<string, unknown>
-        const user = normalizeUser(o)
-        return user
+        return normalizeUser(row)
       })
       .filter((u): u is User => u !== null)
   } catch {
@@ -67,8 +67,12 @@ function demoToPublic(id: string): PublicProfile | null {
   }
 }
 
-/** Профиль любого пользователя NORA (демо или зарегистрированный). */
-export function getNoraUserProfile(userId: string): PublicProfile | null {
+export async function getNoraUserProfile(
+  userId: string,
+): Promise<PublicProfile | null> {
+  if (isApiEnabled()) {
+    return apiGetPublicProfile(userId)
+  }
   const demo = demoToPublic(userId)
   if (demo) return demo
   const reg = loadRegisteredUsers().find((u) => u.id === userId)
@@ -76,8 +80,23 @@ export function getNoraUserProfile(userId: string): PublicProfile | null {
   return null
 }
 
-/** Все аккаунты NORA для добавления в маршрут. */
-export function listNoraUserProfiles(excludeId?: string): PublicProfile[] {
+/** Синхронный вариант для обратной совместимости (мок / до загрузки API). */
+export function getNoraUserProfileSync(userId: string): PublicProfile | null {
+  const demo = demoToPublic(userId)
+  if (demo) return demo
+  const reg = loadRegisteredUsers().find((u) => u.id === userId)
+  if (reg) return userToPublic(reg)
+  return null
+}
+
+export async function listNoraUserProfiles(
+  excludeId?: string,
+  query = '',
+): Promise<PublicProfile[]> {
+  if (isApiEnabled()) {
+    return apiSearchProfiles(query, excludeId)
+  }
+
   const byId = new Map<string, PublicProfile>()
   for (const d of DEMO_USERS) {
     if (d.id === excludeId) continue
@@ -88,7 +107,18 @@ export function listNoraUserProfiles(excludeId?: string): PublicProfile[] {
     if (u.id === excludeId) continue
     byId.set(u.id, userToPublic(u))
   }
-  return [...byId.values()].sort((a, b) =>
-    a.nickname.localeCompare(b.nickname, 'ru'),
-  )
+  let list = [...byId.values()]
+  const q = query.trim().toLowerCase()
+  if (q) {
+    list = list.filter(
+      (p) =>
+        p.nickname.toLowerCase().includes(q) ||
+        p.bio.toLowerCase().includes(q) ||
+        p.city.toLowerCase().includes(q),
+    )
+  }
+  return list
 }
+
+/** @deprecated используйте getNoraUserProfile */
+export const getNoraUserProfileLegacy = getNoraUserProfileSync

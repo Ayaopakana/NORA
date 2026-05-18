@@ -11,6 +11,7 @@ import type { VenueTag } from '@/lib/age-policy'
 import type { MbtiId } from '@/lib/mbti'
 import { dailyBudgetLabel, normalizeBudgetIndex } from '@/lib/daily-budget'
 import type { MoodPreset } from '@/types/user'
+import { withPlaceCoordinates } from '@/lib/place-coordinates'
 
 export type PlannerMood = Exclude<MoodPreset, ''>
 
@@ -30,6 +31,8 @@ export type PlannerRecommendation = {
   venueTags?: VenueTag[]
   /** Минимальный возраст (бары, клубы — 18+) */
   minAge?: number
+  /** Для популярных POI: подходящие настроения планера */
+  moods?: PlannerMood[]
 }
 
 export const PLANNER_MOOD_META: Record<
@@ -300,9 +303,9 @@ export function findPlannerRecommendation(
   const pools = localizePlannerPool(PLANNER_BY_MOOD, locale)
   for (const mood of Object.keys(pools) as PlannerMood[]) {
     const hit = pools[mood].find((r) => r.id === id)
-    if (hit) return hit
+    if (hit) return withPlaceCoordinates(hit)
     const event = getPlannerEvents(mood, locale).find((r) => r.id === id)
-    if (event) return event
+    if (event) return withPlaceCoordinates(event)
   }
   return null
 }
@@ -363,7 +366,9 @@ export function getRecommendationsForMoodAndBudget(
     mbti,
   )
 
-  if (sorted.length >= 4) return sorted.slice(0, 4)
+  if (sorted.length >= 4) {
+    return sorted.slice(0, 4).map(withPlaceCoordinates)
+  }
 
   const extra = sortByPreferences(
     pool
@@ -373,7 +378,7 @@ export function getRecommendationsForMoodAndBudget(
     mbti,
   )
 
-  return [...sorted, ...extra].slice(0, 4)
+  return [...sorted, ...extra].slice(0, 4).map(withPlaceCoordinates)
 }
 
 export function budgetLabelForTier(tier: number, locale: Locale = 'ru'): string {

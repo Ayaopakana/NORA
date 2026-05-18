@@ -1,6 +1,6 @@
 import { strictestBirthDateInGroup } from '@/lib/age-policy'
 import { dailyBudgetLabel, normalizeBudgetIndex } from '@/lib/daily-budget'
-import { getNoraUserProfile } from '@/lib/nora-users'
+import { getNoraUserProfileSync } from '@/lib/nora-users'
 import type { Locale } from '@/i18n/config'
 import type { BirthDateInput } from '@/types/birth-date'
 
@@ -39,7 +39,7 @@ export function analyzeRouteGroup(input: AnalyzeGroupInput): GroupBudgetAnalysis
 
   const members: RouteGroupBudgetMember[] = []
 
-  const organizer = getNoraUserProfile(input.organizerId)
+  const organizer = getNoraUserProfileSync(input.organizerId)
   members.push({
     id: input.organizerId,
     nickname: organizer?.nickname ?? 'you',
@@ -48,7 +48,7 @@ export function analyzeRouteGroup(input: AnalyzeGroupInput): GroupBudgetAnalysis
   })
 
   for (const id of participantIds) {
-    const p = getNoraUserProfile(id)
+    const p = getNoraUserProfileSync(id)
     if (!p) continue
     members.push({
       id: p.id,
@@ -103,7 +103,7 @@ export function strictestBirthDateForRouteGroup(
 ): BirthDateInput {
   const participants: BirthDateInput[] = []
   for (const id of participantIds) {
-    const p = getNoraUserProfile(id)
+    const p = getNoraUserProfileSync(id)
     if (!p) continue
     participants.push({
       birthDay: p.birthDay ?? null,

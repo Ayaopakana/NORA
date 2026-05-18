@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Sparkles } from 'lucide-react'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FriendActionButton } from '@/components/profile/FriendActionButton'
 import { useAuth } from '@/contexts/useAuth'
 import { useI18n } from '@/hooks/useI18n'
@@ -27,18 +27,20 @@ export function PeopleSearchResults({ query, compact }: PeopleSearchResultsProps
   const { t } = useI18n()
   useSocialRefresh()
 
+  const [peers, setPeers] = useState<PublicProfile[]>([])
+
+  useEffect(() => {
+    if (!user) {
+      setPeers([])
+      return
+    }
+    void listPublicProfiles(user.id, query).then(setPeers)
+  }, [user, query])
+
   const ranked = useMemo(() => {
     if (!user) return []
-    const peers = listPublicProfiles(user.id)
-    const q = query.trim().toLowerCase()
-    const filtered = q
-      ? peers.filter((p) => {
-          const hay = `${p.nickname} ${p.bio} ${p.city} ${p.interests.join(' ')} ${p.mbti}`.toLowerCase()
-          return hay.includes(q)
-        })
-      : peers
-    return rankPeerMatches(user, filtered)
-  }, [query, user])
+    return rankPeerMatches(user, peers)
+  }, [peers, user])
 
   const suggested = useMemo(
     () => (query.trim() ? [] : ranked.filter((m) => m.score > 0).slice(0, 3)),
@@ -61,16 +63,16 @@ export function PeopleSearchResults({ query, compact }: PeopleSearchResultsProps
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {!compact ? (
-        <div className="border-b border-[var(--nora-border-subtle)] px-3 pb-2 pt-0.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-500 dark:text-sky-400">
-            {t('search.community')}
-          </p>
+      <div className="border-b border-[var(--nora-border-subtle)] px-3 pb-2 pt-0.5">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-500 dark:text-sky-400">
+          {compact ? t('search.peopleTitle') : t('search.community')}
+        </p>
+        {!compact ? (
           <p className="mt-0.5 text-xs text-[var(--nora-text-muted)]">
             {t('search.subtitle')}
           </p>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
 
       {friendCount > 0 ? (
         <p className="px-3 py-2 text-xs text-[var(--nora-text-muted)]">

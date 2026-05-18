@@ -1,3 +1,5 @@
+import { isApiEnabled } from '@/api/config'
+import * as socialApi from '@/api/social'
 import { findDemoUser } from './demoUsers'
 
 const FRIENDS_KEY = 'nora_friends'
@@ -17,6 +19,11 @@ export type ChatThread = {
   peerId: string
   messages: ChatMessage[]
 }
+
+let apiFriends: string[] | null = null
+let apiOutgoing: string[] | null = null
+let apiIncoming: string[] | null = null
+let apiChats: ChatThread[] | null = null
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -42,8 +49,29 @@ export function notifySocialChange() {
   }
 }
 
-/** Демо: входящие заявки при первом запуске */
+export function clearSocialApiCache() {
+  apiFriends = null
+  apiOutgoing = null
+  apiIncoming = null
+  apiChats = null
+}
+
+export async function refreshSocialFromApi(): Promise<void> {
+  if (!isApiEnabled()) return
+  const [friends, outgoing, incoming, threads] = await Promise.all([
+    socialApi.apiGetFriendIds(),
+    socialApi.apiGetOutgoingRequestIds(),
+    socialApi.apiGetIncomingRequestIds(),
+    socialApi.apiGetChatThreads(),
+  ])
+  apiFriends = friends
+  apiOutgoing = outgoing
+  apiIncoming = incoming
+  apiChats = threads
+}
+
 function ensureDemoIncoming() {
+  if (isApiEnabled()) return
   if (readJson(SOCIAL_SEEDED_KEY, false)) return
   const incoming = readJson<string[]>(INCOMING_KEY, [])
   if (incoming.length === 0) {
@@ -53,16 +81,19 @@ function ensureDemoIncoming() {
 }
 
 export function getFriendIds(): string[] {
+  if (isApiEnabled() && apiFriends) return apiFriends
   ensureDemoIncoming()
   return readJson<string[]>(FRIENDS_KEY, [])
 }
 
 export function getOutgoingRequestIds(): string[] {
+  if (isApiEnabled() && apiOutgoing) return apiOutgoing
   ensureDemoIncoming()
   return readJson<string[]>(OUTGOING_KEY, [])
 }
 
 export function getIncomingRequestIds(): string[] {
+  if (isApiEnabled() && apiIncoming) return apiIncoming
   ensureDemoIncoming()
   return readJson<string[]>(INCOMING_KEY, [])
 }
@@ -79,7 +110,7 @@ export function hasIncomingRequest(peerId: string): boolean {
   return getIncomingRequestIds().includes(peerId)
 }
 
-function ensureChatThread(peerId: string) {
+function ensureChatThreadLocal(peerId: string) {
   const chats = getChatThreads()
   if (chats.some((t) => t.peerId === peerId)) return
   const peer = findDemoUser(peerId)
@@ -101,7 +132,14 @@ function ensureChatThread(peerId: string) {
   ])
 }
 
-export function addFriend(peerId: string): void {
+export async function addFriend(peerId: string): Promise<void> {
+  if (isApiEnabled()) {
+    await socialApi.apiAcceptIncomingRequest(peerId)
+    await refreshSocialFromApi()
+    notifySocialChange()
+    return
+  }
+
   const ids = getFriendIds()
   if (ids.includes(peerId)) return
   writeJson(FRIENDS_KEY, [...ids, peerId])
@@ -113,11 +151,18 @@ export function addFriend(peerId: string): void {
     INCOMING_KEY,
     getIncomingRequestIds().filter((id) => id !== peerId),
   )
-  ensureChatThread(peerId)
+  ensureChatThreadLocal(peerId)
   notifySocialChange()
 }
 
-export function removeFriend(peerId: string): void {
+export async function removeFriend(peerId: string): Promise<void> {
+  if (isApiEnabled()) {
+    await socialApi.apiRemoveFriend(peerId)
+    await refreshSocialFromApi()
+    notifySocialChange()
+    return
+  }
+
   writeJson(
     FRIENDS_KEY,
     getFriendIds().filter((id) => id !== peerId),
@@ -125,8 +170,14 @@ export function removeFriend(peerId: string): void {
   notifySocialChange()
 }
 
-/** Отправить заявку в друзья (не сразу в друзья). */
-export function sendFriendRequest(peerId: string): void {
+export async function sendFriendRequest(peerId: string): Promise<void> {
+  if (isApiEnabled()) {
+    await socialApi.apiSendFriendRequest(peerId)
+    await refreshSocialFromApi()
+    notifySocialChange()
+    return
+  }
+
   if (isFriend(peerId)) return
   const outgoing = getOutgoingRequestIds()
   if (!outgoing.includes(peerId)) {
@@ -135,7 +186,14 @@ export function sendFriendRequest(peerId: string): void {
   notifySocialChange()
 }
 
-export function cancelOutgoingRequest(peerId: string): void {
+export async function cancelOutgoingRequest(peerId: string): Promise<void> {
+  if (isApiEnabled()) {
+    await socialApi.apiCancelOutgoingRequest(peerId)
+    await refreshSocialFromApi()
+    notifySocialChange()
+    return
+  }
+
   writeJson(
     OUTGOING_KEY,
     getOutgoingRequestIds().filter((id) => id !== peerId),
@@ -143,12 +201,25 @@ export function cancelOutgoingRequest(peerId: string): void {
   notifySocialChange()
 }
 
-export function acceptIncomingRequest(peerId: string): void {
+export async function acceptIncomingRequest(peerId: string): Promise<void> {
+  if (isApiEnabled()) {
+    await socialApi.apiAcceptIncomingRequest(peerId)
+    await refreshSocialFromApi()
+    notifySocialChange()
+    return
+  }
   if (!hasIncomingRequest(peerId)) return
-  addFriend(peerId)
+  await addFriend(peerId)
 }
 
-export function rejectIncomingRequest(peerId: string): void {
+export async function rejectIncomingRequest(peerId: string): Promise<void> {
+  if (isApiEnabled()) {
+    await socialApi.apiRejectIncomingRequest(peerId)
+    await refreshSocialFromApi()
+    notifySocialChange()
+    return
+  }
+
   writeJson(
     INCOMING_KEY,
     getIncomingRequestIds().filter((id) => id !== peerId),
@@ -157,6 +228,7 @@ export function rejectIncomingRequest(peerId: string): void {
 }
 
 export function getChatThreads(): ChatThread[] {
+  if (isApiEnabled() && apiChats) return apiChats
   return readJson<ChatThread[]>(CHATS_KEY, [])
 }
 
@@ -164,13 +236,20 @@ export function getThread(peerId: string): ChatThread | null {
   return getChatThreads().find((t) => t.peerId === peerId) ?? null
 }
 
-export function sendMessage(
+export async function sendMessage(
   peerId: string,
   fromId: string,
   text: string,
-): ChatMessage {
+): Promise<ChatMessage> {
   const trimmed = text.trim()
   if (!trimmed) throw new Error('Пустое сообщение')
+
+  if (isApiEnabled()) {
+    const msg = await socialApi.apiSendChatMessage(peerId, trimmed)
+    await refreshSocialFromApi()
+    notifySocialChange()
+    return msg
+  }
 
   const msg: ChatMessage = {
     id: `msg-${Date.now()}`,
@@ -190,5 +269,6 @@ export function sendMessage(
     threads.push({ peerId, messages: [msg] })
   }
   writeJson(CHATS_KEY, threads)
+  notifySocialChange()
   return msg
 }

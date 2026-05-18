@@ -2,7 +2,7 @@
 
 import { ArrowLeft, MapPin, MessageCircle, Sparkles } from 'lucide-react'
 import Link from 'next/link'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
 import { FriendActionButton } from '@/components/profile/FriendActionButton'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,7 @@ import { useSocialRefresh } from '@/hooks/useSocialRefresh'
 import { getMbtiTypes } from '@/i18n/content/mbti-types'
 import { scorePeerMatch, type MatchReasonKey } from '@/lib/people-matching'
 import { getPublicProfile } from '@/lib/public-profile'
+import type { PublicProfile } from '@/types/public-profile'
 import {
   hasIncomingRequest,
   hasOutgoingRequest,
@@ -29,7 +30,11 @@ export function PublicProfileView({ peerId }: PublicProfileViewProps) {
   const { locale, t } = useI18n()
   useSocialRefresh()
 
-  const profile = getPublicProfile(peerId)
+  const [profile, setProfile] = useState<PublicProfile | null>(null)
+
+  useEffect(() => {
+    void getPublicProfile(peerId).then(setProfile)
+  }, [peerId])
   const friend = isFriend(peerId)
   const outgoing = hasOutgoingRequest(peerId)
   const incoming = hasIncomingRequest(peerId)
@@ -120,7 +125,7 @@ export function PublicProfileView({ peerId }: PublicProfileViewProps) {
             </p>
             {profile.interests.length > 0 ? (
               <div className="mt-3 flex flex-wrap justify-center gap-1.5 sm:justify-start">
-                {profile.interests.map((tag) => (
+                {profile.interests.map((tag: string) => (
                   <span
                     key={tag}
                     className="rounded-full border border-[var(--nora-border)] bg-[var(--nora-surface-veil)] px-2.5 py-0.5 text-[11px] text-[var(--nora-text-muted)]"

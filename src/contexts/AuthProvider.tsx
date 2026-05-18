@@ -17,6 +17,21 @@ import {
   type User,
   type UserZones,
 } from '@/types/user'
+import {
+  apiChangePassword,
+  apiDeleteAccount,
+  apiLogin,
+  apiMe,
+  apiPatchProfile,
+  apiRegister,
+} from '@/api/auth'
+import { SESSION_KEY } from '@/api/client'
+import { isApiEnabled } from '@/api/config'
+import { clearApiCaches, hydrateUserDataFromApi } from '@/lib/api-hydrate'
+import {
+  clearSocialApiCache,
+  refreshSocialFromApi,
+} from '@/lib/social-storage'
 import { translateKey } from '@/i18n/locale-storage'
 import {
   AuthContext,
@@ -25,7 +40,6 @@ import {
   type RegisterExtras,
 } from './auth-context'
 
-const SESSION_KEY = 'nora_session'
 const USERS_KEY = 'nora_mock_users'
 
 type StoredAccount = User & { password: string }
@@ -95,6 +109,17 @@ function saveSession(payload: { token: string; user: User }) {
 
 function clearSession() {
   storageRemove(SESSION_KEY)
+}
+
+function loadSessionToken(): string | null {
+  const raw = storageGet(SESSION_KEY)
+  if (!raw) return null
+  try {
+    const data = JSON.parse(raw) as SessionPayload
+    return typeof data.token === 'string' && data.token ? data.token : null
+  } catch {
+    return null
+  }
 }
 
 function loadSessionUser(): User | null {
@@ -235,17 +260,61 @@ function applyProfilePatch(prev: User, patch: ProfileUpdate): User {
   return next
 }
 
+async function syncUserDataAfterAuth(userId: string) {
+  if (!isApiEnabled()) return
+  await Promise.all([hydrateUserDataFromApi(userId), refreshSocialFromApi()])
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   /** Начальное состояние одинаково на сервере и клиенте — сессию читаем только в useEffect. */
   const [user, setUser] = useState<User | null>(null)
   const [authReady, setAuthReady] = useState(false)
 
   useEffect(() => {
-    setUser(loadSessionUser())
-    setAuthReady(true)
+    let cancelled = false
+
+    async function boot() {
+      if (isApiEnabled() && loadSessionToken()) {
+        try {
+          const remote = await apiMe()
+          const sessionUser = normalizeUser(remote)
+          if (!cancelled && sessionUser) {
+            const token = loadSessionToken() ?? ''
+            saveSession({ token, user: sessionUser })
+            setUser(sessionUser)
+            await syncUserDataAfterAuth(sessionUser.id)
+            setAuthReady(true)
+            return
+          }
+        } catch {
+          clearSession()
+        }
+      } else if (!isApiEnabled()) {
+        if (!cancelled) setUser(loadSessionUser())
+      }
+
+      if (!cancelled) setAuthReady(true)
+    }
+
+    void boot()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {
+    if (isApiEnabled()) {
+      const { token, user: raw } = await apiLogin(email, password)
+      const sessionUser = normalizeUser(raw)
+      if (!sessionUser) {
+        throw new Error(translateKey('authErrors.userDataError'))
+      }
+      saveSession({ token, user: sessionUser })
+      setUser(sessionUser)
+      await syncUserDataAfterAuth(sessionUser.id)
+      return
+    }
+
     const normalized = email.trim().toLowerCase()
     const accounts = loadAccounts()
     const account = accounts.find(
@@ -275,6 +344,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (trimmedNickname.length < 2) {
         throw new Error(translateKey('authErrors.nickTooShort'))
       }
+
+      if (isApiEnabled()) {
+        const { token, user: raw } = await apiRegister(
+          name,
+          nickname,
+          email,
+          password,
+          avatarDataUrl,
+          extras,
+        )
+        const sessionUser = normalizeUser(raw)
+        if (!sessionUser) {
+          throw new Error(translateKey('authErrors.createProfileFailed'))
+        }
+        saveSession({ token, user: sessionUser })
+        setUser(sessionUser)
+        await syncUserDataAfterAuth(sessionUser.id)
+        return
+      }
+
       const normalized = email.trim().toLowerCase()
       const accounts = loadAccounts()
       if (accounts.some((a) => a.email.toLowerCase() === normalized)) {
@@ -341,7 +430,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser((prev) => {
       if (!prev) return prev
       const next = applyProfilePatch(prev, patch)
-      saveSession({ token: 'mock-token', user: next })
+      const token = loadSessionToken() ?? 'mock-token'
+      saveSession({ token, user: next })
+
+      if (isApiEnabled()) {
+        void apiPatchProfile(patch)
+          .then((raw) => {
+            const synced = normalizeUser(raw)
+            if (!synced) return
+            saveSession({ token, user: synced })
+            setUser(synced)
+          })
+          .catch(() => {
+            /* optimistic UI; ошибку покажем позже при необходимости */
+          })
+        return next
+      }
+
       const accounts = loadAccounts()
       const idx = accounts.findIndex((a) => a.id === next.id)
       if (idx >= 0) {
@@ -360,6 +465,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (next.length < 4) {
         throw new Error(translateKey('authErrors.passwordTooShort'))
       }
+      if (isApiEnabled()) {
+        await apiChangePassword(currentPassword, next)
+        return
+      }
       const accounts = loadAccounts()
       const idx = accounts.findIndex((a) => a.id === user.id)
       if (idx < 0) throw new Error(translateKey('authErrors.accountNotFound'))
@@ -375,6 +484,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const deleteAccount = useCallback(async (password: string) => {
     const current = user
     if (!current) throw new Error(translateKey('authErrors.loginRequired'))
+    if (isApiEnabled()) {
+      await apiDeleteAccount(password)
+      storageRemove('nora_friends')
+      storageRemove('nora_outgoing_requests')
+      storageRemove('nora_incoming_requests')
+      storageRemove('nora_chats')
+      storageRemove('nora_social_seeded')
+      clearSavedRoutesForUser(current.id)
+      clearSession()
+      setUser(null)
+      return
+    }
     const accounts = loadAccounts()
     const acc = accounts.find((a) => a.id === current.id)
     if (!acc || acc.password !== password) {
@@ -393,6 +514,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     clearSession()
+    clearSocialApiCache()
+    clearApiCaches()
     setUser(null)
   }, [])
 

@@ -12,6 +12,7 @@ import {
   strictestBirthDateForRouteGroup,
 } from '@/lib/route-group-budget'
 import type { MbtiId } from '@/lib/mbti'
+import type { MoodPreset } from '@/types/user'
 import {
   getRouteAreaMeta,
   getRoutePeriodMeta,
@@ -29,10 +30,16 @@ import { cn } from '@/lib/utils'
 
 type RouteBuilderFormProps = {
   mbti: MbtiId | ''
+  /** Текущее настроение с карты / профиля — влияет на длину и темп маршрута */
+  profileMood?: MoodPreset
   onBuilt: (route: DayRoute) => void
 }
 
-export function RouteBuilderForm({ mbti, onBuilt }: RouteBuilderFormProps) {
+export function RouteBuilderForm({
+  mbti,
+  profileMood,
+  onBuilt,
+}: RouteBuilderFormProps) {
   const { user } = useAuth()
   const { locale, t } = useI18n()
 
@@ -116,6 +123,7 @@ export function RouteBuilderForm({ mbti, onBuilt }: RouteBuilderFormProps) {
         participantIds: friendParticipantIds,
         groupBudgetAvg: analysis.avgBudgetIdx,
         organizerBudgetIdx,
+        profileMood,
       },
       locale,
     )

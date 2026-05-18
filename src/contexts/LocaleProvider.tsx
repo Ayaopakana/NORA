@@ -9,12 +9,8 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import {
-  DEFAULT_LOCALE,
-  isLocale,
-  LOCALE_STORAGE_KEY,
-  type Locale,
-} from '@/i18n/config'
+import { DEFAULT_LOCALE, LOCALE_STORAGE_KEY, type Locale } from '@/i18n/config'
+import { readStoredLocale } from '@/i18n/locale-storage'
 import { getMessages } from '@/i18n/messages'
 import { translate } from '@/i18n/translate'
 
@@ -27,24 +23,11 @@ type LocaleContextValue = {
 
 const LocaleContext = createContext<LocaleContextValue | null>(null)
 
-function readStoredLocale(): Locale {
-  try {
-    const raw = localStorage.getItem(LOCALE_STORAGE_KEY)
-    if (raw && isLocale(raw)) return raw
-  } catch {
-    /* private mode */
-  }
-  return DEFAULT_LOCALE
-}
-
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE)
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    setLocaleState(readStoredLocale())
-    setReady(true)
-  }, [])
+  const [locale, setLocaleState] = useState<Locale>(() =>
+    typeof window === 'undefined' ? DEFAULT_LOCALE : readStoredLocale(),
+  )
+  const [ready, setReady] = useState(() => typeof window !== 'undefined')
 
   useEffect(() => {
     if (!ready) return

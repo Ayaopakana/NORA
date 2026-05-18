@@ -10,12 +10,15 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/useAuth'
 import { useI18n } from '@/hooks/useI18n'
 import { findDemoUser } from '@/lib/demoUsers'
+import { getNoraUserProfileSync } from '@/lib/nora-users'
 import {
   getChatThreads,
   getFriendIds,
+  refreshSocialFromApi,
   sendMessage,
   type ChatThread,
 } from '@/lib/social-storage'
+import { useSocialRefresh } from '@/hooks/useSocialRefresh'
 import { cn } from '@/lib/utils'
 
 function highlightSnippet(text: string, query: string): string {
@@ -33,7 +36,9 @@ function peerMatchesQuery(
   query: string,
   threads: ChatThread[],
 ): { match: boolean; snippet: string | null; matchType: 'name' | 'message' | null } {
-  const peer = findDemoUser(peerId)
+  const peer =
+    getNoraUserProfileSync(peerId) ??
+  findDemoUser(peerId)
   if (!peer) return { match: false, snippet: null, matchType: null }
 
   const q = query.toLowerCase()
@@ -79,10 +84,18 @@ function ChatContent() {
   const [listQuery, setListQuery] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
 
+  useSocialRefresh()
+
   const refresh = () => setThreads(getChatThreads())
 
   useEffect(() => {
-    refresh()
+    void refreshSocialFromApi().then(refresh)
+  }, [])
+
+  useEffect(() => {
+    const onSocial = () => refresh()
+    window.addEventListener('nora-social-change', onSocial)
+    return () => window.removeEventListener('nora-social-change', onSocial)
   }, [])
 
   useEffect(() => {
@@ -100,7 +113,9 @@ function ChatContent() {
   }, [friendIds, listQ, threads])
 
   const activeThread = threads.find((t) => t.peerId === activePeer)
-  const activePeerUser = activePeer ? findDemoUser(activePeer) : null
+  const activePeerUser = activePeer
+    ? getNoraUserProfileSync(activePeer) ?? findDemoUser(activePeer)
+    : null
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -108,9 +123,9 @@ function ChatContent() {
 
   if (!user) return null
 
-  function handleSend() {
+  async function handleSend() {
     if (!activePeer || !draft.trim()) return
-    sendMessage(activePeer, user!.id, draft)
+    await sendMessage(activePeer, user!.id, draft)
     setDraft('')
     refresh()
   }

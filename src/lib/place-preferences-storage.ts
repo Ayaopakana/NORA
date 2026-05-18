@@ -1,3 +1,14 @@
+import { isApiEnabled } from '@/api/config'
+import {
+  apiGetDislikedPlaceIds,
+  apiGetPlacePreference,
+  apiSetPlacePreference,
+} from '@/api/places'
+import {
+  getCachedDislikedPlaceIds,
+  setDislikedCache,
+} from '@/lib/api-hydrate'
+
 const PREFS_KEY = 'nora_place_prefs'
 
 export type PlacePreference = 'like' | 'dislike'
@@ -35,11 +46,29 @@ export function getPlacePreference(
   return readAll()[userId]?.[placeId] ?? null
 }
 
-export function setPlacePreference(
+export async function getPlacePreferenceAsync(
+  userId: string,
+  placeId: string,
+): Promise<PlacePreference | null> {
+  if (isApiEnabled()) {
+    return apiGetPlacePreference(placeId)
+  }
+  return getPlacePreference(userId, placeId)
+}
+
+export async function setPlacePreference(
   userId: string,
   placeId: string,
   pref: PlacePreference | null,
-): void {
+): Promise<void> {
+  if (isApiEnabled()) {
+    await apiSetPlacePreference(placeId, pref)
+    const ids = await apiGetDislikedPlaceIds()
+    setDislikedCache(userId, ids)
+    notifyPlaceFeedbackChange()
+    return
+  }
+
   const all = readAll()
   const userPrefs = { ...(all[userId] ?? {}) }
   if (pref === null) {
@@ -60,6 +89,10 @@ export function getLikedPlaceIds(userId: string): string[] {
 }
 
 export function getDislikedPlaceIds(userId: string): string[] {
+  if (isApiEnabled()) {
+    const cached = getCachedDislikedPlaceIds(userId)
+    if (cached !== null) return cached
+  }
   const prefs = readAll()[userId] ?? {}
   return Object.entries(prefs)
     .filter(([, v]) => v === 'dislike')

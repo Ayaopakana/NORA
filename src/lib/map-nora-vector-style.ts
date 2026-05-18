@@ -5,6 +5,8 @@ import type {
   StyleSpecification,
 } from 'maplibre-gl'
 import { NORA_MAP_DARK, NORA_MAP_LIGHT } from '@/lib/map-nora-palette'
+import { resyncPendingMapRoute } from '@/lib/map-route-layer'
+import { resyncPendingMapUserLocation } from '@/lib/map-user-location-layer'
 
 const BUILDING_3D_ID = 'nora-buildings-3d'
 
@@ -269,9 +271,17 @@ function ensureBuildings3d(map: MapLibreMap, isDark: boolean) {
  * Светлая — реально светлая подложка и цветные дороги, не «белое + чёрное».
  */
 export function applyNoraVectorMapStyle(map: MapLibreMap, isDark: boolean) {
-  if (!map.isStyleLoaded()) return
+  if (!map.isStyleLoaded()) {
+    resyncPendingMapRoute(map)
+    resyncPendingMapUserLocation(map)
+    return
+  }
   const vectorId = primaryVectorSourceId(map)
-  if (!vectorId || !map.getSource(vectorId)) return
+  if (!vectorId || !map.getSource(vectorId)) {
+    resyncPendingMapRoute(map)
+    resyncPendingMapUserLocation(map)
+    return
+  }
 
   if (isDark) {
     const p = NORA_MAP_DARK
@@ -332,4 +342,6 @@ export function applyNoraVectorMapStyle(map: MapLibreMap, isDark: boolean) {
 
   ensureBuildings3d(map, isDark)
   applyExtrusionLight(map, isDark)
+  resyncPendingMapRoute(map)
+  resyncPendingMapUserLocation(map)
 }

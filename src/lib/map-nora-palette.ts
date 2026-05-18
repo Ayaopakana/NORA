@@ -40,16 +40,15 @@ export const NORA_MAP_LIGHT = {
   water: '#b8ccd8',
 } as const
 
+/** Маршрут дня — тёплый янтарный, в тон маркерам остановок */
 export const NORA_MAP_ROUTE_DARK = {
-  glow: '#b8c4d4',
-  line: '#d4c4a8',
-  arrowFill: '#f5f3f0',
-  arrowStroke: '#8e9aae',
+  casing: '#92400e',
+  glow: '#fbbf24',
+  line: '#f59e0b',
 } as const
 
 export const NORA_MAP_ROUTE_LIGHT = {
-  glow: '#8eb4d4',
-  line: '#8e9aae',
-  arrowFill: '#ffffff',
-  arrowStroke: '#6a8494',
+  casing: '#b45309',
+  glow: '#fcd34d',
+  line: '#ea580c',
 } as const

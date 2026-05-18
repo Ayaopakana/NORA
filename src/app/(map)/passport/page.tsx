@@ -1,6 +1,6 @@
 'use client'
 
-import { Camera, Home, Briefcase, GraduationCap, Settings } from 'lucide-react'
+import { Camera, Settings } from 'lucide-react'
 import Link from 'next/link'
 import { useMemo, useRef, useState } from 'react'
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar'
@@ -8,11 +8,9 @@ import { CityCombobox } from '@/components/CityCombobox'
 import { CountryCombobox } from '@/components/CountryCombobox'
 import { MbtiGrid } from '@/components/MbtiGrid'
 import { ProfileSocialSection } from '@/components/profile/ProfileSocialSection'
-import { ZoneRoutineEditor } from '@/components/profile/ZoneRoutineEditor'
 import { BirthDateFields } from '@/components/BirthDateFields'
 import { isValidBirthDate } from '@/lib/age-policy'
 import { RequireAuth } from '@/components/RequireAuth'
-import { ZonePickerDialog } from '@/components/ZonePickerDialog'
 import { Button } from '@/components/ui/button'
 import { PageShell } from '@/components/PageShell'
 import { useAuth } from '@/contexts/useAuth'
@@ -22,7 +20,7 @@ import { readFileAsDataURL, validateAvatarFile } from '@/lib/readImage'
 import type { MbtiId } from '@/lib/mbti'
 import { cn } from '@/lib/utils'
 import { displayName } from '@/types/user'
-import type { UserStatus, ZoneKey } from '@/types/user'
+import type { UserStatus } from '@/types/user'
 
 export default function PassportPage() {
   return (
@@ -55,9 +53,6 @@ function PassportContent() {
   const [birthYear, setBirthYear] = useState(
     user?.birthYear ? String(user.birthYear) : '',
   )
-  const [routine, setRoutine] = useState(user?.routine ?? { slots: [] })
-  const [zoneOpen, setZoneOpen] = useState(false)
-  const [zoneKey, setZoneKey] = useState<ZoneKey>('home')
   const [saved, setSaved] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
 
@@ -101,7 +96,6 @@ function PassportContent() {
       birthDay: birthDayNum,
       birthMonth: birthMonthNum,
       birthYear: birthYearNum,
-      routine,
     })
     setSaved(true)
     window.setTimeout(() => setSaved(false), 2000)
@@ -120,11 +114,6 @@ function PassportContent() {
     } catch {
       setAvatarError(t('passportForm.photoFailed'))
     }
-  }
-
-  function openZone(k: ZoneKey) {
-    setZoneKey(k)
-    setZoneOpen(true)
   }
 
   return (
@@ -336,63 +325,7 @@ function PassportContent() {
         />
       </section>
 
-      <section className="mb-6 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-4">
-        <h2 className="text-sm font-semibold text-[var(--nora-text)]">
-          {t('passportForm.smartZonesTitle')}
-        </h2>
-        <div className="mt-4 flex flex-col gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            className="justify-start gap-2"
-            onClick={() => openZone('home')}
-          >
-            <Home className="h-4 w-4 text-sky-300" />
-            {t('passportForm.zoneHome')}
-            {user.zones.home ? (
-              <span className="ml-auto text-[11px] text-emerald-400">✓</span>
-            ) : null}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="justify-start gap-2"
-            onClick={() => openZone('school')}
-          >
-            <GraduationCap className="h-4 w-4 text-sky-300" />
-            {t('passportForm.zoneStudy')}
-            {user.zones.school ? (
-              <span className="ml-auto text-[11px] text-emerald-400">✓</span>
-            ) : null}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="justify-start gap-2"
-            onClick={() => openZone('work')}
-          >
-            <Briefcase className="h-4 w-4 text-sky-300" />
-            {t('passportForm.zoneWork')}
-            {user.zones.work ? (
-              <span className="ml-auto text-[11px] text-emerald-400">✓</span>
-            ) : null}
-          </Button>
-        </div>
-      </section>
-
-      <section className="mb-8 rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-4">
-        <h2 className="text-sm font-semibold text-[var(--nora-text)]">
-          {t('routine.title')}
-        </h2>
-        <ZoneRoutineEditor
-          className="mt-3"
-          zones={user.zones}
-          routine={routine}
-          onChange={setRoutine}
-        />
-      </section>
-
-      <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
         <Button type="button" onClick={onSaveProfile}>
           {t('passportForm.saveProfile')}
         </Button>
@@ -403,22 +336,6 @@ function PassportContent() {
         ) : null}
       </div>
 
-      <ZonePickerDialog
-        open={zoneOpen}
-        onOpenChange={setZoneOpen}
-        zone={zoneKey}
-        title={
-          zoneKey === 'home'
-            ? t('passportForm.zoneHome')
-            : zoneKey === 'school'
-              ? t('passportForm.zoneStudy')
-              : t('passportForm.zoneWork')
-        }
-        initial={user.zones[zoneKey] ?? null}
-        onSave={(point) => {
-          updateProfile({ zones: { [zoneKey]: point } })
-        }}
-      />
     </PageShell>
   )
 }

@@ -27,8 +27,8 @@ import {
 import { useAuth } from '@/contexts/useAuth'
 import { APP_VERSION, SUPPORT_EMAIL } from '@/lib/app-version'
 import {
-  getNotificationPrefs,
-  saveNotificationPrefs,
+  fetchNotificationPrefs,
+  persistNotificationPrefs,
   type NotificationPrefs,
 } from '@/lib/settings-preferences'
 import { displayName } from '@/types/user'
@@ -46,12 +46,10 @@ function SettingsContent() {
   const { t } = useI18n()
   const router = useRouter()
 
-  const [prefs, setPrefs] = useState<NotificationPrefs>(() =>
-    typeof window !== 'undefined' ? getNotificationPrefs() : {
-      pushEnabled: true,
-      importantOnly: false,
-    },
-  )
+  const [prefs, setPrefs] = useState<NotificationPrefs>({
+    pushEnabled: true,
+    importantOnly: false,
+  })
 
   const [currentPw, setCurrentPw] = useState('')
   const [newPw, setNewPw] = useState('')
@@ -66,7 +64,7 @@ function SettingsContent() {
   const [deletePending, setDeletePending] = useState(false)
 
   useEffect(() => {
-    setPrefs(getNotificationPrefs())
+    void fetchNotificationPrefs().then(setPrefs)
   }, [])
 
   if (!user) return null
@@ -76,7 +74,7 @@ function SettingsContent() {
   function updatePrefs(patch: Partial<NotificationPrefs>) {
     const next = { ...prefs, ...patch }
     setPrefs(next)
-    saveNotificationPrefs(next)
+    void persistNotificationPrefs(next).then(setPrefs)
   }
 
   async function onChangePassword() {

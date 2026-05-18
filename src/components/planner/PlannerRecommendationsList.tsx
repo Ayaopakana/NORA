@@ -9,11 +9,11 @@ import {
   budgetLabelForTier,
   fitsUserBudget,
   getPlannerMoodMeta,
-  getRecommendationsForMoodAndBudget,
   recommendationInsight,
   type PlannerMood,
   type PlannerRecommendation,
 } from '@/lib/planner-recommendations'
+import { getCombinedRecommendationsForMoodAndBudget } from '@/lib/venue-catalog'
 import type { MbtiId } from '@/lib/mbti'
 import { tween } from '@/lib/motion'
 import { cn } from '@/lib/utils'
@@ -35,7 +35,7 @@ export function PlannerRecommendationsList({
 }: PlannerRecommendationsListProps) {
   const { user } = useAuth()
   const { locale, t } = useI18n()
-  const recommendations = getRecommendationsForMoodAndBudget(
+  const recommendations = getCombinedRecommendationsForMoodAndBudget(
     mood,
     budgetIdx,
     locale,

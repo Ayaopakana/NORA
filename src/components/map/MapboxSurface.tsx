@@ -17,8 +17,21 @@ import {
   mapStyleForTheme,
 } from '@/lib/map-styles'
 import { useI18n } from '@/hooks/useI18n'
-import { translateKey } from '@/i18n/locale-storage'
-import { syncMapRouteLayer, type MapRoutePoint } from '@/lib/map-route-layer'
+import {
+  resyncPendingMapRoute,
+  syncMapRouteLayer,
+  type MapRoutePoint,
+} from '@/lib/map-route-layer'
+import {
+  resyncPendingMapUserLocation,
+  syncMapUserLocationLayer,
+  type UserMapLocation,
+} from '@/lib/map-user-location-layer'
+import {
+  createMapMarkerElement,
+  type MapSurfaceMarker,
+} from '@/lib/map-marker'
+import { nudgeMapResize } from '@/lib/nudge-map-resize'
 import { cn } from '@/lib/utils'
 
 /** Центр карты по умолчанию — Бишкек */
@@ -30,16 +43,13 @@ export type MapboxSurfaceProps = {
   blueMono?: boolean
   onMap?: (map: MapLibreMap) => void
   pickPoint?: (coords: { lng: number; lat: number }) => void
-  markers?: {
-    id: string
-    lng: number
-    lat: number
-    color?: string
-    /** Номер остановки на маршруте */
-    label?: string | number
-  }[]
+  markers?: MapSurfaceMarker[]
   /** Точки маршрута по порядку — линия на карте (демо, до бэкенд-роутинга) */
   routePath?: MapRoutePoint[]
+  /** Текущая геопозиция пользователя (watchPosition) */
+  userLocation?: UserMapLocation
+  /** Вид сверху при старте (pitch 0) — для главной карты */
+  topDown?: boolean
 }
 
 type MapViewState = {
@@ -55,8 +65,12 @@ export function MapboxSurface({
   pickPoint,
   markers,
   routePath,
+  userLocation,
+  topDown = false,
 }: MapboxSurfaceProps) {
   const { t } = useI18n()
+  const tRef = useRef(t)
+  tRef.current = t
   const { theme, resolvedTheme } = useTheme()
   const mapScheme = mapAppearanceScheme(theme, resolvedTheme)
   const isDark = mapScheme === 'dark'
@@ -84,7 +98,6 @@ export function MapboxSurface({
 
   const isRasterFallbackRef = useRef(false)
   isRasterFallbackRef.current = isRasterFallback
-  const tilesReadyListenerRef = useRef<(() => void) | null>(null)
   /** Чтобы не вызывать setStyle сразу после перехода на растр с тем же стилем. */
   const rasterThemeSyncedRef = useRef<string | undefined>(undefined)
   /** Последняя тема векторного стиля (Positron vs Dark) — без полного setStyle слои двух стилей смешиваются. */
@@ -110,6 +123,7 @@ export function MapboxSurface({
     let instance: MapLibreMap | null = null
     let ro: ResizeObserver | null = null
     let onClick: ((e: MapMouseEvent) => void) | undefined
+    let onViewportChange: (() => void) | undefined
     let usedFallback = false
 
     const initialScheme = getMapScheme()
@@ -179,7 +193,7 @@ export function MapboxSurface({
         if (cancelled) return
         const msg =
           e.error?.message ??
-          (typeof e.error === 'string' ? e.error : translateKey('mapSurface.tileError'))
+          (typeof e.error === 'string' ? e.error : tRef.current('mapSurface.tileError'))
         setTileError(msg)
       })
     }
@@ -187,7 +201,7 @@ export function MapboxSurface({
     const createMap = (
       style: string | StyleSpecification,
       view?: MapViewState,
-      runGeolocate = true,
+      runGeolocate = false,
     ) => {
       if (cancelled || !containerRef.current) return
 
@@ -198,9 +212,9 @@ export function MapboxSurface({
         container: containerRef.current,
         style,
         center: view?.center ?? DEFAULT_CENTER,
-        zoom: view?.zoom ?? 12,
-        bearing: view?.bearing ?? -18,
-        pitch: view?.pitch ?? 56,
+        zoom: view?.zoom ?? (topDown ? 16 : 12),
+        bearing: view?.bearing ?? (topDown ? 0 : -18),
+        pitch: view?.pitch ?? (topDown ? 0 : 56),
         attributionControl: false,
         /* Быстрее показывать тайлы, без долгого «растворения» пустой подложки */
         fadeDuration: 0,
@@ -209,48 +223,38 @@ export function MapboxSurface({
 
       mapRef.current = instance
 
-      const onTilesIdle = () => {
-        if (cancelled || !instance || !styleLoadCompleted) return
-        try {
-          instance.off('idle', onTilesIdle)
-        } catch {
-          /* */
-        }
-        tilesReadyListenerRef.current = null
-        setMapTilesReady(true)
-      }
-      tilesReadyListenerRef.current = onTilesIdle
-      instance.on('idle', onTilesIdle)
-
       wireErrors(instance)
 
       instance.once('load', () => {
         if (cancelled || !instance) return
         styleLoadCompleted = true
         afterLoad(instance, runGeolocate)
+        const markTilesReady = () => {
+          if (cancelled || !instance) return
+          setMapTilesReady(true)
+          nudgeMapResize(instance)
+        }
+        instance.once('idle', markTilesReady)
       })
 
       ro?.disconnect()
       ro = new ResizeObserver(() => {
-        instance?.resize()
+        if (instance) nudgeMapResize(instance)
       })
       ro.observe(containerRef.current)
     }
+
+    onViewportChange = () => {
+      if (mapRef.current) nudgeMapResize(mapRef.current)
+    }
+    window.visualViewport?.addEventListener('resize', onViewportChange)
+    window.addEventListener('orientationchange', onViewportChange)
 
     createMap(vectorStyle)
 
     const fallbackTimer = window.setTimeout(() => {
       if (cancelled || !instance || usedFallback) return
       if (instance.isStyleLoaded() && instance.loaded()) return
-
-      if (tilesReadyListenerRef.current && instance) {
-        try {
-          instance.off('idle', tilesReadyListenerRef.current)
-        } catch {
-          /* */
-        }
-        tilesReadyListenerRef.current = null
-      }
 
       usedFallback = true
       setIsRasterFallback(true)
@@ -276,15 +280,11 @@ export function MapboxSurface({
       window.clearTimeout(fallbackTimer)
       window.clearTimeout(tilesFallbackTimer)
       ro?.disconnect()
-      if (onClick && instance) instance.off('click', onClick)
-      if (tilesReadyListenerRef.current && instance) {
-        try {
-          instance.off('idle', tilesReadyListenerRef.current)
-        } catch {
-          /* */
-        }
-        tilesReadyListenerRef.current = null
+      if (onViewportChange) {
+        window.visualViewport?.removeEventListener('resize', onViewportChange)
+        window.removeEventListener('orientationchange', onViewportChange)
       }
+      if (onClick && instance) instance.off('click', onClick)
       markerObjs.current.forEach((m) => m.remove())
       markerObjs.current = []
       instance?.remove()
@@ -318,12 +318,14 @@ export function MapboxSurface({
       if (gen !== vectorStyleSwitchGenRef.current) return
       if (!map.isStyleLoaded()) return
       map.jumpTo({ center, zoom, bearing, pitch })
-      map.resize()
+      nudgeMapResize(map)
       try {
         applyNoraVectorMapStyle(map, applyDark)
       } catch {
         /* */
       }
+      resyncPendingMapRoute(map)
+      resyncPendingMapUserLocation(map)
     }
 
     /* После setStyle приходит серия styledata; первый раз список слоёв может быть ещё без building —
@@ -343,6 +345,8 @@ export function MapboxSurface({
     map.once('idle', () => {
       map.off('styledata', onStyleData)
       finishVectorTheme()
+      resyncPendingMapRoute(map)
+      resyncPendingMapUserLocation(map)
     })
 
     return () => {
@@ -378,6 +382,8 @@ export function MapboxSurface({
         pitch,
       })
       map.resize()
+      resyncPendingMapRoute(map)
+      resyncPendingMapUserLocation(map)
     }
 
     map.on('styledata', onRasterStyleData)
@@ -413,61 +419,85 @@ export function MapboxSurface({
     const map = mapRef.current
     if (!map) return
 
-    const syncOverlays = () => {
+    const syncMarkers = () => {
       markerObjs.current.forEach((m) => m.remove())
       markerObjs.current = []
 
       if (markers) {
         for (const m of markers) {
-          const el = document.createElement('div')
-          const hasLabel = m.label !== undefined && m.label !== null
-          const size = hasLabel ? 24 : 14
-          el.style.width = `${size}px`
-          el.style.height = `${size}px`
-          el.style.borderRadius = '999px'
-          el.style.background =
-            m.color ?? (isDark ? '#b8c4d4' : '#8e9aae')
-          el.style.boxShadow = isDark
-            ? '0 1px 3px rgba(12,11,10,0.4), 0 0 14px rgba(212,196,168,0.45), 0 0 2px rgba(184,196,212,0.85)'
-            : '0 1px 3px rgba(42,40,38,0.2), 0 0 12px rgba(142,154,174,0.35), 0 0 2px rgba(142,154,174,0.75)'
-          el.style.border = isDark
-            ? '2px solid rgba(245,243,240,0.9)'
-            : '2px solid rgba(255,255,255,0.92)'
-          if (hasLabel) {
-            el.style.display = 'flex'
-            el.style.alignItems = 'center'
-            el.style.justifyContent = 'center'
-            el.style.fontSize = '11px'
-            el.style.fontWeight = '700'
-            el.style.color = '#0f172a'
-            el.textContent = String(m.label)
-          }
-          const marker = new maplibregl.Marker({ element: el })
+          const el = createMapMarkerElement(m, isDark)
+          const marker = new maplibregl.Marker({
+            element: el,
+            anchor: 'bottom',
+          })
             .setLngLat([m.lng, m.lat])
             .addTo(map)
           markerObjs.current.push(marker)
         }
       }
-
-      syncMapRouteLayer(map, routePath, isDark)
     }
 
     if (map.isStyleLoaded()) {
-      syncOverlays()
+      syncMarkers()
     } else {
-      map.once('load', syncOverlays)
+      map.once('load', syncMarkers)
+      return () => {
+        map.off('load', syncMarkers)
+      }
+    }
+  }, [markers, isDark])
+
+  const routePathRef = useRef(routePath)
+  routePathRef.current = routePath
+  const routeIsDarkRef = useRef(isDark)
+  routeIsDarkRef.current = isDark
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    const syncRoute = () => {
+      syncMapRouteLayer(map, routePathRef.current, routeIsDarkRef.current)
     }
 
-    const onStyleData = () => {
-      if (!map.isStyleLoaded()) return
-      syncOverlays()
+    if (map.isStyleLoaded()) {
+      syncRoute()
+      return
     }
-    map.on('styledata', onStyleData)
 
+    map.once('idle', syncRoute)
     return () => {
-      map.off('styledata', onStyleData)
+      map.off('idle', syncRoute)
     }
-  }, [markers, routePath, isDark])
+  }, [routePath, isDark])
+
+  const userLocationRef = useRef(userLocation)
+  userLocationRef.current = userLocation
+  const userLocationIsDarkRef = useRef(isDark)
+  userLocationIsDarkRef.current = isDark
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    const syncUser = () => {
+      syncMapUserLocationLayer(
+        map,
+        userLocationRef.current,
+        userLocationIsDarkRef.current,
+      )
+    }
+
+    if (map.isStyleLoaded()) {
+      syncUser()
+      return
+    }
+
+    map.once('idle', syncUser)
+    return () => {
+      map.off('idle', syncUser)
+    }
+  }, [userLocation, isDark])
 
   return (
     <div
@@ -514,8 +544,7 @@ export function MapboxSurface({
       ) : null}
       {tileError ? (
         <div className="pointer-events-none absolute bottom-24 left-3 right-3 z-[5] rounded-xl border border-amber-500/40 bg-amber-950/90 px-3 py-2 text-center text-xs text-amber-100">
-          Не удалось подгрузить часть карты: {tileError}. Проверьте интернет или
-          отключите блокировщик рекламы для localhost.
+          {t('map.tileError')}
         </div>
       ) : null}
     </div>

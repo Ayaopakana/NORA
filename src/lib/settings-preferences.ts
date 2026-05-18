@@ -1,3 +1,9 @@
+import { isApiEnabled } from '@/api/config'
+import {
+  apiGetNotificationPrefs,
+  apiSaveNotificationPrefs,
+} from '@/api/settings'
+
 export type NotificationPrefs = {
   pushEnabled: boolean
   importantOnly: boolean
@@ -10,7 +16,7 @@ const DEFAULT: NotificationPrefs = {
   importantOnly: false,
 }
 
-export function getNotificationPrefs(): NotificationPrefs {
+function readLocal(): NotificationPrefs {
   try {
     const raw = localStorage.getItem(KEY)
     if (!raw) return { ...DEFAULT }
@@ -30,6 +36,17 @@ export function getNotificationPrefs(): NotificationPrefs {
   }
 }
 
+export function getNotificationPrefs(): NotificationPrefs {
+  return readLocal()
+}
+
+export async function fetchNotificationPrefs(): Promise<NotificationPrefs> {
+  if (isApiEnabled()) {
+    return apiGetNotificationPrefs()
+  }
+  return readLocal()
+}
+
 export function saveNotificationPrefs(prefs: NotificationPrefs) {
   try {
     localStorage.setItem(KEY, JSON.stringify(prefs))
@@ -37,4 +54,16 @@ export function saveNotificationPrefs(prefs: NotificationPrefs) {
   } catch {
     /* quota */
   }
+}
+
+export async function persistNotificationPrefs(
+  prefs: NotificationPrefs,
+): Promise<NotificationPrefs> {
+  if (isApiEnabled()) {
+    const saved = await apiSaveNotificationPrefs(prefs)
+    saveNotificationPrefs(saved)
+    return saved
+  }
+  saveNotificationPrefs(prefs)
+  return prefs
 }

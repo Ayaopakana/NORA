@@ -8,7 +8,7 @@ import { DailyBudgetLabel } from '@/components/DailyBudgetLabel'
 import { useI18n } from '@/hooks/useI18n'
 import { useSocialRefresh } from '@/hooks/useSocialRefresh'
 import { getDailyBudgetLabels } from '@/lib/daily-budget'
-import { getNoraUserProfile } from '@/lib/nora-users'
+import { getNoraUserProfileSync } from '@/lib/nora-users'
 import {
   analyzeRouteGroup,
   formatGroupBudgetSummary,
@@ -43,7 +43,7 @@ export function RouteGroupSection({
   const budgetLabels = getDailyBudgetLabels(locale)
 
   const friends: PublicProfile[] = getFriendIds()
-    .map((id) => getNoraUserProfile(id))
+    .map((id) => getNoraUserProfileSync(id))
     .filter((p): p is PublicProfile => p !== null)
 
   const friendIdSet = useMemo(

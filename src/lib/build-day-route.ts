@@ -5,6 +5,13 @@ import { localizePlannerPool } from '@/i18n/planner-text'
 import { filterRecommendationsByAge, type BirthDateInput } from '@/lib/age-policy'
 import { getDislikedPlaceIds } from '@/lib/place-preferences-storage'
 import {
+  buildRouteProfile,
+  buildSaturatedRoute,
+  effectiveStopCount,
+  maxLegKmForProfile,
+  rankPlacesForRoute,
+} from '@/lib/route-criteria'
+import {
   clampStopCount,
   filterByRouteArea,
   isRouteAreaKey,
@@ -12,6 +19,7 @@ import {
   isRouteVibe,
   legacyMoodToVibe,
   routeAreaLabel,
+  routeAreaSeed,
   vibeToPlannerMood,
   type RouteAreaKey,
   type RouteDayPeriod,
@@ -25,6 +33,10 @@ import {
   type PlannerMood,
   type PlannerRecommendation,
 } from '@/lib/planner-recommendations'
+import { optimizeWalkingOrder } from '@/lib/optimize-route-order'
+import { withPlaceCoordinates } from '@/lib/place-coordinates'
+import { getPopularForMoodAndBudget } from '@/lib/venue-catalog'
+import type { MoodPreset } from '@/types/user'
 
 /** @deprecated используйте dayPeriod + stopCount */
 export type RouteTimeSlot = 'morning' | 'afternoon' | 'evening' | 'full'
@@ -46,6 +58,8 @@ export type DayRouteInput = {
   participantIds?: string[]
   groupBudgetAvg?: number
   organizerBudgetIdx?: number
+  /** Настроение из профиля / карты — уточняет «устал» vs «энергия» */
+  profileMood?: MoodPreset
 }
 
 export type DayRoute = {
@@ -69,39 +83,64 @@ export type DayRoute = {
 }
 
 function parseDurationMinutes(s: string): number {
-  const h = s.match(/(\d+)\s*ч/)
-  const m = s.match(/(\d+)\s*мин/)
+  const h = s.match(/(\d+)\s*(?:ч|h|саат|시간)\b/i)
+  const m = s.match(/(\d+)\s*(?:мин|min|мүн|분)\b/i)
   return (h ? Number(h[1]) * 60 : 0) + (m ? Number(m[1]) : 0)
 }
 
-function dist(
-  a: { lng: number; lat: number },
-  b: { lng: number; lat: number },
-) {
-  const dx = (a.lng - b.lng) * Math.cos((a.lat * Math.PI) / 180)
-  const dy = a.lat - b.lat
-  return Math.hypot(dx, dy)
-}
-
-function orderByProximity(
-  stops: PlannerRecommendation[],
+function gatherMoodPools(
+  mood: PlannerMood,
+  profile: ReturnType<typeof buildRouteProfile>,
+  locale: Locale,
+  budgetIdx: number,
+  birthDate: BirthDateInput,
+  userId: string | undefined,
+  mbti: MbtiId | '' | undefined,
 ): PlannerRecommendation[] {
-  if (stops.length <= 1) return stops
-  const rem = [...stops]
-  const ordered: PlannerRecommendation[] = []
-  const cx = rem.reduce((s, p) => s + p.lng, 0) / rem.length
-  const cy = rem.reduce((s, p) => s + p.lat, 0) / rem.length
-  rem.sort(
-    (a, b) =>
-      dist(a, { lng: cx, lat: cy }) - dist(b, { lng: cx, lat: cy }),
-  )
-  ordered.push(rem.shift()!)
-  while (rem.length) {
-    const last = ordered[ordered.length - 1]!
-    rem.sort((a, b) => dist(a, last) - dist(b, last))
-    ordered.push(rem.shift()!)
+  const tiredLike =
+    profile.vibe === 'cozy' ||
+    profile.profileMood === 'tired' ||
+    profile.profileMood === 'anxious'
+
+  const moods = new Set<PlannerMood>([mood])
+  if (profile.profileMood) moods.add(profile.profileMood)
+  if (profile.vibe === 'cozy' || tiredLike) {
+    moods.add('tired')
+    moods.add('calm')
+    moods.add('anxious')
   }
-  return ordered
+  if (profile.vibe === 'romantic' || profile.vibe === 'family' || profile.vibe === 'calm') {
+    moods.add('calm')
+    moods.add('tired')
+  }
+  if (profile.vibe === 'social' || profile.vibe === 'active') {
+    moods.add('energy')
+    moods.add('calm')
+  }
+  if (!tiredLike) moods.add('energy')
+
+  const out: PlannerRecommendation[] = []
+  for (const m of moods) {
+    out.push(
+      ...getRecommendationsForMoodAndBudget(
+        m,
+        budgetIdx,
+        locale,
+        birthDate,
+        userId,
+        mbti,
+      ),
+      ...getPopularForMoodAndBudget(
+        m,
+        budgetIdx,
+        locale,
+        birthDate,
+        userId,
+        mbti,
+      ),
+    )
+  }
+  return out
 }
 
 function uniqueById(items: PlannerRecommendation[]) {
@@ -122,8 +161,14 @@ export function buildDayRoute(
   const mood = vibeToPlannerMood(vibe)
   const budget = normalizeBudgetIndex(input.budgetIdx)
   const birthDate = input.birthDate ?? null
-  const stopCount = clampStopCount(input.stopCount)
   const areaKey = input.areaKey
+  const profile = buildRouteProfile({
+    vibe,
+    dayPeriod: input.dayPeriod,
+    stopCount: input.stopCount,
+    profileMood: input.profileMood,
+  })
+  const resolvedStopCount = effectiveStopCount(profile)
   const pools = localizePlannerPool(PLANNER_BY_MOOD, locale)
   const affordable = filterRecommendationsByAge(
     pools[mood].filter((r) => r.budgetTier <= budget),
@@ -140,10 +185,11 @@ export function buildDayRoute(
   }
 
   let candidates = uniqueById([
-    ...getRecommendationsForMoodAndBudget(
+    ...gatherMoodPools(
       mood,
-      input.budgetIdx,
+      profile,
       locale,
+      input.budgetIdx,
       birthDate,
       input.userId,
       input.mbti,
@@ -152,11 +198,35 @@ export function buildDayRoute(
   ]).filter((r) => !disliked.has(r.id))
 
   candidates = filterByRouteArea(candidates, areaKey, input.areaCustom)
-  if (!candidates.length) candidates = affordable.filter((r) => !disliked.has(r.id))
   if (!candidates.length) return null
 
-  const stops = orderByProximity(candidates).slice(0, stopCount)
-  if (!stops.length) return null
+  const ranked = rankPlacesForRoute(
+    candidates,
+    profile,
+    input.mbti,
+    input.userId,
+    birthDate,
+  )
+  const shortlist = ranked.slice(0, Math.max(resolvedStopCount * 8, 24))
+  const areaCenter = routeAreaSeed(areaKey)
+  const maxLegKm = maxLegKmForProfile(profile, areaKey)
+
+  const picked = buildSaturatedRoute(
+    shortlist,
+    profile,
+    areaCenter,
+    maxLegKm,
+    input.mbti,
+    input.userId,
+    birthDate,
+  ).map(withPlaceCoordinates)
+
+  if (!picked.length) return null
+
+  const stops =
+    picked.length >= 2
+      ? optimizeWalkingOrder(picked, areaCenter)
+      : picked
 
   const groupSize = input.groupSize ?? 1
   const participantIds = input.participantIds ?? []
@@ -166,7 +236,7 @@ export function buildDayRoute(
     vibe,
     mood,
     dayPeriod: input.dayPeriod,
-    stopCount,
+    stopCount: clampStopCount(resolvedStopCount),
     areaKey,
     area: routeAreaLabel(areaKey, input.areaCustom, locale),
     stops,
@@ -186,17 +256,23 @@ export function buildDayRoute(
   }
 }
 
+const DURATION_UNITS: Record<
+  Locale,
+  { hour: string; minute: string }
+> = {
+  en: { hour: 'h', minute: 'min' },
+  ru: { hour: 'ч', minute: 'мин' },
+  ky: { hour: 'саат', minute: 'мүн' },
+  ko: { hour: '시간', minute: '분' },
+}
+
 export function formatRouteDuration(totalMin: number, locale: Locale): string {
   const h = Math.floor(totalMin / 60)
   const m = totalMin % 60
-  if (locale === 'en') {
-    if (h && m) return `${h} h ${m} min`
-    if (h) return `${h} h`
-    return `${m} min`
-  }
-  if (h && m) return `${h} ч ${m} мин`
-  if (h) return `${h} ч`
-  return `${m} мин`
+  const { hour, minute } = DURATION_UNITS[locale] ?? DURATION_UNITS.ru
+  if (h && m) return `${h} ${hour} ${m} ${minute}`
+  if (h) return `${h} ${hour}`
+  return `${m} ${minute}`
 }
 
 /** Нормализация старых маршрутов из localStorage */

@@ -1,9 +1,16 @@
 import type { Locale } from '@/i18n/config'
+import { isApiEnabled } from '@/api/config'
+import {
+  apiDeleteSavedRoute,
+  apiListSavedRoutes,
+  apiSaveRoute,
+} from '@/api/routes'
+import { readStoredLocale } from '@/i18n/locale-storage'
 import {
   normalizeDayRouteFields,
   type DayRoute,
 } from '@/lib/build-day-route'
-import { findPlannerRecommendation } from '@/lib/planner-recommendations'
+import { findRecommendation } from '@/lib/venue-catalog'
 
 export type SavedDayRoute = DayRoute & { savedAt: number }
 
@@ -47,30 +54,30 @@ function normalizeSavedRoute(
     .map((s) => {
       if (!s || typeof s !== 'object') return null
       const p = s as Record<string, unknown>
-      const lng = Number(p.lng)
-      const lat = Number(p.lat)
-      if (
-        typeof p.id !== 'string' ||
-        typeof p.title !== 'string' ||
-        typeof p.place !== 'string' ||
-        !Number.isFinite(lng) ||
-        !Number.isFinite(lat)
-      ) {
-        return null
+      if (typeof p.id !== 'string') return null
+
+      const fresh = findRecommendation(p.id, locale)
+      let lng = Number(p.lng)
+      let lat = Number(p.lat)
+      if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+        if (!fresh) return null
+        lng = fresh.lng
+        lat = fresh.lat
       }
+
       return {
         id: p.id,
-        title: p.title,
-        place: p.place,
-        address: typeof p.address === 'string' ? p.address : '',
+        title: fresh?.title ?? (typeof p.title === 'string' ? p.title : p.id),
+        place: fresh?.place ?? (typeof p.place === 'string' ? p.place : ''),
+        address: fresh?.address ?? (typeof p.address === 'string' ? p.address : ''),
         lng,
         lat,
-        duration: typeof p.duration === 'string' ? p.duration : '',
-        budgetTier: Number(p.budgetTier) || 0,
-        badge: typeof p.badge === 'string' ? p.badge : '',
-        mbtiFit: Array.isArray(p.mbtiFit) ? p.mbtiFit : undefined,
-        venueTags: Array.isArray(p.venueTags) ? p.venueTags : undefined,
-        minAge: typeof p.minAge === 'number' ? p.minAge : undefined,
+        duration: fresh?.duration ?? (typeof p.duration === 'string' ? p.duration : ''),
+        budgetTier: Number(p.budgetTier) || fresh?.budgetTier || 0,
+        badge: fresh?.badge ?? (typeof p.badge === 'string' ? p.badge : ''),
+        mbtiFit: Array.isArray(p.mbtiFit) ? p.mbtiFit : fresh?.mbtiFit,
+        venueTags: Array.isArray(p.venueTags) ? p.venueTags : fresh?.venueTags,
+        minAge: typeof p.minAge === 'number' ? p.minAge : fresh?.minAge,
       }
     })
     .filter((s): s is NonNullable<typeof s> => s !== null)
@@ -92,15 +99,7 @@ export function notifySavedRoutesChange() {
   }
 }
 
-export function getSavedRoutes(userId: string): SavedDayRoute[] {
-  const list = readStore()[userId] ?? []
-  return list
-    .map((r) => normalizeSavedRoute(r, 'ru'))
-    .filter((r): r is SavedDayRoute => r !== null)
-    .sort((a, b) => b.savedAt - a.savedAt)
-}
-
-export function getSavedRoutesLocalized(
+function getSavedRoutesLocal(
   userId: string,
   locale: Locale,
 ): SavedDayRoute[] {
@@ -111,13 +110,47 @@ export function getSavedRoutesLocalized(
     .sort((a, b) => b.savedAt - a.savedAt)
 }
 
+export async function getSavedRoutesLocalized(
+  userId: string,
+  locale: Locale,
+): Promise<SavedDayRoute[]> {
+  if (isApiEnabled()) {
+    const routes = await apiListSavedRoutes()
+    return routes
+      .map((r) => normalizeSavedRoute(r, locale))
+      .filter((r): r is SavedDayRoute => r !== null)
+      .sort((a, b) => b.savedAt - a.savedAt)
+  }
+  return getSavedRoutesLocal(userId, locale)
+}
+
+export function getSavedRoutes(
+  userId: string,
+  locale: Locale = readStoredLocale(),
+): SavedDayRoute[] {
+  return getSavedRoutesLocal(userId, locale)
+}
+
+function mergeStopWithSavedCoords(
+  saved: DayRoute['stops'][number],
+  fresh: DayRoute['stops'][number] | null,
+): DayRoute['stops'][number] {
+  if (!fresh) return saved
+  const lng = Number.isFinite(saved.lng) ? saved.lng : fresh.lng
+  const lat = Number.isFinite(saved.lat) ? saved.lat : fresh.lat
+  return { ...fresh, lng, lat }
+}
+
 export function rehydrateDayRoute(route: DayRoute, locale: Locale): DayRoute {
-  const fields = normalizeDayRouteFields(route as unknown as Record<string, unknown>, locale)
+  const fields = normalizeDayRouteFields(
+    route as unknown as Record<string, unknown>,
+    locale,
+  )
   return {
     ...route,
     ...(fields ?? {}),
-    stops: route.stops.map(
-      (s) => findPlannerRecommendation(s.id, locale) ?? s,
+    stops: route.stops.map((s) =>
+      mergeStopWithSavedCoords(s, findRecommendation(s.id, locale)),
     ),
   }
 }
@@ -127,20 +160,39 @@ function sameStops(a: DayRoute, b: DayRoute) {
   return a.stops.every((s, i) => s.id === b.stops[i]?.id)
 }
 
-export function isDayRouteSaved(userId: string, route: DayRoute): boolean {
-  return getSavedRoutes(userId).some((r) => sameStops(r, route))
-}
-
-export function findSavedRouteMatch(
+export async function isDayRouteSaved(
   userId: string,
   route: DayRoute,
-): SavedDayRoute | null {
-  return getSavedRoutes(userId).find((r) => sameStops(r, route)) ?? null
+): Promise<boolean> {
+  const list = await getSavedRoutesLocalized(userId, readStoredLocale())
+  return list.some((r) => sameStops(r, route))
 }
 
-export function saveDayRoute(userId: string, route: DayRoute): boolean {
+export async function findSavedRouteMatch(
+  userId: string,
+  route: DayRoute,
+  locale: Locale = readStoredLocale(),
+): Promise<SavedDayRoute | null> {
+  const list = await getSavedRoutesLocalized(userId, locale)
+  return list.find((r) => sameStops(r, route)) ?? null
+}
+
+export async function saveDayRoute(
+  userId: string,
+  route: DayRoute,
+): Promise<boolean> {
+  if (isApiEnabled()) {
+    try {
+      await apiSaveRoute(route)
+      notifySavedRoutesChange()
+      return true
+    } catch {
+      return false
+    }
+  }
+
   const store = readStore()
-  const list = getSavedRoutes(userId)
+  const list = getSavedRoutesLocal(userId, readStoredLocale())
   if (list.some((r) => sameStops(r, route))) return false
   const entry: SavedDayRoute = { ...route, savedAt: Date.now() }
   const next = [entry, ...list].slice(0, MAX_PER_USER)
@@ -150,9 +202,17 @@ export function saveDayRoute(userId: string, route: DayRoute): boolean {
   return true
 }
 
-export function removeSavedRoute(userId: string, routeId: string) {
+export async function removeSavedRoute(userId: string, routeId: string) {
+  if (isApiEnabled()) {
+    await apiDeleteSavedRoute(routeId)
+    notifySavedRoutesChange()
+    return
+  }
+
   const store = readStore()
-  const list = getSavedRoutes(userId).filter((r) => r.id !== routeId)
+  const list = getSavedRoutesLocal(userId, readStoredLocale()).filter(
+    (r) => r.id !== routeId,
+  )
   store[userId] = list
   writeStore(store)
   notifySavedRoutesChange()

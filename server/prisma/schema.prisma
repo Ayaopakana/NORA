@@ -1,0 +1,119 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  passwordHash     String
+  name             String
+  nickname         String
+  bio              String   @default("")
+  avatarUrl        String?
+  avatarEmoji      String   @default("✨")
+  interests        String   @default("[]")
+  isDemo           Boolean  @default(false)
+  psychotypeId     String   @default("")
+  moodNote         String   @default("")
+  budgetComfort    String   @default("")
+  cityIntent       String   @default("")
+  mbti             String   @default("")
+  countryOrigin    String   @default("")
+  countryCurrent   String   @default("")
+  userStatus       String   @default("")
+  zones            String   @default("{}")
+  dailyBudgetIndex Int      @default(1)
+  initialMood      String   @default("")
+  birthYear        Int?
+  routine          String   @default("{\"slots\":[]}")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  settings         UserSettings?
+  savedRoutes      SavedRoute[]
+  friendships      Friendship[]      @relation("Friendships")
+  friendOf         Friendship[]      @relation("FriendOf")
+  sentRequests     FriendRequest[]   @relation("SentRequests")
+  receivedRequests FriendRequest[]   @relation("ReceivedRequests")
+  chatMessages     ChatMessage[]
+  placeReviews     PlaceReview[]
+  placePreferences PlacePreference[]
+}
+
+model UserSettings {
+  userId        String  @id
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pushEnabled   Boolean @default(true)
+  importantOnly Boolean @default(false)
+}
+
+model SavedRoute {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Friendship {
+  userId   String
+  friendId String
+  user     User   @relation("Friendships", fields: [userId], references: [id], onDelete: Cascade)
+  friend   User   @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@id([userId, friendId])
+}
+
+model FriendRequest {
+  id        String   @id @default(uuid())
+  fromId    String
+  toId      String
+  from      User     @relation("SentRequests", fields: [fromId], references: [id], onDelete: Cascade)
+  to        User     @relation("ReceivedRequests", fields: [toId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([fromId, toId])
+  @@index([toId])
+  @@index([fromId])
+}
+
+model ChatMessage {
+  id     String   @id @default(uuid())
+  userId String
+  peerId String
+  fromId String
+  text   String
+  at     DateTime @default(now())
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, peerId, at])
+}
+
+model PlaceReview {
+  id      String   @id @default(uuid())
+  placeId String
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating  Int
+  text    String
+  at      DateTime @default(now())
+
+  @@index([placeId, at])
+  @@unique([userId, placeId])
+}
+
+model PlacePreference {
+  userId  String
+  placeId String
+  value   String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, placeId])
+}

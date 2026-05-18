@@ -1,14 +1,12 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { Briefcase, GraduationCap, Home } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { CityCombobox } from '@/components/CityCombobox'
 import { CountryCombobox } from '@/components/CountryCombobox'
 import { MbtiGrid } from '@/components/MbtiGrid'
-import { MapboxSurface } from '@/components/map/MapboxSurface'
 import { Button } from '@/components/ui/button'
 import { DailyBudgetSlider } from '@/components/DailyBudgetSlider'
 import { useAuth } from '@/contexts/useAuth'
@@ -19,13 +17,11 @@ import {
 } from '@/lib/planner-recommendations'
 import { getCountries } from '@/lib/countries'
 import type { MbtiId } from '@/lib/mbti'
-import { ZoneRoutineEditor } from '@/components/profile/ZoneRoutineEditor'
 import { BirthDateFields } from '@/components/BirthDateFields'
 import { isValidBirthDate } from '@/lib/age-policy'
 import { motionGpuClass, spring, tween } from '@/lib/motion'
 import { cn } from '@/lib/utils'
-import { emptyRoutine, type UserRoutine } from '@/types/routine'
-import type { MoodPreset, UserStatus, UserZones, ZoneKey } from '@/types/user'
+import type { MoodPreset, UserStatus } from '@/types/user'
 
 const MOOD_IDS: PlannerMood[] = ['energy', 'calm', 'tired', 'anxious']
 
@@ -84,36 +80,10 @@ export function RegisterWizard() {
 
   const [mbti, setMbti] = useState<MbtiId | ''>('')
 
-  const [zones, setZones] = useState<UserZones>({})
-  const [routine, setRoutine] = useState<UserRoutine>(emptyRoutine())
-  const [activeZone, setActiveZone] = useState<ZoneKey | null>(null)
-  const activeZoneRef = useRef<ZoneKey | null>(null)
-  activeZoneRef.current = activeZone
-
-  const pickStable = useCallback((p: { lng: number; lat: number }) => {
-    const z = activeZoneRef.current
-    if (!z) return
-    setZones((prev) => ({ ...prev, [z]: p }))
-  }, [])
-
-  const markers = useMemo(() => {
-    const out: { id: string; lng: number; lat: number; color?: string }[] = []
-    const colors: Record<ZoneKey, string> = {
-      home: '#38bdf8',
-      school: '#7dd3fc',
-      work: '#2563eb',
-    }
-    ;(['home', 'school', 'work'] as ZoneKey[]).forEach((k) => {
-      const z = zones[k]
-      if (z) out.push({ id: k, lng: z.lng, lat: z.lat, color: colors[k] })
-    })
-    return out
-  }, [zones])
-
   const [mood, setMood] = useState<MoodPreset>('calm')
   const [budgetIdx, setBudgetIdx] = useState(1)
 
-  const progress = useMemo(() => ((step + 1) / 4) * 100, [step])
+  const progress = useMemo(() => ((step + 1) / 3) * 100, [step])
 
   const birthDayNum = Number(birthDay)
   const birthMonthNum = Number(birthMonth)
@@ -131,8 +101,6 @@ export function RegisterWizard() {
 
   const canNext1 = mbti !== ''
 
-  const canNext2 = Boolean(zones.home)
-
   const canFinish = budgetIdx >= 0
 
   async function finish() {
@@ -146,11 +114,9 @@ export function RegisterWizard() {
         cityIntent: city,
         userStatus: status,
         mbti: mbti || undefined,
-        zones,
         birthDay: birthDayNum,
         birthMonth: birthMonthNum,
         birthYear: birthYearNum,
-        routine,
         initialMood: mood,
         dailyBudgetIndex: budgetIdx,
         moodNote:
@@ -178,14 +144,13 @@ export function RegisterWizard() {
 
   function next() {
     setError(null)
-    if (step < 3) setStep((s) => s + 1)
+    if (step < 2) setStep((s) => s + 1)
   }
 
   const disableNext =
     (step === 0 && !canNext0) ||
     (step === 1 && !canNext1) ||
-    (step === 2 && !canNext2) ||
-    (step === 3 && !canFinish)
+    (step === 2 && !canFinish)
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-[var(--nora-bg)] px-4 py-8 text-[var(--nora-text)]">
@@ -369,77 +334,9 @@ export function RegisterWizard() {
             ) : null}
 
             {step === 2 ? (
-              <div className="space-y-4">
+              <motion.div className="space-y-5">
                 <div>
-                  <h1 className="text-xl font-semibold">Шаг 3 — Smart Zones</h1>
-                  <p className="mt-1 text-sm text-[var(--nora-text-muted)]">
-                    Выбери зону, затем тапни по карте, чтобы поставить точку.
-                    Дом обязателен для баланса сценариев NORA.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {(
-                    [
-                      { id: 'home' as const, label: t('register.zoneHome'), icon: Home },
-                      {
-                        id: 'school' as const,
-                        label: t('register.zoneSchool'),
-                        icon: GraduationCap,
-                      },
-                      {
-                        id: 'work' as const,
-                        label: t('register.zoneWork'),
-                        icon: Briefcase,
-                      },
-                    ] as const
-                  ).map(({ id, label, icon: Icon }) => (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setActiveZone(id)}
-                      className={cn(
-                        'inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm transition-colors',
-                        activeZone === id
-                          ? 'border-sky-400/70 bg-sky-400/10 text-sky-100 shadow-neon'
-                          : 'border-[var(--nora-border)] glass-panel text-[var(--nora-text)]',
-                      )}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <div className="h-56 overflow-hidden rounded-xl border border-[var(--nora-border)]">
-                  <MapboxSurface
-                    className="h-full w-full"
-                    pickPoint={pickStable}
-                    markers={markers}
-                  />
-                </div>
-                {!activeZone ? (
-                  <p className="text-xs text-[var(--nora-text-muted)]">
-                    Сначала выбери тип зоны (дом, учёба или работа).
-                  </p>
-                ) : null}
-                <div className="border-t border-[var(--nora-border-subtle)] pt-4">
-                  <p className="text-sm font-medium">{t('register.routineTitle')}</p>
-                  <p className="mt-1 text-xs text-[var(--nora-text-muted)]">
-                    {t('register.routineHint')}
-                  </p>
-                  <ZoneRoutineEditor
-                    className="mt-3"
-                    zones={zones}
-                    routine={routine}
-                    onChange={setRoutine}
-                  />
-                </div>
-              </div>
-            ) : null}
-
-            {step === 3 ? (
-              <div className="space-y-5">
-                <div>
-                  <h1 className="text-xl font-semibold">Шаг 4 — состояние</h1>
+                  <h1 className="text-xl font-semibold">Шаг 3 — состояние</h1>
                   <p className="mt-1 text-sm text-[var(--nora-text-muted)]">
                     Как ты чувствуешь себя прямо сейчас? И какой бюджет на день
                     комфортен?
@@ -474,7 +371,7 @@ export function RegisterWizard() {
                     sliderClassName="mt-3"
                   />
                 </div>
-              </div>
+              </motion.div>
             ) : null}
 
             {error ? (
@@ -492,7 +389,7 @@ export function RegisterWizard() {
               >
                 Назад
               </Button>
-              {step < 3 ? (
+              {step < 2 ? (
                 <Button
                   type="button"
                   disabled={disableNext || pending || leaving}
