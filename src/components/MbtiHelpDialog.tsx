@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { useI18n } from '@/hooks/useI18n'
 import { getMbtiTypes } from '@/i18n/content/mbti-types'
+import { getMbtiAccentHex, mbtiTitleColor } from '@/lib/mbti-colors'
 import { MBTI_TEST_URL } from '@/lib/mbti-links'
 import { cn } from '@/lib/utils'
 
@@ -63,12 +64,20 @@ export function MbtiHelpDialog({
             {t('mbtiHelp.typesOverview')}
           </p>
           <ul className="mt-2 space-y-2 text-sm text-[var(--nora-text-muted)]">
-            {types.map((type) => (
-              <li key={type.id}>
-                <strong className="text-[var(--nora-text)]">{type.id}</strong> —{' '}
-                {type.subtitle}
-              </li>
-            ))}
+            {types.map((type) => {
+              const hex = getMbtiAccentHex(type.id)
+              return (
+                <li key={type.id}>
+                  <strong
+                    className="font-semibold"
+                    style={hex ? mbtiTitleColor(hex) : undefined}
+                  >
+                    {type.id}
+                  </strong>{' '}
+                  — {type.subtitle}
+                </li>
+              )
+            })}
           </ul>
         </div>
       </DialogContent>

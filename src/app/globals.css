@@ -2,103 +2,129 @@
 @tailwind components;
 @tailwind utilities;
 
-/* NORA — прозрачное стекло, чёткий контраст light + dark */
+/* NORA — мягкая премиальная эстетика (ivory · champagne · pearl) */
 :root {
   color-scheme: light;
 
-  --nora-bg-base: #e2edf5;
-  --nora-mesh-a: rgba(14, 165, 233, 0.22);
-  --nora-mesh-b: rgba(37, 99, 235, 0.1);
-  --nora-mesh-c: rgba(255, 255, 255, 0.75);
+  --nora-bg-base: #f8f6f3;
+  --nora-bg-gradient: linear-gradient(
+    180deg,
+    #fcfbfa 0%,
+    #f8f6f3 45%,
+    #f2efe9 100%
+  );
+  --nora-mesh-a: rgba(212, 196, 168, 0.22);
+  --nora-mesh-b: rgba(196, 204, 214, 0.18);
+  --nora-mesh-c: rgba(255, 252, 248, 0.72);
+  --nora-mesh-d: transparent;
 
-  --nora-bg: #e2edf5;
-  --nora-text: #0f172a;
-  --nora-text-muted: #475569;
-  --nora-accent: #0284c7;
-  --nora-accent-2: #1d4ed8;
-  --nora-border: rgba(15, 23, 42, 0.14);
-  --nora-border-strong: rgba(15, 23, 42, 0.22);
-  --nora-border-subtle: rgba(15, 23, 42, 0.08);
-  --nora-glow: rgba(14, 165, 233, 0.28);
-  --nora-progress: rgba(2, 132, 199, 0.95);
+  --nora-bg: #f8f6f3;
+  --nora-text: #2a2826;
+  --nora-text-muted: #8a8580;
+  --nora-accent: #8e9aae;
+  --nora-accent-2: #c4b5a0;
+  --nora-border: rgba(42, 40, 38, 0.07);
+  --nora-border-strong: rgba(42, 40, 38, 0.11);
+  --nora-border-subtle: rgba(42, 40, 38, 0.05);
+  --nora-glow: rgba(196, 181, 160, 0.32);
+  --nora-progress: rgba(142, 154, 174, 0.88);
 
-  --nora-glass-highlight: rgba(255, 255, 255, 0.72);
-  --nora-glass-shade: rgba(255, 255, 255, 0.18);
-  --nora-surface: rgba(255, 255, 255, 0.42);
-  --nora-surface-strong: rgba(255, 255, 255, 0.58);
-  --nora-surface-veil: rgba(255, 255, 255, 0.28);
-  --nora-nav-bg: rgba(255, 255, 255, 0.5);
+  --nora-glass-highlight: rgba(255, 255, 255, 0.82);
+  --nora-glass-shade: rgba(248, 246, 243, 0.42);
+  --nora-surface: rgba(255, 255, 255, 0.58);
+  --nora-surface-strong: rgba(255, 255, 255, 0.74);
+  --nora-surface-veil: rgba(255, 255, 255, 0.38);
+  --nora-nav-bg: rgba(255, 255, 255, 0.62);
 
-  --nora-bubble-mine: rgba(14, 165, 233, 0.18);
-  --nora-bubble-mine-text: #0c4a6e;
-  --nora-bubble-theirs: rgba(255, 255, 255, 0.65);
-  --nora-bubble-theirs-text: #0f172a;
+  --nora-bubble-mine: rgba(232, 228, 220, 0.72);
+  --nora-bubble-mine-text: #4a4844;
+  --nora-bubble-theirs: rgba(255, 255, 255, 0.78);
+  --nora-bubble-theirs-text: #2a2826;
 
-  --nora-blur: 24px;
-  --nora-blur-strong: 36px;
-  --nora-radius: 1rem;
-  --nora-radius-lg: 1.25rem;
+  --nora-blur: 28px;
+  --nora-blur-strong: 40px;
+  --nora-radius: 1.0625rem;
+  --nora-radius-lg: 1.3125rem;
 
   --nora-shadow-glass:
-    0 2px 8px rgba(15, 23, 42, 0.06),
-    0 12px 32px -8px rgba(37, 99, 235, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    0 1px 2px rgba(42, 40, 38, 0.04),
+    0 8px 28px -6px rgba(42, 40, 38, 0.07),
+    0 20px 48px -16px rgba(196, 181, 160, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
   --nora-shadow-glass-lg:
-    0 8px 28px -4px rgba(15, 23, 42, 0.1),
-    0 20px 48px -12px rgba(37, 99, 235, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+    0 2px 4px rgba(42, 40, 38, 0.05),
+    0 16px 40px -8px rgba(42, 40, 38, 0.09),
+    0 32px 64px -20px rgba(196, 181, 160, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.98);
   --nora-shadow-nav:
-    0 -2px 20px rgba(15, 23, 42, 0.06),
-    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+    0 -1px 0 rgba(255, 255, 255, 0.65) inset,
+    0 -12px 36px -8px rgba(42, 40, 38, 0.06);
 }
 
 .dark {
   color-scheme: dark;
 
-  --nora-bg-base: #020617;
-  --nora-mesh-a: rgba(56, 189, 248, 0.12);
-  --nora-mesh-b: rgba(37, 99, 235, 0.2);
-  --nora-mesh-c: rgba(15, 23, 42, 0.45);
+  --nora-bg-base: #141820;
+  --nora-bg-gradient: linear-gradient(
+    152deg,
+    #221e32 0%,
+    #1a1824 28%,
+    #181716 52%,
+    #121a24 78%,
+    #0e141c 100%
+  );
+  --nora-mesh-a: rgba(212, 196, 168, 0.16);
+  --nora-mesh-b: rgba(148, 172, 210, 0.14);
+  --nora-mesh-c: rgba(118, 92, 138, 0.12);
+  --nora-mesh-d: rgba(72, 118, 142, 0.1);
 
-  --nora-bg: #020617;
-  --nora-text: #f1f5f9;
-  --nora-text-muted: #94a3b8;
-  --nora-accent: #38bdf8;
-  --nora-accent-2: #60a5fa;
-  --nora-border: rgba(148, 163, 184, 0.18);
-  --nora-border-strong: rgba(148, 163, 184, 0.28);
-  --nora-border-subtle: rgba(56, 189, 248, 0.1);
-  --nora-glow: rgba(56, 189, 248, 0.35);
-  --nora-progress: rgba(56, 189, 248, 0.95);
+  --nora-bg: #181716;
+  --nora-text: #f5f3f0;
+  --nora-text-muted: #a39e98;
+  --nora-accent: #b8c4d4;
+  --nora-accent-2: #d4c4a8;
+  --nora-border: rgba(255, 255, 255, 0.07);
+  --nora-border-strong: rgba(255, 255, 255, 0.11);
+  --nora-border-subtle: rgba(255, 255, 255, 0.05);
+  --nora-glow: rgba(212, 196, 168, 0.18);
+  --nora-progress: rgba(184, 196, 212, 0.88);
 
   --nora-glass-highlight: rgba(255, 255, 255, 0.07);
-  --nora-glass-shade: rgba(2, 6, 23, 0.4);
-  --nora-surface: rgba(15, 23, 42, 0.42);
-  --nora-surface-strong: rgba(15, 23, 42, 0.62);
-  --nora-surface-veil: rgba(15, 23, 42, 0.32);
-  --nora-nav-bg: rgba(2, 6, 23, 0.52);
+  --nora-glass-shade: rgba(12, 11, 10, 0.42);
+  --nora-surface: rgba(36, 34, 32, 0.52);
+  --nora-surface-strong: rgba(42, 40, 38, 0.72);
+  --nora-surface-veil: rgba(36, 34, 32, 0.38);
+  --nora-nav-bg: rgba(24, 23, 22, 0.62);
 
-  --nora-bubble-mine: rgba(56, 189, 248, 0.22);
-  --nora-bubble-mine-text: #e0f2fe;
-  --nora-bubble-theirs: rgba(30, 41, 59, 0.75);
-  --nora-bubble-theirs-text: #f1f5f9;
+  --nora-bubble-mine: rgba(184, 196, 212, 0.16);
+  --nora-bubble-mine-text: #e8e6e2;
+  --nora-bubble-theirs: rgba(42, 40, 38, 0.82);
+  --nora-bubble-theirs-text: #f5f3f0;
 
   --nora-shadow-glass:
-    0 4px 20px rgba(0, 0, 0, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.22),
+    0 16px 40px -12px rgba(0, 0, 0, 0.32),
     inset 0 1px 0 rgba(255, 255, 255, 0.07);
   --nora-shadow-glass-lg:
-    0 12px 40px -8px rgba(0, 0, 0, 0.5),
-    0 0 40px -16px rgba(56, 189, 248, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 4px 12px rgba(0, 0, 0, 0.26),
+    0 24px 56px -16px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
   --nora-shadow-nav:
-    0 -6px 28px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 -1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 -16px 40px -10px rgba(0, 0, 0, 0.28);
 }
 
 @layer base {
   html {
     @apply antialiased;
-    background: var(--nora-bg-base);
+    background: var(--nora-bg-gradient, var(--nora-bg-base));
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.025em;
+    font-weight: 600;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -108,12 +134,16 @@
   }
 
   body {
+    @apply font-sans;
     margin: 0;
     min-height: 100dvh;
     min-height: 100svh;
     background: transparent;
     color: var(--nora-text);
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    letter-spacing: -0.012em;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
     padding-top: env(safe-area-inset-top);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
@@ -127,21 +157,26 @@
     pointer-events: none;
     background:
       radial-gradient(
-        ellipse 90% 55% at 8% -5%,
+        ellipse 85% 60% at 6% -8%,
         var(--nora-mesh-a) 0%,
-        transparent 55%
+        transparent 58%
       ),
       radial-gradient(
-        ellipse 70% 50% at 95% 15%,
+        ellipse 72% 55% at 98% 8%,
         var(--nora-mesh-b) 0%,
+        transparent 52%
+      ),
+      radial-gradient(
+        ellipse 55% 50% at 82% 92%,
+        var(--nora-mesh-d) 0%,
+        transparent 48%
+      ),
+      radial-gradient(
+        ellipse 70% 50% at 12% 100%,
+        var(--nora-mesh-c) 0%,
         transparent 50%
       ),
-      radial-gradient(
-        ellipse 60% 45% at 50% 100%,
-        var(--nora-mesh-c) 0%,
-        transparent 45%
-      ),
-      var(--nora-bg-base);
+      var(--nora-bg-gradient, var(--nora-bg-base));
   }
 
   body::after {
@@ -150,41 +185,61 @@
     inset: 0;
     z-index: -1;
     pointer-events: none;
-    opacity: 0.28;
+    opacity: 0.14;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
   }
 
   .dark body::after {
-    opacity: 0.16;
+    opacity: 0.09;
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   ::view-transition-group(root) {
-    animation-duration: 0.65s;
+    animation-duration: 0.42s;
     animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
   }
 
   ::view-transition-old(root),
   ::view-transition-new(root) {
-    animation-duration: 0.65s;
+    animation-duration: 0.42s;
     animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
   }
 }
 
 @layer utilities {
+  .motion-gpu {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .transition-smooth {
+    transition-property:
+      color, background-color, border-color, box-shadow, opacity, transform;
+    transition-duration: 280ms;
+    transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .nora-label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
   .glass-panel {
     border-radius: var(--nora-radius);
-    border: 1px solid var(--nora-border-strong);
+    border: 1px solid color-mix(in srgb, white 42%, var(--nora-border-strong));
     background: linear-gradient(
-      155deg,
+      165deg,
       var(--nora-glass-highlight) 0%,
-      var(--nora-surface) 38%,
+      var(--nora-surface) 42%,
       var(--nora-glass-shade) 100%
     );
     box-shadow: var(--nora-shadow-glass);
-    backdrop-filter: blur(var(--nora-blur)) saturate(180%);
-    -webkit-backdrop-filter: blur(var(--nora-blur)) saturate(180%);
+    backdrop-filter: blur(var(--nora-blur)) saturate(132%);
+    -webkit-backdrop-filter: blur(var(--nora-blur)) saturate(132%);
     transition:
       background 0.35s ease,
       border-color 0.35s ease,
@@ -193,20 +248,20 @@
 
   .glass-panel-strong {
     border-radius: var(--nora-radius-lg);
-    border: 1px solid var(--nora-border-strong);
+    border: 1px solid color-mix(in srgb, white 38%, var(--nora-border-strong));
     background: linear-gradient(
-      160deg,
+      168deg,
       var(--nora-glass-highlight) 0%,
-      var(--nora-surface-strong) 48%,
+      var(--nora-surface-strong) 50%,
       var(--nora-glass-shade) 100%
     );
     box-shadow: var(--nora-shadow-glass-lg);
-    backdrop-filter: blur(var(--nora-blur-strong)) saturate(185%);
-    -webkit-backdrop-filter: blur(var(--nora-blur-strong)) saturate(185%);
+    backdrop-filter: blur(var(--nora-blur-strong)) saturate(138%);
+    -webkit-backdrop-filter: blur(var(--nora-blur-strong)) saturate(138%);
   }
 
   .glass-nav {
-    border-top: 1px solid var(--nora-border-strong);
+    border-top: 1px solid color-mix(in srgb, white 28%, var(--nora-border-strong));
     background: linear-gradient(
       180deg,
       var(--nora-glass-highlight) 0%,
@@ -214,27 +269,29 @@
       var(--nora-nav-bg) 100%
     );
     box-shadow: var(--nora-shadow-nav);
-    backdrop-filter: blur(26px) saturate(190%);
-    -webkit-backdrop-filter: blur(26px) saturate(190%);
+    backdrop-filter: blur(28px) saturate(135%);
+    -webkit-backdrop-filter: blur(28px) saturate(135%);
   }
 
   .glass-chip {
-    border-radius: 0.75rem;
-    border: 1px solid var(--nora-border-subtle);
+    border-radius: 0.8125rem;
+    border: 1px solid color-mix(in srgb, white 35%, var(--nora-border-subtle));
     background: var(--nora-surface);
-    backdrop-filter: blur(14px) saturate(165%);
-    -webkit-backdrop-filter: blur(14px) saturate(165%);
-    box-shadow: inset 0 1px 0 var(--nora-glass-highlight);
+    backdrop-filter: blur(16px) saturate(128%);
+    -webkit-backdrop-filter: blur(16px) saturate(128%);
+    box-shadow:
+      inset 0 1px 0 var(--nora-glass-highlight),
+      0 1px 2px rgba(42, 40, 38, 0.04);
   }
 
   .glass-input {
-    border-radius: 0.75rem;
-    border: 1px solid var(--nora-border-strong);
+    border-radius: 0.8125rem;
+    border: 1px solid color-mix(in srgb, white 30%, var(--nora-border-strong));
     background: var(--nora-surface-strong);
     color: var(--nora-text);
-    backdrop-filter: blur(16px) saturate(165%);
-    -webkit-backdrop-filter: blur(16px) saturate(165%);
-    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.05);
+    backdrop-filter: blur(18px) saturate(128%);
+    -webkit-backdrop-filter: blur(18px) saturate(128%);
+    box-shadow: inset 0 1px 2px rgba(42, 40, 38, 0.04);
     transition:
       border-color 0.2s ease,
       box-shadow 0.2s ease,
@@ -286,8 +343,8 @@
 
   .neon-ring {
     box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--nora-accent) 45%, transparent),
-      0 0 20px var(--nora-glow),
+      0 0 0 1px color-mix(in srgb, var(--nora-accent-2) 38%, transparent),
+      0 8px 28px -6px var(--nora-glow),
       inset 0 1px 0 var(--nora-glass-highlight);
   }
 
@@ -327,7 +384,12 @@
 }
 
 .nora-map-dark {
-  background: #030712;
+  background: linear-gradient(
+    165deg,
+    #1e1a2c 0%,
+    #16141e 45%,
+    #0e141c 100%
+  );
 }
 
 .nora-map-dark::after {
@@ -338,30 +400,35 @@
   z-index: 1;
   background:
     radial-gradient(
-      ellipse 120% 80% at 50% 115%,
-      rgba(15, 23, 42, 0.55) 0%,
-      transparent 55%
+      ellipse 100% 70% at 0% 0%,
+      rgba(212, 196, 168, 0.07) 0%,
+      transparent 50%
     ),
     radial-gradient(
-      ellipse 90% 55% at 50% -5%,
-      rgba(56, 189, 248, 0.05) 0%,
-      transparent 42%
+      ellipse 90% 60% at 100% 15%,
+      rgba(148, 172, 210, 0.08) 0%,
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse 120% 80% at 50% 115%,
+      rgba(8, 10, 18, 0.55) 0%,
+      transparent 55%
     ),
     linear-gradient(
       180deg,
-      rgba(2, 6, 23, 0.12) 0%,
-      transparent 35%,
-      transparent 65%,
-      rgba(2, 6, 23, 0.18) 100%
+      rgba(34, 30, 50, 0.2) 0%,
+      transparent 38%,
+      transparent 62%,
+      rgba(8, 12, 20, 0.28) 100%
     );
 }
 
 .nora-map-dark .maplibregl-canvas {
-  filter: brightness(1.04) contrast(1.02) saturate(1.04) hue-rotate(-1deg);
+  filter: brightness(1.02) contrast(1.04) saturate(0.88) sepia(0.06) hue-rotate(8deg);
 }
 
 .nora-map-light {
-  background: #edf2f6;
+  background: #f0eeeb;
 }
 
 .nora-map-light .maplibregl-canvas {
@@ -376,12 +443,12 @@
   z-index: 1;
   background: radial-gradient(
       ellipse 95% 65% at 50% 100%,
-      rgba(14, 165, 233, 0.03) 0%,
+      rgba(196, 181, 160, 0.05) 0%,
       transparent 52%
     ),
     radial-gradient(
       ellipse 70% 45% at 50% 0%,
-      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.14) 0%,
       transparent 38%
     );
 }
@@ -396,8 +463,8 @@
     var(--nora-surface-strong)
   ) !important;
   box-shadow: var(--nora-shadow-glass) !important;
-  backdrop-filter: blur(var(--nora-blur)) saturate(190%) !important;
-  -webkit-backdrop-filter: blur(var(--nora-blur)) saturate(190%) !important;
+  backdrop-filter: blur(var(--nora-blur)) saturate(135%) !important;
+  -webkit-backdrop-filter: blur(var(--nora-blur)) saturate(135%) !important;
 }
 
 .nora-map-dark .maplibregl-ctrl-group button + button,
@@ -405,10 +472,14 @@
   border-top-color: var(--nora-border-subtle) !important;
 }
 
-.nora-map-dark .maplibregl-ctrl-icon,
+.nora-map-dark .maplibregl-ctrl-icon {
+  filter: brightness(0) saturate(100%) invert(88%) sepia(8%) saturate(400%)
+    hue-rotate(12deg) brightness(98%) contrast(92%);
+}
+
 .nora-map-light .maplibregl-ctrl-icon {
-  filter: brightness(0) saturate(100%) invert(78%) sepia(12%) saturate(1200%)
-    hue-rotate(169deg) brightness(103%) contrast(96%);
+  filter: brightness(0) saturate(100%) invert(42%) sepia(12%) saturate(600%)
+    hue-rotate(12deg) brightness(95%) contrast(90%);
 }
 
 html:not(.dark) .nora-map-light .maplibregl-ctrl-icon {
@@ -429,7 +500,7 @@ html:not(.dark) .nora-map-light .maplibregl-ctrl-icon {
 }
 
 .nora-map-dark.nora-map-raster .maplibregl-canvas {
-  filter: brightness(1.06) contrast(1.04) saturate(1.04) hue-rotate(-1deg);
+  filter: brightness(0.94) contrast(1.06) saturate(0.82) sepia(0.1) hue-rotate(12deg);
 }
 
 .nora-map-light.nora-map-raster .maplibregl-canvas {

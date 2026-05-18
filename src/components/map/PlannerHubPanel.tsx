@@ -13,6 +13,7 @@ import { BudgetStepSlider } from '@/components/BudgetStepSlider'
 import { MAP_MOODS } from '@/components/map/map-moods'
 import { useI18n } from '@/hooks/useI18n'
 import { getDailyBudgetLabels } from '@/lib/daily-budget'
+import { getMbtiAccentHex, mbtiTitleColor } from '@/lib/mbti-colors'
 import { MBTI_TYPES } from '@/lib/mbti'
 import {
   getPlannerMoodMeta,
@@ -22,6 +23,7 @@ import {
 } from '@/lib/planner-recommendations'
 import type { MbtiId } from '@/lib/mbti'
 import type { MoodPreset } from '@/types/user'
+import { motionGpuClass, tween } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 type PlannerHubPanelProps = {
@@ -66,6 +68,7 @@ export function PlannerHubPanel({
 
   const plannerMood = normalizePlannerMood(mood)
   const mbtiMeta = MBTI_TYPES.find((type) => type.id === mbti)
+  const mbtiHex = getMbtiAccentHex(mbti)
 
   function setPanelOpen(next: boolean) {
     setOpen(next)
@@ -107,7 +110,7 @@ export function PlannerHubPanel({
           'pointer-events-auto fixed z-20 flex items-center justify-center',
           'right-[max(0.65rem,env(safe-area-inset-right))]',
           PLANNER_TOP,
-          'h-[3.35rem] w-[3.35rem] rounded-2xl border transition-all duration-300',
+          'h-[3.35rem] w-[3.35rem] rounded-2xl border transition-smooth',
           'glass-panel shadow-glass backdrop-blur-xl',
           open
             ? 'border-sky-400/55 bg-sky-400/14 text-sky-600 dark:text-sky-300'
@@ -126,8 +129,8 @@ export function PlannerHubPanel({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="pointer-events-auto fixed inset-0 z-30 bg-[color-mix(in_srgb,var(--nora-bg-base)_45%,transparent)] backdrop-blur-md"
+              transition={tween.fast}
+              className="pointer-events-auto fixed inset-0 z-30 bg-[color-mix(in_srgb,var(--nora-bg-base)_45%,transparent)] backdrop-blur-md motion-gpu"
               onClick={() => setPanelOpen(false)}
             />
             <motion.aside
@@ -137,9 +140,10 @@ export function PlannerHubPanel({
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
-              transition={{ type: 'spring', stiffness: 280, damping: 32 }}
+              transition={tween.panel}
               className={cn(
-                'pointer-events-auto fixed z-40 flex min-h-0 w-[min(20rem,92vw)] flex-col',
+                'pointer-events-auto fixed z-40 flex min-h-0 w-[min(20rem,92vw)] flex-col motion-gpu',
+                motionGpuClass,
                 'right-0',
                 PLANNER_TOP,
                 PLANNER_PANEL_BOTTOM,
@@ -233,7 +237,10 @@ export function PlannerHubPanel({
                   </div>
                   {mbti ? (
                     <p className="mt-1.5 text-xs text-[var(--nora-text)]">
-                      <span className="font-semibold text-sky-600 dark:text-sky-300">
+                      <span
+                        className="font-semibold"
+                        style={mbtiHex ? mbtiTitleColor(mbtiHex) : undefined}
+                      >
                         {mbti}
                       </span>
                       {mbtiMeta ? (

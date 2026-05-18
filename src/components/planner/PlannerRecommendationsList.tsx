@@ -14,6 +14,7 @@ import {
   type PlannerRecommendation,
 } from '@/lib/planner-recommendations'
 import type { MbtiId } from '@/lib/mbti'
+import { tween } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 type PlannerRecommendationsListProps = {
@@ -55,7 +56,7 @@ export function PlannerRecommendationsList({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={tween.medium}
           className="space-y-2"
         >
           {recommendations.map((r) => (
@@ -64,7 +65,7 @@ export function PlannerRecommendationsList({
                 type="button"
                 onClick={() => onSelect(r)}
                 className={cn(
-                  'w-full rounded-xl border border-[var(--nora-border-subtle)] bg-[var(--nora-surface-veil)] text-left transition-all hover:border-sky-400/35 active:scale-[0.99]',
+                  'w-full rounded-xl border border-[var(--nora-border-subtle)] bg-[var(--nora-surface-veil)] text-left transition-smooth hover:border-sky-400/35 active:scale-[0.99]',
                   compact ? 'p-2.5' : 'p-3',
                 )}
               >

@@ -4,7 +4,13 @@ import { motion } from 'framer-motion'
 import { MbtiHelpDialog } from '@/components/MbtiHelpDialog'
 import { useI18n } from '@/hooks/useI18n'
 import { getMbtiTypes } from '@/i18n/content/mbti-types'
+import {
+  getMbtiAccentHex,
+  mbtiActiveStyle,
+  mbtiTitleColor,
+} from '@/lib/mbti-colors'
 import type { MbtiId } from '@/lib/mbti'
+import { spring } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 type MbtiGridProps = {
@@ -21,21 +27,29 @@ export function MbtiGrid({ value, onChange }: MbtiGridProps) {
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {types.map((mbtiType) => {
           const active = value === mbtiType.id
+          const hex = getMbtiAccentHex(mbtiType.id)!
           return (
             <motion.button
               key={mbtiType.id}
               type="button"
-              layout
               whileTap={{ scale: 0.97 }}
+              transition={spring.snappy}
               onClick={() => onChange(mbtiType.id)}
               className={cn(
-                'rounded-xl border px-2 py-3 text-left transition-colors',
+                'rounded-xl border px-2 py-3 text-left transition-smooth',
                 active
-                  ? 'border-sky-400/70 bg-sky-400/10 neon-ring'
+                  ? 'ring-2'
                   : 'border-[var(--nora-border-subtle)] glass-panel hover:border-[color-mix(in_srgb,var(--nora-accent)_35%,transparent)] hover:shadow-glass',
               )}
+              style={active ? mbtiActiveStyle(hex) : undefined}
             >
-              <p className="text-sm font-semibold text-[var(--nora-text)]">
+              <p
+                className={cn(
+                  'text-sm font-semibold',
+                  !active && 'text-[var(--nora-text)]',
+                )}
+                style={active ? mbtiTitleColor(hex) : undefined}
+              >
                 {mbtiType.title}
               </p>
               <p className="mt-0.5 text-[11px] text-[var(--nora-text-muted)]">

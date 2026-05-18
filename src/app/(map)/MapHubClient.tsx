@@ -24,6 +24,7 @@ import {
   findPlannerRecommendation,
   type PlannerRecommendation,
 } from '@/lib/planner-recommendations'
+import { motionGpuClass, spring, tween } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import type { MoodPreset, ZoneKey } from '@/types/user'
 import type { NoraMapHandle } from './map-types'
@@ -399,7 +400,10 @@ export default function MapHubClient() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
+            transition={tween.medium}
             className={cn(
+              'motion-gpu',
+              motionGpuClass,
               'pointer-events-auto fixed z-[25] w-full max-w-[min(18rem,88vw)]',
               statePanelOpen
                 ? 'left-[max(0.5rem,env(safe-area-inset-left))] right-[max(calc(min(20rem,92vw)+0.75rem),env(safe-area-inset-right))]'
@@ -437,9 +441,10 @@ export default function MapHubClient() {
             initial={{ y: 120, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 120, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 220, damping: 32 }}
+            transition={spring.sheet}
             className={cn(
-              'pointer-events-none fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-[max(0.5rem,env(safe-area-inset-right))] z-30',
+              'motion-gpu pointer-events-none fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] right-[max(0.5rem,env(safe-area-inset-right))] z-30',
+              motionGpuClass,
               statePanelOpen
                 ? 'right-[max(calc(min(20rem,92vw)+0.5rem),env(safe-area-inset-right))]'
                 : 'left-[max(0.5rem,env(safe-area-inset-left))]',

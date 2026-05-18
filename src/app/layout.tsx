@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Onest } from 'next/font/google'
 import './globals.css'
 import './shell.css'
 import { AppProviders } from './providers'
 
-const inter = Inter({
+const onest = Onest({
   subsets: ['latin', 'cyrillic'],
   variable: '--font-sans',
   display: 'swap',
+  weight: ['400', '500', '600', '700'],
 })
 
 export const metadata: Metadata = {
@@ -32,8 +33,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#020617' },
-    { media: '(prefers-color-scheme: light)', color: '#e0f2fe' },
+    { media: '(prefers-color-scheme: dark)', color: '#1a1824' },
+    { media: '(prefers-color-scheme: light)', color: '#f8f6f3' },
   ],
   width: 'device-width',
   initialScale: 1,
@@ -46,8 +47,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ru" suppressHydrationWarning>
-      <body className={`${inter.variable} min-h-dvh font-sans antialiased`}>
+    <html lang="ru" className={onest.variable} suppressHydrationWarning>
+      <body className="min-h-dvh font-sans antialiased">
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

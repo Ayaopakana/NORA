@@ -103,10 +103,15 @@ export function BudgetStepSlider({
         />
         <div
           className={cn(
-            'pointer-events-none absolute top-1/2 z-10 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/50 bg-gradient-to-b from-sky-300 to-sky-500 shadow-neon transition-transform duration-150',
-            dragging && 'scale-110 ring-2 ring-[color-mix(in_srgb,var(--nora-accent)_40%,transparent)]',
+            'pointer-events-none absolute top-1/2 z-10 h-5 w-5 rounded-full border border-white/50 bg-gradient-to-b from-sky-300 to-sky-500 shadow-neon transition-[transform,box-shadow] duration-200 ease-nora',
+            dragging && 'ring-2 ring-[color-mix(in_srgb,var(--nora-accent)_40%,transparent)]',
           )}
-          style={{ left: `${ratio * 100}%` }}
+          style={{
+            left: `${ratio * 100}%`,
+            transform: dragging
+              ? 'translate(-50%, -50%) scale(1.1)'
+              : 'translate(-50%, -50%)',
+          }}
         />
       </div>
 
@@ -125,7 +130,7 @@ export function BudgetStepSlider({
             >
               <span
                 className={cn(
-                  'block rounded-full transition-[transform,background-color] duration-200',
+                  'block rounded-full transition-[transform,background-color] duration-200 ease-nora',
                   active
                     ? 'h-2.5 w-2.5 bg-sky-400 shadow-[0_0_8px_var(--nora-glow)]'
                     : 'h-2 w-2 bg-[var(--nora-border)] hover:bg-sky-400/55',

@@ -21,6 +21,7 @@ import { getCountries } from '@/lib/countries'
 import type { MbtiId } from '@/lib/mbti'
 import { ZoneRoutineEditor } from '@/components/profile/ZoneRoutineEditor'
 import { isValidBirthYear } from '@/lib/age-policy'
+import { motionGpuClass, spring, tween } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 import { emptyRoutine, type UserRoutine } from '@/types/routine'
 import type { MoodPreset, UserStatus, UserZones, ZoneKey } from '@/types/user'
@@ -202,10 +203,13 @@ export function RegisterWizard() {
       <div className="mx-auto max-w-lg pt-[max(0.5rem,env(safe-area-inset-top))]">
         <div className="mb-6 h-1 overflow-hidden rounded-full bg-slate-800/60 dark:bg-slate-900/80">
           <motion.div
-            className="h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 shadow-[0_0_18px_rgba(56,189,248,0.65)]"
+            className={cn(
+              'h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-600 shadow-[0_0_18px_rgba(56,189,248,0.65)] motion-gpu',
+              motionGpuClass,
+            )}
             initial={false}
             animate={{ width: `${progress}%` }}
-            transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+            transition={spring.smooth}
           />
         </div>
 
@@ -219,8 +223,11 @@ export function RegisterWizard() {
                 : { opacity: 1, y: 0, scale: 1 }
             }
             exit={{ opacity: 0, y: -8, scale: 0.99 }}
-            transition={{ duration: 0.48, ease: [0.25, 0.1, 0.25, 1] }}
-            className="rounded-2xl border border-[var(--nora-border)] glass-panel-strong p-6 shadow-2xl"
+            transition={tween.enter}
+            className={cn(
+              'motion-gpu rounded-2xl border border-[var(--nora-border)] glass-panel-strong p-6 shadow-2xl',
+              motionGpuClass,
+            )}
           >
             {step === 0 ? (
               <div className="space-y-4">

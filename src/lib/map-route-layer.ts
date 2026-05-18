@@ -1,4 +1,8 @@
 import type { Map as MapLibreMap } from 'maplibre-gl'
+import {
+  NORA_MAP_ROUTE_DARK,
+  NORA_MAP_ROUTE_LIGHT,
+} from '@/lib/map-nora-palette'
 
 export const NORA_ROUTE_SOURCE = 'nora-day-route'
 const NORA_ROUTE_GLOW = 'nora-day-route-glow'
@@ -20,7 +24,9 @@ function removeRouteLayers(map: MapLibreMap) {
 export function syncMapRouteLayer(
   map: MapLibreMap,
   path: MapRoutePoint[] | undefined,
+  isDark = false,
 ) {
+  const route = isDark ? NORA_MAP_ROUTE_DARK : NORA_MAP_ROUTE_LIGHT
   removeRouteLayers(map)
   if (!path || path.length < 2) return
 
@@ -41,9 +47,9 @@ export function syncMapRouteLayer(
     source: NORA_ROUTE_SOURCE,
     layout: { 'line-join': 'round', 'line-cap': 'round' },
     paint: {
-      'line-color': '#38bdf8',
+      'line-color': route.glow,
       'line-width': 12,
-      'line-opacity': 0.22,
+      'line-opacity': 0.24,
       'line-blur': 3,
     },
   })
@@ -54,9 +60,9 @@ export function syncMapRouteLayer(
     source: NORA_ROUTE_SOURCE,
     layout: { 'line-join': 'round', 'line-cap': 'round' },
     paint: {
-      'line-color': '#0ea5e9',
+      'line-color': route.line,
       'line-width': 4.5,
-      'line-opacity': 0.92,
+      'line-opacity': 0.9,
       'line-dasharray': [1.6, 1.1],
     },
   })
@@ -82,9 +88,9 @@ export function syncMapRouteLayer(
     source: `${NORA_ROUTE_SOURCE}-arrows`,
     paint: {
       'circle-radius': 4,
-      'circle-color': '#f8fafc',
+      'circle-color': route.arrowFill,
       'circle-stroke-width': 2,
-      'circle-stroke-color': '#0284c7',
+      'circle-stroke-color': route.arrowStroke,
       'circle-opacity': 0.95,
     },
   })

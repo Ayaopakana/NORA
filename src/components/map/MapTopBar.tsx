@@ -9,6 +9,7 @@ import type { DayRoute } from '@/lib/build-day-route'
 import { useI18n } from '@/hooks/useI18n'
 import type { MbtiId } from '@/lib/mbti'
 import type { MoodPreset } from '@/types/user'
+import { motionGpuClass, tween } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 type Panel = 'search' | 'route' | null
@@ -30,7 +31,7 @@ const SEARCH_TOP =
 const PANEL_MAX_H =
   'max-h-[min(58dvh,calc(100dvh_-_5.5rem_-_env(safe-area-inset-bottom,0px)))]' as const
 
-const openCloseTransition = { duration: 0.28, ease: [0.32, 0.72, 0, 1] as const }
+const openCloseTransition = tween.medium
 
 /** Верхняя панель: поиск людей и создание маршрута на день. */
 export function MapTopBar({
@@ -174,13 +175,14 @@ export function MapTopBar({
                 {searchOpen ? (
                   <motion.div
                     key="search-panel"
-                    initial={{ opacity: 0, scaleY: 0.92 }}
-                    animate={{ opacity: 1, scaleY: 1 }}
-                    exit={{ opacity: 0, scaleY: 0.92 }}
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.97 }}
                     transition={openCloseTransition}
-                    style={{ transformOrigin: 'top' }}
+                    style={{ transformOrigin: 'top center' }}
                     className={cn(
-                      'flex min-h-0 flex-col overflow-hidden border-t border-[var(--nora-border-subtle)]',
+                      'motion-gpu flex min-h-0 flex-col overflow-hidden border-t border-[var(--nora-border-subtle)]',
+                      motionGpuClass,
                       PANEL_MAX_H,
                     )}
                   >
@@ -214,13 +216,14 @@ export function MapTopBar({
             {routeOpen ? (
               <motion.div
                 key="route-panel"
-                initial={{ opacity: 0, scaleY: 0.92 }}
-                animate={{ opacity: 1, scaleY: 1 }}
-                exit={{ opacity: 0, scaleY: 0.92 }}
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
                 transition={openCloseTransition}
-                style={{ transformOrigin: 'top' }}
+                style={{ transformOrigin: 'top center' }}
                 className={cn(
-                  'flex min-h-0 flex-col overflow-hidden rounded-2xl border border-sky-400/40 glass-panel-strong shadow-glass backdrop-blur-xl',
+                  'motion-gpu flex min-h-0 flex-col overflow-hidden rounded-2xl border border-sky-400/40 glass-panel-strong shadow-glass backdrop-blur-xl',
+                  motionGpuClass,
                   PANEL_MAX_H,
                 )}
               >

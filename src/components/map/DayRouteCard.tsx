@@ -5,6 +5,7 @@ import { ArrowDown, Bookmark, MapPin, Route, X } from 'lucide-react'
 import { useState } from 'react'
 import { formatRouteDuration, type DayRoute } from '@/lib/build-day-route'
 import { useI18n } from '@/hooks/useI18n'
+import { motionGpuClass, tween } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 const STOP_COLORS = ['#f59e0b', '#fb923c', '#fbbf24', '#a3e635'] as const
@@ -42,8 +43,10 @@ export function DayRouteCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
+      transition={tween.medium}
       className={cn(
-        'pointer-events-auto rounded-2xl border border-amber-400/40 bg-[var(--nora-surface-strong)] p-3 shadow-glass-lg backdrop-blur-xl',
+        'motion-gpu pointer-events-auto rounded-2xl border border-amber-400/40 bg-[var(--nora-surface-strong)] p-3 shadow-glass-lg backdrop-blur-xl',
+        motionGpuClass,
         className,
       )}
     >

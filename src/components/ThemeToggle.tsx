@@ -8,9 +8,8 @@ import { buttonVariants } from '@/components/ui/button'
 import { transitionTheme } from '@/lib/theme-view-transition'
 import { mapAppearanceScheme } from '@/lib/map-appearance'
 import { useI18n } from '@/hooks/useI18n'
+import { spring } from '@/lib/motion'
 import { cn } from '@/lib/utils'
-
-const iconSpring = { type: 'spring' as const, stiffness: 200, damping: 30 }
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { t } = useI18n()
@@ -46,7 +45,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={isDark ? t('theme.light') : t('theme.dark')}
       whileTap={reduceMotion ? undefined : { scale: 0.96 }}
       whileHover={reduceMotion ? undefined : { scale: 1.03 }}
-      transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+      transition={spring.snappy}
       onClick={() => transitionTheme(isDark ? 'light' : 'dark', setTheme)}
     >
       <span className="pointer-events-none relative flex h-full w-full items-center justify-center">
@@ -58,7 +57,7 @@ export function ThemeToggle({ className }: { className?: string }) {
             scale: isDark ? 0 : 1,
             opacity: isDark ? 0 : 1,
           }}
-          transition={reduceMotion ? { duration: 0 } : iconSpring}
+          transition={reduceMotion ? { duration: 0 } : spring.smooth}
         >
           <Sun className="h-[1.1rem] w-[1.1rem]" aria-hidden />
         </motion.span>
@@ -70,7 +69,7 @@ export function ThemeToggle({ className }: { className?: string }) {
             scale: isDark ? 1 : 0,
             opacity: isDark ? 1 : 0,
           }}
-          transition={reduceMotion ? { duration: 0 } : iconSpring}
+          transition={reduceMotion ? { duration: 0 } : spring.smooth}
         >
           <Moon className="h-[1.1rem] w-[1.1rem]" aria-hidden />
         </motion.span>

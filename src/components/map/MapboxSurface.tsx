@@ -222,11 +222,6 @@ export function MapboxSurface({
       tilesReadyListenerRef.current = onTilesIdle
       instance.on('idle', onTilesIdle)
 
-      instance.addControl(
-        new maplibregl.NavigationControl({ visualizePitch: true }),
-        'bottom-right',
-      )
-
       wireErrors(instance)
 
       instance.once('load', () => {
@@ -430,10 +425,14 @@ export function MapboxSurface({
           el.style.width = `${size}px`
           el.style.height = `${size}px`
           el.style.borderRadius = '999px'
-          el.style.background = m.color ?? '#38bdf8'
-          el.style.boxShadow =
-            '0 1px 3px rgba(15,23,42,0.35), 0 0 14px rgba(56,189,248,0.55), 0 0 2px rgba(14,165,233,0.9)'
-          el.style.border = '2px solid rgba(241,245,249,0.92)'
+          el.style.background =
+            m.color ?? (isDark ? '#b8c4d4' : '#8e9aae')
+          el.style.boxShadow = isDark
+            ? '0 1px 3px rgba(12,11,10,0.4), 0 0 14px rgba(212,196,168,0.45), 0 0 2px rgba(184,196,212,0.85)'
+            : '0 1px 3px rgba(42,40,38,0.2), 0 0 12px rgba(142,154,174,0.35), 0 0 2px rgba(142,154,174,0.75)'
+          el.style.border = isDark
+            ? '2px solid rgba(245,243,240,0.9)'
+            : '2px solid rgba(255,255,255,0.92)'
           if (hasLabel) {
             el.style.display = 'flex'
             el.style.alignItems = 'center'
@@ -450,7 +449,7 @@ export function MapboxSurface({
         }
       }
 
-      syncMapRouteLayer(map, routePath)
+      syncMapRouteLayer(map, routePath, isDark)
     }
 
     if (map.isStyleLoaded()) {
@@ -468,7 +467,7 @@ export function MapboxSurface({
     return () => {
       map.off('styledata', onStyleData)
     }
-  }, [markers, routePath])
+  }, [markers, routePath, isDark])
 
   return (
     <div
@@ -486,8 +485,8 @@ export function MapboxSurface({
           className={cn(
             'pointer-events-none absolute inset-0 z-[4] flex flex-col items-center justify-center gap-2 transition-opacity duration-300',
             isDark
-              ? 'bg-[#020617] text-slate-400'
-              : 'bg-[#edf2f6] text-slate-500',
+              ? 'bg-[#1a1824] text-[var(--nora-text-muted)]'
+              : 'bg-[#f0eeeb] text-[var(--nora-text-muted)]',
           )}
           aria-busy
           aria-label={t('mapSurface.loadingAria')}
@@ -495,7 +494,9 @@ export function MapboxSurface({
           <span
             className={cn(
               'text-sm font-medium',
-              isDark ? 'text-sky-400/90' : 'text-sky-700/90',
+              isDark
+                ? 'text-[color-mix(in_srgb,var(--nora-accent-2)_88%,var(--nora-text))]'
+                : 'text-[color-mix(in_srgb,var(--nora-accent)_88%,var(--nora-text))]',
             )}
           >
             NORA
@@ -504,7 +505,9 @@ export function MapboxSurface({
           <span
             className={cn(
               'mt-2 block h-1 w-28 rounded-full motion-safe:animate-pulse',
-              isDark ? 'bg-sky-500/35' : 'bg-sky-600/30',
+              isDark
+                ? 'bg-[color-mix(in_srgb,var(--nora-accent-2)_40%,transparent)]'
+                : 'bg-[color-mix(in_srgb,var(--nora-accent)_35%,transparent)]',
             )}
           />
         </div>

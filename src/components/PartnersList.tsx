@@ -11,6 +11,7 @@ import {
   getPartners,
   type PartnerCategory,
 } from '@/i18n/content/partners'
+import { tween } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 export function PartnersList() {
@@ -33,7 +34,7 @@ export function PartnersList() {
             type="button"
             onClick={() => setCategory(c.id)}
             className={cn(
-              'shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors',
+              'shrink-0 rounded-full border px-3 py-1.5 text-sm transition-smooth',
               category === c.id
                 ? 'border-sky-400/70 bg-sky-400/15 text-sky-100 shadow-neon'
                 : 'border-[var(--nora-border)] text-[var(--nora-text-muted)] hover:border-sky-400/35',
@@ -50,7 +51,7 @@ export function PartnersList() {
             key={p.id}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05, duration: 0.3 }}
+            transition={{ ...tween.medium, delay: i * 0.04 }}
             className="rounded-2xl border border-[var(--nora-border)] glass-panel p-4 shadow-lg"
           >
             <div className="flex items-start gap-3">

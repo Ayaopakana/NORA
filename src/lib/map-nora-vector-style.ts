@@ -4,6 +4,7 @@ import type {
   Map as MapLibreMap,
   StyleSpecification,
 } from 'maplibre-gl'
+import { NORA_MAP_DARK, NORA_MAP_LIGHT } from '@/lib/map-nora-palette'
 
 const BUILDING_3D_ID = 'nora-buildings-3d'
 
@@ -35,17 +36,12 @@ function applyExtrusionLight(map: MapLibreMap, isDark: boolean) {
   }
   try {
     if (isDark) {
-      const fromStyle = (map.getStyle() as StyleSpecification).light
-      if (fromStyle) {
-        map.setLight(fromStyle)
-      } else {
-        map.setLight({
-          anchor: 'viewport',
-          color: '#ffffff',
-          intensity: 0.35,
-          position: [1.15, 210, 30],
-        })
-      }
+      map.setLight({
+        anchor: 'viewport',
+        color: NORA_MAP_DARK.lightColor,
+        intensity: 0.32,
+        position: [1.15, 210, 32],
+      })
       return
     }
     map.setLight(soft)
@@ -133,11 +129,12 @@ function stripFillPattern(map: MapLibreMap, layerId: string) {
   }
 }
 
-/** Подписи — мягкие, без яркого неона */
+/** Подписи — champagne / pearl, без холодного неона */
 function applyDarkReadableLabels(map: MapLibreMap) {
+  const p = NORA_MAP_DARK
   const street: [string, string, string][] = [
-    ['highway_name_other', '#d8dee9', 'rgba(2,6,23,0.9)'],
-    ['highway_name_motorway', '#b8c9d9', 'rgba(15,23,42,0.85)'],
+    ['highway_name_other', p.labelStreet, p.labelHalo],
+    ['highway_name_motorway', p.labelStreetAlt, p.labelHalo],
   ]
   for (const [id, color, halo] of street) {
     safeSetPaint(map, id, 'text-color', color)
@@ -146,8 +143,8 @@ function applyDarkReadableLabels(map: MapLibreMap) {
     safeSetPaint(map, id, 'text-halo-blur', 0.35)
   }
 
-  safeSetPaint(map, 'water_name', 'text-color', '#97a5ad')
-  safeSetPaint(map, 'water_name', 'text-halo-color', 'rgba(15,23,42,0.75)')
+  safeSetPaint(map, 'water_name', 'text-color', p.labelWater)
+  safeSetPaint(map, 'water_name', 'text-halo-color', p.labelWaterHalo)
   safeSetPaint(map, 'water_name', 'text-halo-width', 1)
 }
 
@@ -155,9 +152,9 @@ function applyDarkReadableLabels(map: MapLibreMap) {
 function applyLightReadableLabels(map: MapLibreMap) {
   const halo = 'rgba(255,255,255,0.92)'
   const labels: [string, string][] = [
-    ['highway-name-minor', '#5c6b7a'],
-    ['highway-name-major', '#4a5660'],
-    ['highway-name-path', '#6c7580'],
+    ['highway-name-minor', '#7a8499'],
+    ['highway-name-major', '#5f6a7a'],
+    ['highway-name-path', '#8a8580'],
   ]
   for (const [id, color] of labels) {
     safeSetPaint(map, id, 'text-color', color)
@@ -193,6 +190,7 @@ function ensureBuildings3d(map: MapLibreMap, isDark: boolean) {
     2,
   ]
 
+  const p = NORA_MAP_DARK
   const color = (
     isDark
       ? [
@@ -200,13 +198,13 @@ function ensureBuildings3d(map: MapLibreMap, isDark: boolean) {
           ['linear'],
           ['get', 'render_height'],
           0,
-          '#2a3544',
+          p.buildingLow,
           35,
-          '#354554',
+          p.buildingMid,
           90,
-          '#5c6775',
+          p.buildingHigh,
         ]
-      : '#e9eef3'
+      : '#ebe8e4'
   ) as ExpressionSpecification
 
   const paint: Record<string, unknown> = {
@@ -276,37 +274,40 @@ export function applyNoraVectorMapStyle(map: MapLibreMap, isDark: boolean) {
   if (!vectorId || !map.getSource(vectorId)) return
 
   if (isDark) {
-    safeSetPaint(map, 'park', 'fill-color', '#15803d')
-    safeSetPaint(map, 'landuse_park', 'fill-color', '#0f766e')
+    const p = NORA_MAP_DARK
+    safeSetPaint(map, 'background', 'background-color', p.background)
+    safeSetPaint(map, 'landuse_residential', 'fill-color', p.landResidential)
+    safeSetPaint(map, 'park', 'fill-color', p.park)
+    safeSetPaint(map, 'landuse_park', 'fill-color', p.landusePark)
     stripFillPattern(map, 'landcover_wood')
-    safeSetPaint(map, 'landcover_wood', 'fill-color', '#14532d')
-    safeSetPaint(map, 'landcover_grass', 'fill-color', '#166534')
-    safeSetPaint(map, 'water', 'fill-color', '#243840')
+    safeSetPaint(map, 'landcover_wood', 'fill-color', p.wood)
+    safeSetPaint(map, 'landcover_grass', 'fill-color', p.grass)
+    safeSetPaint(map, 'water', 'fill-color', p.water)
 
-    safeSetPaint(map, 'highway_motorway_inner', 'line-color', '#5f8799')
-    safeSetPaint(map, 'highway_motorway_bridge_inner', 'line-color', '#5f8799')
-    safeSetPaint(map, 'tunnel_motorway_inner', 'line-color', '#557a8b')
-    safeSetPaint(map, 'highway_motorway_casing', 'line-color', '#3d4f58')
-    safeSetPaint(map, 'highway_motorway_bridge_casing', 'line-color', '#3d4f58')
+    safeSetPaint(map, 'highway_motorway_inner', 'line-color', p.motorwayInner)
+    safeSetPaint(map, 'highway_motorway_bridge_inner', 'line-color', p.motorwayInner)
+    safeSetPaint(map, 'tunnel_motorway_inner', 'line-color', p.tunnelMotorway)
+    safeSetPaint(map, 'highway_motorway_casing', 'line-color', p.motorwayCasing)
+    safeSetPaint(map, 'highway_motorway_bridge_casing', 'line-color', p.motorwayCasing)
 
-    safeSetPaint(map, 'highway_major_inner', 'line-color', '#1e293b')
-    safeSetPaint(map, 'highway_major_subtle', 'line-color', '#334155')
-    safeSetPaint(map, 'highway_major_casing', 'line-color', '#455a64')
+    safeSetPaint(map, 'highway_major_inner', 'line-color', p.majorInner)
+    safeSetPaint(map, 'highway_major_subtle', 'line-color', p.majorSubtle)
+    safeSetPaint(map, 'highway_major_casing', 'line-color', p.majorCasing)
 
-    safeSetPaint(map, 'highway_minor', 'line-color', '#475569')
-    safeSetPaint(map, 'highway_path', 'line-color', '#5a6670')
+    safeSetPaint(map, 'highway_minor', 'line-color', p.minor)
+    safeSetPaint(map, 'highway_path', 'line-color', p.path)
 
     applyDarkReadableLabels(map)
   } else {
-    /* Фон и «суша» — мягкая светлая палитра */
-    safeSetPaint(map, 'background', 'background-color', '#edf2f6')
-    safeSetPaint(map, 'landuse_residential', 'fill-color', '#e2eaf0')
-    safeSetPaint(map, 'park', 'fill-color', '#bdd8cc')
-    safeSetPaint(map, 'landuse_park', 'fill-color', '#b0ddd4')
+    const p = NORA_MAP_LIGHT
+    safeSetPaint(map, 'background', 'background-color', p.background)
+    safeSetPaint(map, 'landuse_residential', 'fill-color', p.landResidential)
+    safeSetPaint(map, 'park', 'fill-color', p.park)
+    safeSetPaint(map, 'landuse_park', 'fill-color', p.landusePark)
     stripFillPattern(map, 'landcover_wood')
-    safeSetPaint(map, 'landcover_wood', 'fill-color', '#8fd4b8')
-    safeSetPaint(map, 'landcover_grass', 'fill-color', '#9fdcc4')
-    safeSetPaint(map, 'water', 'fill-color', '#b8ccd8')
+    safeSetPaint(map, 'landcover_wood', 'fill-color', p.wood)
+    safeSetPaint(map, 'landcover_grass', 'fill-color', p.grass)
+    safeSetPaint(map, 'water', 'fill-color', p.water)
 
     /* Дороги — серо-голубой, ближе к нейтральному серому */
     safeSetPaint(map, 'highway_motorway_inner', 'line-color', '#7d95a3')

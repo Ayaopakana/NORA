@@ -2,23 +2,24 @@
  * Резервная оболочка без Tailwind
  */
 html:not(.light) {
-  background-color: #020617;
+  background: linear-gradient(
+    152deg,
+    #221e32 0%,
+    #1a1824 28%,
+    #181716 52%,
+    #121a24 78%,
+    #0e141c 100%
+  );
 }
 
 html.light {
-  background-color: #e8f4fc;
+  background-color: #f8f6f3;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   min-height: 100dvh;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
 }
 
 .nora-map-viewport {
@@ -49,11 +50,11 @@ body {
 }
 
 html:not(.light) .nora-bottom-nav {
-  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.08) 0%,
-    rgba(2, 6, 23, 0.55) 40%
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(24, 23, 22, 0.62) 40%
   );
   backdrop-filter: blur(28px) saturate(200%);
   -webkit-backdrop-filter: blur(28px) saturate(200%);
@@ -80,17 +81,17 @@ html.light .nora-bottom-nav {
   font-size: 11px;
   font-weight: 500;
   text-decoration: none;
-  color: #94a3b8;
+  color: #a39e98;
 }
 
 html.light .nora-bottom-nav a {
-  color: #64748b;
+  color: #8a8580;
 }
 
 .nora-bottom-nav a:hover {
-  color: #e2e8f0;
+  color: #e8e6e2;
 }
 
 html.light .nora-bottom-nav a:hover {
-  color: #0f172a;
+  color: #4a4844;
 }

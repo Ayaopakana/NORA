@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { MapPin, MessageCircle, UserRound } from 'lucide-react'
 import { motion, useReducedMotion } from 'framer-motion'
 import { useI18n } from '@/hooks/useI18n'
+import { motionGpuClass, spring } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 const tabKeys = [
@@ -26,7 +27,7 @@ export function IslandDock() {
       <div
         className={cn(
           'pointer-events-auto flex w-full max-w-md items-stretch',
-          'rounded-[1.35rem] border border-[var(--nora-border-strong)]',
+          'rounded-[1.375rem] border border-[color-mix(in_srgb,white_38%,var(--nora-border-strong))]',
           'glass-panel p-1 shadow-glass-lg backdrop-blur-xl',
         )}
       >
@@ -44,10 +45,10 @@ export function IslandDock() {
               key={href}
               href={href}
               className={cn(
-                'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.1rem] py-2 transition-colors duration-300',
+                'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.1rem] py-2 transition-smooth',
                 index > 0 && 'border-l border-[var(--nora-border-subtle)]',
                 active
-                  ? 'bg-sky-400/14 text-sky-600 dark:text-sky-300'
+                  ? 'bg-[color-mix(in_srgb,var(--nora-accent-2)_14%,transparent)] text-[var(--nora-text)]'
                   : 'text-[var(--nora-text-muted)] hover:bg-[var(--nora-surface-veil)] hover:text-[var(--nora-text)]',
               )}
               aria-current={active ? 'page' : undefined}
@@ -55,31 +56,30 @@ export function IslandDock() {
               {active && !reduceMotion ? (
                 <motion.span
                   layoutId="island-tab-glow"
-                  className="absolute inset-0.5 rounded-[1rem] ring-2 ring-sky-400/30"
+                  className={cn(
+                    'absolute inset-0.5 rounded-[1rem] ring-1 ring-[color-mix(in_srgb,var(--nora-accent-2)_42%,transparent)] motion-gpu',
+                    motionGpuClass,
+                  )}
                   aria-hidden
-                  transition={{
-                    type: 'spring',
-                    stiffness: 280,
-                    damping: 34,
-                  }}
+                  transition={spring.layout}
                 />
               ) : active ? (
                 <span
-                  className="absolute inset-0.5 rounded-[1rem] ring-2 ring-sky-400/30"
+                  className="absolute inset-0.5 rounded-[1rem] ring-1 ring-[color-mix(in_srgb,var(--nora-accent-2)_42%,transparent)]"
                   aria-hidden
                 />
               ) : null}
               <Icon
                 className={cn(
                   'relative h-5 w-5',
-                  active && 'drop-shadow-[0_0_10px_rgba(56,189,248,0.45)]',
+                  active && 'opacity-100',
                 )}
                 strokeWidth={active ? 2.25 : 1.75}
               />
               <span
                 className={cn(
                   'relative max-w-full truncate px-0.5 text-[9px] font-medium',
-                  active && 'text-sky-600 dark:text-sky-300',
+                  active && 'text-[var(--nora-text)]',
                 )}
               >
                 {t(key)}
