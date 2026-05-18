@@ -1,7 +1,11 @@
 'use client'
 
 import { Route, Trash2 } from 'lucide-react'
-import { formatRouteDuration, type RouteTimeSlot } from '@/lib/build-day-route'
+import { formatRouteDuration } from '@/lib/build-day-route'
+import {
+  getRoutePeriodMeta,
+  getRouteVibeMeta,
+} from '@/lib/route-intents'
 import type { SavedDayRoute } from '@/lib/saved-routes-storage'
 import { useI18n } from '@/hooks/useI18n'
 import { cn } from '@/lib/utils'
@@ -13,12 +17,6 @@ type SavedRoutesListProps = {
   onDelete: (routeId: string) => void
 }
 
-function routeTitle(route: SavedDayRoute) {
-  const area = route.area.trim()
-  if (area) return area
-  return route.stops[0]?.title ?? '—'
-}
-
 export function SavedRoutesList({
   routes,
   activeRouteId,
@@ -26,13 +24,8 @@ export function SavedRoutesList({
   onDelete,
 }: SavedRoutesListProps) {
   const { locale, t } = useI18n()
-
-  const timeLabels: Record<RouteTimeSlot, string> = {
-    morning: t('routeBuilder.timeMorning'),
-    afternoon: t('routeBuilder.timeAfternoon'),
-    evening: t('routeBuilder.timeEvening'),
-    full: t('routeBuilder.timeFull'),
-  }
+  const vibeMeta = getRouteVibeMeta(locale)
+  const periodMeta = getRoutePeriodMeta(locale)
 
   return (
     <section className="mt-3 rounded-xl border border-[var(--nora-border-subtle)] bg-[var(--nora-surface-veil)] p-2.5">
@@ -52,7 +45,8 @@ export function SavedRoutesList({
           {routes.map((route) => {
             const active = route.id === activeRouteId
             const duration = formatRouteDuration(route.totalDurationMin, locale)
-            const title = routeTitle(route)
+            const title = route.area.trim() || route.stops[0]?.title || '—'
+            const vibe = vibeMeta[route.vibe]
             return (
               <li key={route.id} className="flex gap-1">
                 <button
@@ -81,7 +75,10 @@ export function SavedRoutesList({
                       {title}
                     </span>
                     <span className="mt-0.5 block text-[10px] text-[var(--nora-text-muted)]">
-                      {timeLabels[route.timeSlot]}
+                      {vibe.emoji} {vibe.label} · {periodMeta[route.dayPeriod].label}
+                      {route.groupSize && route.groupSize > 1
+                        ? ` · ${route.groupSize} ${t('routeBuilder.groupShort')}`
+                        : ''}
                     </span>
                     <span className="mt-0.5 block text-[10px] text-[var(--nora-text-muted)]">
                       {t('routeBuilder.stops', {

@@ -4,6 +4,7 @@ import type { Map as MapLibreMap } from 'maplibre-gl'
 import { MapPin } from 'lucide-react'
 import { useRef } from 'react'
 import { MapboxSurface } from '@/components/map/MapboxSurface'
+import { PlaceFeedbackPanel } from '@/components/planner/PlaceFeedbackPanel'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -13,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { useI18n } from '@/hooks/useI18n'
 import type { PlannerRecommendation } from '@/lib/planner-recommendations'
 
 type PlaceMapDialogProps = {
@@ -26,6 +28,7 @@ export function PlaceMapDialog({
   onOpenChange,
   place,
 }: PlaceMapDialogProps) {
+  const { t } = useI18n()
   const mapRef = useRef<MapLibreMap | null>(null)
 
   if (!place) return null
@@ -39,6 +42,8 @@ export function PlaceMapDialog({
     },
   ]
 
+  const isEvent = place.id.startsWith('event-')
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg gap-0 overflow-hidden p-0 sm:max-w-lg">
@@ -49,9 +54,10 @@ export function PlaceMapDialog({
               <span>{place.title}</span>
             </DialogTitle>
             <DialogDescription>
-              {place.place} · {place.address}
+              {isEvent ? t('places.event') : place.place} · {place.address}
             </DialogDescription>
           </DialogHeader>
+          <p className="mt-2 text-xs text-[var(--nora-text-muted)]">{place.badge}</p>
         </div>
         <div className="h-[min(52vh,360px)] w-full border-y border-[var(--nora-border-subtle)]">
           {open ? (
@@ -68,9 +74,16 @@ export function PlaceMapDialog({
             />
           ) : null}
         </div>
-        <DialogFooter className="p-4">
-          <Button type="button" className="w-full sm:w-auto" onClick={() => onOpenChange(false)}>
-            Закрыть
+        <div className="border-t border-[var(--nora-border-subtle)] p-4">
+          <PlaceFeedbackPanel placeId={place.id} />
+        </div>
+        <DialogFooter className="p-4 pt-0">
+          <Button
+            type="button"
+            className="w-full sm:w-auto"
+            onClick={() => onOpenChange(false)}
+          >
+            {t('places.close')}
           </Button>
         </DialogFooter>
       </DialogContent>

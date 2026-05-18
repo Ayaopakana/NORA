@@ -102,19 +102,19 @@ export function ProfileSocialSection() {
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-400/10 text-lg">
                   {peer.avatarEmoji}
                 </span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-[var(--nora-text)]">
+                <Link href={`/user/${peerId}`} className="min-w-0 flex-1">
+                  <p className="font-medium text-[var(--nora-text)] hover:text-sky-300">
                     @{peer.nickname}
                   </p>
                   <p className="truncate text-xs text-[var(--nora-text-muted)]">
                     {peer.bio}
                   </p>
-                </div>
+                </Link>
                 <div className="flex shrink-0 gap-1">
                   {tab === 'friends' ? (
                     <>
                       <Button size="icon" variant="secondary" asChild>
-                        <Link href="/chat" aria-label={t('social.chat')}>
+                        <Link href={`/chat?peer=${peerId}`} aria-label={t('social.chat')}>
                           <MessageCircle className="h-4 w-4" />
                         </Link>
                       </Button>

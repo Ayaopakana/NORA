@@ -2,6 +2,7 @@
 
 import { ArrowLeft, Search, Send, X } from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { PageShell } from '@/components/PageShell'
 import { RequireAuth } from '@/components/RequireAuth'
@@ -70,6 +71,8 @@ export default function ChatPage() {
 function ChatContent() {
   const { user } = useAuth()
   const { t } = useI18n()
+  const searchParams = useSearchParams()
+  const peerFromUrl = searchParams?.get('peer')
   const [threads, setThreads] = useState<ChatThread[]>([])
   const [activePeer, setActivePeer] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
@@ -81,6 +84,12 @@ function ChatContent() {
   useEffect(() => {
     refresh()
   }, [])
+
+  useEffect(() => {
+    if (peerFromUrl && getFriendIds().includes(peerFromUrl)) {
+      setActivePeer(peerFromUrl)
+    }
+  }, [peerFromUrl])
 
   const friendIds = getFriendIds()
   const listQ = listQuery.trim()
@@ -121,14 +130,14 @@ function ChatContent() {
           <span className="text-xl" aria-hidden>
             {activePeerUser.avatarEmoji}
           </span>
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-[var(--nora-text)]">
+          <Link href={`/user/${activePeer}`} className="min-w-0 flex-1">
+            <p className="font-semibold text-[var(--nora-text)] hover:text-sky-300">
               @{activePeerUser.nickname}
             </p>
             <p className="text-xs text-[var(--nora-text-muted)]">
               {t('common.online')} · {t('common.demoChat')}
             </p>
-          </div>
+          </Link>
         </div>
 
         <div className="mb-20 flex min-h-[50vh] flex-1 flex-col gap-2 overflow-y-auto rounded-2xl border border-[var(--nora-border-strong)] glass-panel p-3">

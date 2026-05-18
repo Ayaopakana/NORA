@@ -227,14 +227,7 @@ export function MapTopBar({
                   PANEL_MAX_H,
                 )}
               >
-                <RouteBuilderForm
-                  mood={mood}
-                  budgetIdx={budgetIdx}
-                  mbti={mbti}
-                  onMoodChange={onMoodChange}
-                  onBudgetChange={onBudgetChange}
-                  onBuilt={handleRouteBuilt}
-                />
+                <RouteBuilderForm mbti={mbti} onBuilt={handleRouteBuilt} />
               </motion.div>
             ) : null}
           </AnimatePresence>

@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { Coins, MapPin, Sparkles } from 'lucide-react'
+import { PlaceFeedbackPanel } from '@/components/planner/PlaceFeedbackPanel'
 import { useAuth } from '@/contexts/useAuth'
 import { useI18n } from '@/hooks/useI18n'
 import {
@@ -39,6 +40,8 @@ export function PlannerRecommendationsList({
     budgetIdx,
     locale,
     user?.birthYear ?? null,
+    user?.id,
+    mbti,
   )
   const moodMeta = getPlannerMoodMeta(locale)[mood]
 
@@ -61,13 +64,16 @@ export function PlannerRecommendationsList({
         >
           {recommendations.map((r) => (
             <li key={r.id}>
+              <div
+                className={cn(
+                  'w-full rounded-xl border border-[var(--nora-border-subtle)] bg-[var(--nora-surface-veil)] text-left transition-smooth hover:border-sky-400/35',
+                  compact ? 'p-2.5' : 'p-3',
+                )}
+              >
               <button
                 type="button"
                 onClick={() => onSelect(r)}
-                className={cn(
-                  'w-full rounded-xl border border-[var(--nora-border-subtle)] bg-[var(--nora-surface-veil)] text-left transition-smooth hover:border-sky-400/35 active:scale-[0.99]',
-                  compact ? 'p-2.5' : 'p-3',
-                )}
+                className="w-full text-left active:scale-[0.99]"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -104,6 +110,10 @@ export function PlannerRecommendationsList({
                   {t('common.showOnMap')}
                 </p>
               </button>
+              <div className="mt-2 border-t border-[var(--nora-border-subtle)] pt-2">
+                <PlaceFeedbackPanel placeId={r.id} compact />
+              </div>
+              </div>
             </li>
           ))}
         </motion.ul>

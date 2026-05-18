@@ -3,6 +3,21 @@ import { normalizeBudgetIndex } from '@/lib/daily-budget'
 import type { MbtiId } from '@/lib/mbti'
 import { localizePlannerPool } from '@/i18n/planner-text'
 import { filterRecommendationsByAge } from '@/lib/age-policy'
+import { getDislikedPlaceIds } from '@/lib/place-preferences-storage'
+import {
+  clampStopCount,
+  filterByRouteArea,
+  isRouteAreaKey,
+  isRouteDayPeriod,
+  isRouteVibe,
+  legacyMoodToVibe,
+  routeAreaLabel,
+  vibeToPlannerMood,
+  type RouteAreaKey,
+  type RouteDayPeriod,
+  type RouteStopCount,
+  type RouteVibe,
+} from '@/lib/route-intents'
 import {
   getRecommendationsForMoodAndBudget,
   normalizePlannerMood,
@@ -10,33 +25,47 @@ import {
   type PlannerMood,
   type PlannerRecommendation,
 } from '@/lib/planner-recommendations'
-import type { MoodPreset } from '@/types/user'
 
+/** @deprecated используйте dayPeriod + stopCount */
 export type RouteTimeSlot = 'morning' | 'afternoon' | 'evening' | 'full'
 
 export type DayRouteInput = {
-  mood: MoodPreset
+  vibe: RouteVibe
+  /** Бюджет для подбора (для группы — effective/min) */
   budgetIdx: number
-  timeSlot: RouteTimeSlot
-  area: string
+  dayPeriod: RouteDayPeriod
+  stopCount: number
+  areaKey: RouteAreaKey
+  areaCustom: string
   mbti?: MbtiId | ''
   birthYear?: number | null
+  userId?: string
+  /** Учитывать дизлайки всех участников */
+  dislikeUserIds?: string[]
+  groupSize?: number
+  participantIds?: string[]
+  groupBudgetAvg?: number
+  organizerBudgetIdx?: number
 }
 
 export type DayRoute = {
   id: string
+  vibe: RouteVibe
+  /** Для подбора мест и обратной совместимости */
   mood: PlannerMood
-  timeSlot: RouteTimeSlot
+  dayPeriod: RouteDayPeriod
+  stopCount: RouteStopCount
+  areaKey: RouteAreaKey
   area: string
+  /** @deprecated */
+  timeSlot?: RouteTimeSlot
   stops: PlannerRecommendation[]
   totalDurationMin: number
-}
-
-const STOP_COUNT: Record<RouteTimeSlot, number> = {
-  morning: 2,
-  afternoon: 3,
-  evening: 3,
-  full: 4,
+  groupSize?: number
+  participantIds?: string[]
+  groupBudgetAvg?: number
+  groupBudgetEffective?: number
+  organizerBudgetIdx?: number
 }
 
 function parseDurationMinutes(s: string): number {
@@ -54,10 +83,6 @@ function dist(
   return Math.hypot(dx, dy)
 }
 
-/**
- * Демо-порядок остановок (ближайший сосед).
- * Позже заменится бэкендом: OSRM/GraphHopper, дороги, трафик, окна времени.
- */
 function orderByProximity(
   stops: PlannerRecommendation[],
 ): PlannerRecommendation[] {
@@ -79,17 +104,6 @@ function orderByProximity(
   return ordered
 }
 
-function filterByArea(
-  pool: PlannerRecommendation[],
-  area: string,
-): PlannerRecommendation[] {
-  const q = area.trim().toLowerCase()
-  if (!q) return pool
-  return pool.filter((r) =>
-    `${r.title} ${r.place} ${r.address}`.toLowerCase().includes(q),
-  )
-}
-
 function uniqueById(items: PlannerRecommendation[]) {
   const seen = new Set<string>()
   return items.filter((r) => {
@@ -99,19 +113,31 @@ function uniqueById(items: PlannerRecommendation[]) {
   })
 }
 
-/** Собирает маршрут на день по настроению, бюджету, времени и району. */
+/** Собирает маршрут: намерение дня, бюджет, время, число мест и район. */
 export function buildDayRoute(
   input: DayRouteInput,
   locale: Locale = 'ru',
 ): DayRoute | null {
-  const mood = normalizePlannerMood(input.mood)
+  const vibe = input.vibe
+  const mood = vibeToPlannerMood(vibe)
   const budget = normalizeBudgetIndex(input.budgetIdx)
   const birthYear = input.birthYear ?? null
+  const stopCount = clampStopCount(input.stopCount)
+  const areaKey = input.areaKey
   const pools = localizePlannerPool(PLANNER_BY_MOOD, locale)
   const affordable = filterRecommendationsByAge(
     pools[mood].filter((r) => r.budgetTier <= budget),
     birthYear,
   )
+
+  const dislikeIds = [
+    ...(input.dislikeUserIds ?? []),
+    ...(input.userId ? [input.userId] : []),
+  ]
+  const disliked = new Set<string>()
+  for (const uid of [...new Set(dislikeIds)]) {
+    for (const id of getDislikedPlaceIds(uid)) disliked.add(id)
+  }
 
   let candidates = uniqueById([
     ...getRecommendationsForMoodAndBudget(
@@ -119,34 +145,44 @@ export function buildDayRoute(
       input.budgetIdx,
       locale,
       birthYear,
+      input.userId,
+      input.mbti,
     ),
     ...affordable,
-  ])
+  ]).filter((r) => !disliked.has(r.id))
 
-  const byArea = filterByArea(candidates, input.area)
-  if (byArea.length) candidates = byArea
-  else if (input.area.trim()) {
-    const areaOnly = filterByArea(affordable, input.area)
-    if (areaOnly.length) candidates = areaOnly
-  }
-
-  if (!candidates.length) candidates = affordable
+  candidates = filterByRouteArea(candidates, areaKey, input.areaCustom)
+  if (!candidates.length) candidates = affordable.filter((r) => !disliked.has(r.id))
   if (!candidates.length) return null
 
-  const count = STOP_COUNT[input.timeSlot]
-  const stops = orderByProximity(candidates).slice(0, count)
+  const stops = orderByProximity(candidates).slice(0, stopCount)
   if (!stops.length) return null
+
+  const groupSize = input.groupSize ?? 1
+  const participantIds = input.participantIds ?? []
 
   return {
     id: `route-${Date.now()}`,
+    vibe,
     mood,
-    timeSlot: input.timeSlot,
-    area: input.area.trim(),
+    dayPeriod: input.dayPeriod,
+    stopCount,
+    areaKey,
+    area: routeAreaLabel(areaKey, input.areaCustom, locale),
     stops,
     totalDurationMin: stops.reduce(
       (sum, r) => sum + parseDurationMinutes(r.duration),
       0,
     ),
+    ...(groupSize > 1
+      ? {
+          groupSize,
+          participantIds,
+          groupBudgetAvg: input.groupBudgetAvg,
+          groupBudgetEffective: budget,
+          organizerBudgetIdx: input.organizerBudgetIdx,
+        }
+      : {}),
   }
 }
 
@@ -161,4 +197,103 @@ export function formatRouteDuration(totalMin: number, locale: Locale): string {
   if (h && m) return `${h} ч ${m} мин`
   if (h) return `${h} ч`
   return `${m} мин`
+}
+
+/** Нормализация старых маршрутов из localStorage */
+export function normalizeDayRouteFields(
+  raw: Record<string, unknown>,
+  locale: Locale,
+): Pick<
+  DayRoute,
+  | 'vibe'
+  | 'mood'
+  | 'dayPeriod'
+  | 'stopCount'
+  | 'areaKey'
+  | 'area'
+  | 'timeSlot'
+  | 'groupSize'
+  | 'participantIds'
+  | 'groupBudgetAvg'
+  | 'groupBudgetEffective'
+  | 'organizerBudgetIdx'
+> | null {
+  const legacySlot = raw.timeSlot
+  const legacyMood = raw.mood
+
+  let vibe: RouteVibe =
+    isRouteVibe(raw.vibe) ? raw.vibe : 'calm'
+  let mood: PlannerMood = vibeToPlannerMood(vibe)
+
+  if (!isRouteVibe(raw.vibe) && typeof legacyMood === 'string') {
+    const m = normalizePlannerMood(legacyMood as '')
+    mood = m
+    vibe = legacyMoodToVibe(m)
+  }
+
+  let dayPeriod: RouteDayPeriod = isRouteDayPeriod(raw.dayPeriod)
+    ? raw.dayPeriod
+    : 'afternoon'
+
+  if (!isRouteDayPeriod(raw.dayPeriod) && typeof legacySlot === 'string') {
+    if (legacySlot === 'morning') dayPeriod = 'morning'
+    else if (legacySlot === 'evening') dayPeriod = 'evening'
+    else if (legacySlot === 'full') dayPeriod = 'afternoon'
+    else dayPeriod = 'afternoon'
+  }
+
+  const stopCount = clampStopCount(
+    Number(raw.stopCount) ||
+      (legacySlot === 'morning'
+        ? 2
+        : legacySlot === 'evening'
+          ? 3
+          : legacySlot === 'full'
+            ? 4
+            : 3),
+  )
+
+  const areaKey: RouteAreaKey = isRouteAreaKey(raw.areaKey)
+    ? raw.areaKey
+    : 'custom'
+  const areaCustom =
+    areaKey === 'custom' && typeof raw.area === 'string' ? raw.area : ''
+  const area =
+    typeof raw.area === 'string' && raw.area.trim()
+      ? raw.area.trim()
+      : routeAreaLabel(areaKey, areaCustom, locale)
+
+  const groupSize =
+    typeof raw.groupSize === 'number' && raw.groupSize > 1
+      ? Math.min(12, Math.round(raw.groupSize))
+      : 1
+  const participantIds = Array.isArray(raw.participantIds)
+    ? raw.participantIds.filter((id): id is string => typeof id === 'string')
+    : []
+
+  return {
+    vibe,
+    mood,
+    dayPeriod,
+    stopCount,
+    areaKey,
+    area,
+    timeSlot:
+      typeof legacySlot === 'string' &&
+      ['morning', 'afternoon', 'evening', 'full'].includes(legacySlot)
+        ? (legacySlot as RouteTimeSlot)
+        : undefined,
+    groupSize: groupSize > 1 ? groupSize : undefined,
+    participantIds: groupSize > 1 ? participantIds : undefined,
+    groupBudgetAvg:
+      typeof raw.groupBudgetAvg === 'number' ? raw.groupBudgetAvg : undefined,
+    groupBudgetEffective:
+      typeof raw.groupBudgetEffective === 'number'
+        ? raw.groupBudgetEffective
+        : undefined,
+    organizerBudgetIdx:
+      typeof raw.organizerBudgetIdx === 'number'
+        ? raw.organizerBudgetIdx
+        : undefined,
+  }
 }

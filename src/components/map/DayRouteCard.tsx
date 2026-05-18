@@ -4,6 +4,11 @@ import { motion } from 'framer-motion'
 import { ArrowDown, Bookmark, MapPin, Route, X } from 'lucide-react'
 import { useState } from 'react'
 import { formatRouteDuration, type DayRoute } from '@/lib/build-day-route'
+import { dailyBudgetLabel } from '@/lib/daily-budget'
+import {
+  getRoutePeriodMeta,
+  getRouteVibeMeta,
+} from '@/lib/route-intents'
 import { useI18n } from '@/hooks/useI18n'
 import { motionGpuClass, tween } from '@/lib/motion'
 import { cn } from '@/lib/utils'
@@ -30,6 +35,23 @@ export function DayRouteCard({
   const { locale, t } = useI18n()
   const [saveHint, setSaveHint] = useState<'idle' | 'saved' | 'duplicate'>('idle')
   const duration = formatRouteDuration(route.totalDurationMin, locale)
+  const vibeMeta = getRouteVibeMeta(locale)
+  const periodMeta = getRoutePeriodMeta(locale)
+  const summary = t('routeBuilder.routeSummary', {
+    vibe: vibeMeta[route.vibe].label,
+    period: periodMeta[route.dayPeriod].label,
+    area: route.area,
+  })
+  const groupLine =
+    route.groupSize && route.groupSize > 1
+      ? t('routeBuilder.groupInRoute', {
+          count: String(route.groupSize),
+          budget: dailyBudgetLabel(
+            route.groupBudgetEffective ?? route.groupBudgetAvg ?? 1,
+            locale,
+          ),
+        })
+      : null
 
   function handleSave() {
     if (!onSave) return
@@ -62,6 +84,14 @@ export function DayRouteCard({
               duration,
             })}
           </p>
+          <p className="mt-0.5 text-[10px] text-sky-600/90 dark:text-sky-400/80">
+            {summary}
+          </p>
+          {groupLine ? (
+            <p className="mt-0.5 text-[10px] text-emerald-600/90 dark:text-emerald-400/80">
+              {groupLine}
+            </p>
+          ) : null}
           <p className="mt-1 text-[10px] leading-snug text-[var(--nora-text-muted)]">
             {t('routeBuilder.routePreviewHint')}
           </p>

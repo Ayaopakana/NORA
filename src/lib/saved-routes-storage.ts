@@ -1,15 +1,14 @@
 import type { Locale } from '@/i18n/config'
+import {
+  normalizeDayRouteFields,
+  type DayRoute,
+} from '@/lib/build-day-route'
 import { findPlannerRecommendation } from '@/lib/planner-recommendations'
-import type { DayRoute, RouteTimeSlot } from '@/lib/build-day-route'
-import type { PlannerMood } from '@/lib/planner-recommendations'
 
 export type SavedDayRoute = DayRoute & { savedAt: number }
 
 const KEY = 'nora_saved_routes'
 const MAX_PER_USER = 24
-
-const TIME_SLOTS: RouteTimeSlot[] = ['morning', 'afternoon', 'evening', 'full']
-const MOODS: PlannerMood[] = ['calm', 'energy', 'tired', 'anxious']
 
 function readStore(): Record<string, SavedDayRoute[]> {
   try {
@@ -31,20 +30,17 @@ function writeStore(store: Record<string, SavedDayRoute[]>) {
   }
 }
 
-function isTimeSlot(v: unknown): v is RouteTimeSlot {
-  return typeof v === 'string' && TIME_SLOTS.includes(v as RouteTimeSlot)
-}
-
-function isMood(v: unknown): v is PlannerMood {
-  return typeof v === 'string' && MOODS.includes(v as PlannerMood)
-}
-
-function normalizeSavedRoute(raw: unknown): SavedDayRoute | null {
+function normalizeSavedRoute(
+  raw: unknown,
+  locale: Locale,
+): SavedDayRoute | null {
   if (!raw || typeof raw !== 'object') return null
   const o = raw as Record<string, unknown>
-  if (typeof o.id !== 'string' || !isMood(o.mood) || !isTimeSlot(o.timeSlot)) {
-    return null
-  }
+  if (typeof o.id !== 'string') return null
+
+  const fields = normalizeDayRouteFields(o, locale)
+  if (!fields) return null
+
   const stopsRaw = o.stops
   if (!Array.isArray(stopsRaw) || !stopsRaw.length) return null
   const stops = stopsRaw
@@ -80,11 +76,10 @@ function normalizeSavedRoute(raw: unknown): SavedDayRoute | null {
     .filter((s): s is NonNullable<typeof s> => s !== null)
   if (!stops.length) return null
   const savedAt = Number(o.savedAt)
+
   return {
     id: o.id,
-    mood: o.mood,
-    timeSlot: o.timeSlot,
-    area: typeof o.area === 'string' ? o.area : '',
+    ...fields,
     stops,
     totalDurationMin: Number(o.totalDurationMin) || 0,
     savedAt: Number.isFinite(savedAt) ? savedAt : Date.now(),
@@ -100,14 +95,27 @@ export function notifySavedRoutesChange() {
 export function getSavedRoutes(userId: string): SavedDayRoute[] {
   const list = readStore()[userId] ?? []
   return list
-    .map(normalizeSavedRoute)
+    .map((r) => normalizeSavedRoute(r, 'ru'))
+    .filter((r): r is SavedDayRoute => r !== null)
+    .sort((a, b) => b.savedAt - a.savedAt)
+}
+
+export function getSavedRoutesLocalized(
+  userId: string,
+  locale: Locale,
+): SavedDayRoute[] {
+  const list = readStore()[userId] ?? []
+  return list
+    .map((r) => normalizeSavedRoute(r, locale))
     .filter((r): r is SavedDayRoute => r !== null)
     .sort((a, b) => b.savedAt - a.savedAt)
 }
 
 export function rehydrateDayRoute(route: DayRoute, locale: Locale): DayRoute {
+  const fields = normalizeDayRouteFields(route as unknown as Record<string, unknown>, locale)
   return {
     ...route,
+    ...(fields ?? {}),
     stops: route.stops.map(
       (s) => findPlannerRecommendation(s.id, locale) ?? s,
     ),
@@ -130,7 +138,6 @@ export function findSavedRouteMatch(
   return getSavedRoutes(userId).find((r) => sameStops(r, route)) ?? null
 }
 
-/** true — добавлен, false — уже был такой набор остановок */
 export function saveDayRoute(userId: string, route: DayRoute): boolean {
   const store = readStore()
   const list = getSavedRoutes(userId)

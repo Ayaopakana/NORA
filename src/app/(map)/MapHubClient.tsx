@@ -8,6 +8,8 @@ import { MapLoadingFallback } from '@/components/map/MapLoadingFallback'
 import { DayRouteCard } from '@/components/map/DayRouteCard'
 import { MapTopBar } from '@/components/map/MapTopBar'
 import { PlannerHubPanel } from '@/components/map/PlannerHubPanel'
+import { PlaceMapDialog } from '@/components/planner/PlaceMapDialog'
+import { PlaceFeedbackPanel } from '@/components/planner/PlaceFeedbackPanel'
 import type { DayRoute } from '@/lib/build-day-route'
 import {
   findSavedRouteMatch,
@@ -88,6 +90,7 @@ export default function MapHubClient() {
   const [dayRoute, setDayRoute] = useState<DayRoute | null>(null)
   const [savedRoutes, setSavedRoutes] = useState<SavedDayRoute[]>([])
   const [insightZone, setInsightZone] = useState<'home' | 'work' | null>(null)
+  const [placeDetailOpen, setPlaceDetailOpen] = useState(false)
 
   const focusPlace = useMemo(
     () => (focusPlaceId ? findPlannerRecommendation(focusPlaceId, locale) : null),
@@ -419,16 +422,28 @@ export default function MapHubClient() {
                 {focusPlace.title}
               </p>
               <p className="text-xs text-[var(--nora-text-muted)]">{focusPlace.place}</p>
-              <button
-                type="button"
-                className="mt-2 text-xs text-[var(--nora-text-muted)] hover:text-[var(--nora-text)]"
-                onClick={() => {
-                  focusPlaceRef.current = null
-                  setFocusPlaceId(null)
-                }}
-              >
-                {t('planner.hideMarker')}
-              </button>
+              <div className="mt-2">
+                <PlaceFeedbackPanel placeId={focusPlace.id} compact />
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="text-xs font-medium text-sky-400 hover:underline"
+                  onClick={() => setPlaceDetailOpen(true)}
+                >
+                  {t('places.details')}
+                </button>
+                <button
+                  type="button"
+                  className="text-xs text-[var(--nora-text-muted)] hover:text-[var(--nora-text)]"
+                  onClick={() => {
+                    focusPlaceRef.current = null
+                    setFocusPlaceId(null)
+                  }}
+                >
+                  {t('planner.hideMarker')}
+                </button>
+              </div>
             </div>
           </motion.div>
         ) : null}
@@ -475,6 +490,12 @@ export default function MapHubClient() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      <PlaceMapDialog
+        open={placeDetailOpen}
+        onOpenChange={setPlaceDetailOpen}
+        place={focusPlace}
+      />
     </>
   )
 }

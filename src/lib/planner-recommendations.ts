@@ -2,6 +2,11 @@ import type { Locale } from '@/i18n/config'
 import { getMessages } from '@/i18n/messages'
 import { localizePlannerPool } from '@/i18n/planner-text'
 import { filterRecommendationsByAge } from '@/lib/age-policy'
+import { getPlannerEvents } from '@/lib/planner-events'
+import {
+  getDislikedPlaceIds,
+  placePreferenceWeight,
+} from '@/lib/place-preferences-storage'
 import type { VenueTag } from '@/lib/age-policy'
 import type { MbtiId } from '@/lib/mbti'
 import { dailyBudgetLabel, normalizeBudgetIndex } from '@/lib/daily-budget'
@@ -296,6 +301,8 @@ export function findPlannerRecommendation(
   for (const mood of Object.keys(pools) as PlannerMood[]) {
     const hit = pools[mood].find((r) => r.id === id)
     if (hit) return hit
+    const event = getPlannerEvents(mood, locale).find((r) => r.id === id)
+    if (event) return event
   }
   return null
 }
@@ -316,24 +323,55 @@ export function getPlannerMoodMeta(locale: Locale) {
 }
 
 /** Места, которые помещаются в выбранный дневной бюджет. */
+function sortByPreferences(
+  items: PlannerRecommendation[],
+  userId?: string,
+  mbti?: MbtiId | '',
+): PlannerRecommendation[] {
+  const disliked = userId ? new Set(getDislikedPlaceIds(userId)) : new Set<string>()
+  const filtered = items.filter((r) => !disliked.has(r.id))
+  return [...filtered].sort((a, b) => {
+    const wa =
+      placePreferenceWeight(userId, a.id) +
+      (mbti && a.mbtiFit?.includes(mbti) ? 1 : 0)
+    const wb =
+      placePreferenceWeight(userId, b.id) +
+      (mbti && b.mbtiFit?.includes(mbti) ? 1 : 0)
+    return wb - wa
+  })
+}
+
 export function getRecommendationsForMoodAndBudget(
   mood: PlannerMood,
   budgetIndex: number,
   locale: Locale = 'ru',
   birthYear: number | null = null,
+  userId?: string,
+  mbti?: MbtiId | '',
 ): PlannerRecommendation[] {
   const budget = normalizeBudgetIndex(budgetIndex)
   const pools = localizePlannerPool(PLANNER_BY_MOOD, locale)
-  const pool = filterRecommendationsByAge(pools[mood], birthYear)
+  const pool = filterRecommendationsByAge(
+    [...pools[mood], ...getPlannerEvents(mood, locale)],
+    birthYear,
+  )
 
   const affordable = pool.filter((r) => r.budgetTier <= budget)
-  const sorted = [...affordable].sort((a, b) => b.budgetTier - a.budgetTier)
+  const sorted = sortByPreferences(
+    [...affordable].sort((a, b) => b.budgetTier - a.budgetTier),
+    userId,
+    mbti,
+  )
 
   if (sorted.length >= 4) return sorted.slice(0, 4)
 
-  const extra = pool
-    .filter((r) => r.budgetTier > budget && !sorted.some((s) => s.id === r.id))
-    .sort((a, b) => a.budgetTier - b.budgetTier)
+  const extra = sortByPreferences(
+    pool
+      .filter((r) => r.budgetTier > budget && !sorted.some((s) => s.id === r.id))
+      .sort((a, b) => a.budgetTier - b.budgetTier),
+    userId,
+    mbti,
+  )
 
   return [...sorted, ...extra].slice(0, 4)
 }
