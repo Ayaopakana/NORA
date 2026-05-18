@@ -105,6 +105,57 @@ export async function savedRoutesRoutes(app: FastifyInstance) {
     },
   )
 
+  app.put(
+    '/:routeId',
+    { preHandler: [app.authenticate] },
+    async (request, reply) => {
+      const parsed = saveBodySchema.safeParse(request.body)
+      if (!parsed.success) {
+        return reply.code(400).send({
+          code: 'VALIDATION_ERROR',
+          message: parsed.error.flatten(),
+        })
+      }
+
+      const { routeId } = request.params as { routeId: string }
+      const userId = request.user.sub
+      const route = parsed.data.route as Record<string, unknown>
+
+      const row = await prisma.savedRoute.findFirst({
+        where: { id: routeId, userId },
+      })
+      if (!row) {
+        return reply.code(404).send({
+          code: 'NOT_FOUND',
+          message: 'Route not found',
+        })
+      }
+
+      let savedAt = Date.now()
+      try {
+        const prev = JSON.parse(row.data) as { savedAt?: number }
+        if (typeof prev.savedAt === 'number') savedAt = prev.savedAt
+      } catch {
+        /* keep new savedAt */
+      }
+
+      const payload = {
+        ...route,
+        id: routeId,
+        savedAt,
+      }
+
+      const updated = await prisma.savedRoute.update({
+        where: { id: routeId },
+        data: { data: JSON.stringify(payload) },
+      })
+
+      return {
+        route: JSON.parse(updated.data) as Record<string, unknown>,
+      }
+    },
+  )
+
   app.delete(
     '/:routeId',
     { preHandler: [app.authenticate] },

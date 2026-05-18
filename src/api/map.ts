@@ -42,6 +42,21 @@ export async function fetchVenueCatalog(): Promise<VenueCatalogItem[] | null> {
   return (await res.json()) as VenueCatalogItem[]
 }
 
+export async function fetchGeocode(
+  query: string,
+): Promise<{ lng: number; lat: number } | null> {
+  if (!isApiEnabled()) return null
+  const res = await apiFetch('/map/geocode', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  })
+  if (!res.ok) return null
+  const data = (await res.json()) as { lng: number; lat: number }
+  if (!Number.isFinite(data.lng) || !Number.isFinite(data.lat)) return null
+  return { lng: data.lng, lat: data.lat }
+}
+
 export async function fetchWalkingRoutePath(
   points: MapRoutePoint[],
 ): Promise<MapRouteResponse | null> {

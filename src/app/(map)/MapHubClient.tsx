@@ -25,6 +25,7 @@ import {
   rehydrateDayRoute,
   removeSavedRoute,
   saveDayRoute,
+  updateSavedRoute,
   type SavedDayRoute,
 } from '@/lib/saved-routes-storage'
 import type { MapSurfaceMarker } from '@/lib/map-marker'
@@ -77,6 +78,8 @@ export default function MapHubClient() {
   const [dayRoute, setDayRoute] = useState<DayRoute | null>(null)
   const [savedRoutes, setSavedRoutes] = useState<SavedDayRoute[]>([])
   const [dayRouteIsSaved, setDayRouteIsSaved] = useState(false)
+  const [routeDirty, setRouteDirty] = useState(false)
+  const [routeOpenTrigger, setRouteOpenTrigger] = useState(0)
   const [placeDetailOpen, setPlaceDetailOpen] = useState(false)
   const [placeCoordsEpoch, setPlaceCoordsEpoch] = useState(0)
   const [routeNavActive, setRouteNavActive] = useState(false)
@@ -311,6 +314,8 @@ export default function MapHubClient() {
     (route: DayRoute) => {
       setRouteNavActive(false)
       setDayRoute(route)
+      setRouteDirty(false)
+      setDayRouteIsSaved(false)
       setFocusPlaceId(null)
       focusPlaceRef.current = null
       flyToRoute(route, geo.snapshot)
@@ -372,22 +377,38 @@ export default function MapHubClient() {
     return () => window.removeEventListener('nora-routes-change', refresh)
   }, [user?.id, locale])
 
+  const handleRouteChange = useCallback((next: DayRoute) => {
+    setRouteNavActive(false)
+    setDayRoute(applyPlaceCoordsToRoute(next))
+    setRouteDirty(true)
+  }, [])
+
   const handleSaveDayRoute = useCallback(async () => {
     if (!user?.id || !dayRoute) return false
+    if (dayRouteIsSaved) {
+      await updateSavedRoute(user.id, dayRoute)
+      const list = await getSavedRoutesLocalized(user.id, locale)
+      setSavedRoutes(list)
+      setRouteDirty(false)
+      return true
+    }
     const ok = await saveDayRoute(user.id, dayRoute)
     if (ok) {
       const list = await getSavedRoutesLocalized(user.id, locale)
       setSavedRoutes(list)
       setDayRouteIsSaved(true)
+      setRouteDirty(false)
     }
     return ok
-  }, [user?.id, dayRoute, locale])
+  }, [user?.id, dayRoute, dayRouteIsSaved, locale])
 
   const handleSelectSavedRoute = useCallback(
     (saved: SavedDayRoute) => {
       setRouteNavActive(false)
       const route = applyPlaceCoordsToRoute(rehydrateDayRoute(saved, locale))
       setDayRoute(route)
+      setRouteDirty(false)
+      setDayRouteIsSaved(true)
       setFocusPlaceId(null)
       focusPlaceRef.current = null
       window.requestAnimationFrame(() => {
@@ -425,6 +446,7 @@ export default function MapHubClient() {
       <MapTopBar
         defaultSearchOpen={searchOpenDefault}
         defaultRouteOpen={routeOpenDefault}
+        routeOpenTrigger={routeOpenTrigger}
         mood={mood}
         budgetIdx={budgetIdx}
         mbti={user?.mbti ?? ''}
@@ -448,6 +470,11 @@ export default function MapHubClient() {
         activeRouteId={user?.id ? activeSavedRouteId : null}
         onSelectSavedRoute={user?.id ? handleSelectSavedRoute : undefined}
         onDeleteSavedRoute={user?.id ? handleDeleteSavedRoute : undefined}
+        onOpenRouteBuilder={
+          user?.id
+            ? () => setRouteOpenTrigger((n) => n + 1)
+            : undefined
+        }
       />
 
       <AnimatePresence>
@@ -456,8 +483,10 @@ export default function MapHubClient() {
             key={dayRoute.id}
             route={dayRoute}
             onSelectStop={handleSelectRouteStop}
+            onRouteChange={handleRouteChange}
             onSave={user?.id ? handleSaveDayRoute : undefined}
             isSaved={dayRouteIsSaved}
+            hasUnsavedChanges={routeDirty}
             navigationActive={routeNavActive}
             canStartNavigation={geo.hasLocation}
             onStartNavigation={handleStartNavigation}
@@ -465,6 +494,8 @@ export default function MapHubClient() {
             onClear={() => {
               setRouteNavActive(false)
               setDayRoute(null)
+              setRouteDirty(false)
+              setDayRouteIsSaved(false)
               setFocusPlaceId(null)
               focusPlaceRef.current = null
             }}

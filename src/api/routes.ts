@@ -19,6 +19,16 @@ export async function apiSaveRoute(route: DayRoute): Promise<SavedDayRoute> {
   return data.route
 }
 
+export async function apiUpdateSavedRoute(route: DayRoute): Promise<SavedDayRoute> {
+  const res = await apiFetch(`/routes/${encodeURIComponent(route.id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ route }),
+  })
+  const data = await parseJson<{ route: SavedDayRoute }>(res)
+  return data.route
+}
+
 export async function apiDeleteSavedRoute(routeId: string): Promise<void> {
   const res = await apiFetch(`/routes/${encodeURIComponent(routeId)}`, {
     method: 'DELETE',

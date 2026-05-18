@@ -26,6 +26,8 @@ const registerExtrasSchema = z
     dailyBudgetIndex: z.number().int().min(0).max(3).optional(),
     moodNote: z.string().optional(),
     budgetComfort: z.string().optional(),
+    birthDay: z.number().int().min(1).max(31).nullable().optional(),
+    birthMonth: z.number().int().min(1).max(12).nullable().optional(),
     birthYear: z.number().int().nullable().optional(),
     routine: z.object({ slots: z.array(z.unknown()) }).optional(),
   })
@@ -96,9 +98,11 @@ export async function authRoutes(app: FastifyInstance) {
         userStatus: extras?.userStatus ?? '',
         zones: JSON.stringify(extras?.zones ?? {}),
         dailyBudgetIndex: extras?.dailyBudgetIndex ?? 1,
-        initialMood: extras?.initialMood ?? '',
-        birthYear: extras?.birthYear ?? null,
-        routine: JSON.stringify(extras?.routine ?? { slots: [] }),
+          initialMood: extras?.initialMood ?? '',
+          birthDay: extras?.birthDay ?? null,
+          birthMonth: extras?.birthMonth ?? null,
+          birthYear: extras?.birthYear ?? null,
+          routine: JSON.stringify(extras?.routine ?? { slots: [] }),
         settings: { create: {} },
       },
     })

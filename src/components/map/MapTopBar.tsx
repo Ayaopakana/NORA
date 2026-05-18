@@ -19,6 +19,8 @@ type Panel = 'search' | 'route' | null
 type MapTopBarProps = {
   defaultSearchOpen?: boolean
   defaultRouteOpen?: boolean
+  /** Увеличивается, чтобы открыть панель маршрута из планера */
+  routeOpenTrigger?: number
   mood: MoodPreset
   budgetIdx: number
   mbti: MbtiId | ''
@@ -42,6 +44,7 @@ const openCloseTransition = tween.medium
 export function MapTopBar({
   defaultSearchOpen = false,
   defaultRouteOpen = false,
+  routeOpenTrigger = 0,
   mood,
   budgetIdx,
   mbti,
@@ -56,11 +59,16 @@ export function MapTopBar({
     defaultRouteOpen ? 'route' : defaultSearchOpen ? 'search' : null,
   )
   const [query, setQuery] = useState('')
+  const [searchLeaving, setSearchLeaving] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const searchOpen = panel === 'search'
   const routeOpen = panel === 'route'
   const overlayOpen = panel !== null
+  /** Пока идёт exit-анимация поиска — держим max-height, иначе flex растягивает панель */
+  const searchExpanded = searchOpen || searchLeaving
+  const shellExpanded = overlayOpen || searchLeaving
+  const showBackdrop = overlayOpen
 
   useEffect(() => {
     if (defaultSearchOpen) setPanel('search')
@@ -69,6 +77,10 @@ export function MapTopBar({
   useEffect(() => {
     if (defaultRouteOpen) setPanel('route')
   }, [defaultRouteOpen])
+
+  useEffect(() => {
+    if (routeOpenTrigger > 0) setPanel('route')
+  }, [routeOpenTrigger])
 
   useEffect(() => {
     if (!searchOpen) return
@@ -86,6 +98,10 @@ export function MapTopBar({
   }, [overlayOpen])
 
   function closePanel() {
+    if (panel === 'search') {
+      setSearchLeaving(true)
+      window.setTimeout(() => setSearchLeaving(false), 320)
+    }
     setPanel(null)
     setQuery('')
     onOverlayChange?.()
@@ -100,6 +116,7 @@ export function MapTopBar({
   }, [panel, onOverlayChange])
 
   function openSearch() {
+    setSearchLeaving(false)
     setPanel('search')
   }
 
@@ -115,7 +132,7 @@ export function MapTopBar({
   return (
     <>
       <AnimatePresence>
-        {overlayOpen ? (
+        {showBackdrop ? (
           <motion.button
             type="button"
             aria-label={t('common.close')}
@@ -138,13 +155,16 @@ export function MapTopBar({
         <div
           className={cn(
             'pointer-events-auto flex w-full max-w-md flex-col gap-2',
-            overlayOpen && PANEL_MAX_H,
+            shellExpanded && 'min-h-0',
+            shellExpanded && PANEL_MAX_H,
           )}
         >
-          <div className="flex gap-2">
+          <div className={cn('flex gap-2', searchExpanded && 'min-h-0 flex-1')}>
             <div
               className={cn(
                 'flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border shadow-glass backdrop-blur-xl',
+                searchExpanded && 'min-h-0',
+                searchExpanded && PANEL_MAX_H,
                 searchOpen
                   ? 'border-sky-400/40 glass-panel-strong'
                   : 'border-[var(--nora-border-strong)] glass-panel bg-[color-mix(in_srgb,var(--nora-surface)_38%,transparent)]',
@@ -187,29 +207,30 @@ export function MapTopBar({
                 ) : null}
               </div>
 
-              <AnimatePresence initial={false}>
+              <AnimatePresence initial={false} mode="popLayout">
                 {searchOpen ? (
                   <motion.div
                     key="search-panel"
-                    initial={{ opacity: 0, scale: 0.97 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.97 }}
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
                     transition={openCloseTransition}
-                    style={{ transformOrigin: 'top center' }}
+                    onExitComplete={() => setSearchLeaving(false)}
                     className={cn(
                       'motion-gpu flex min-h-0 flex-col overflow-hidden border-t border-[var(--nora-border-subtle)]',
                       motionGpuClass,
-                      PANEL_MAX_H,
                     )}
                   >
-                    <PlacesSearchResults
-                      query={query}
-                      onSelect={(place) => {
-                        onSelectPlace?.(place)
-                        closePanel()
-                      }}
-                    />
-                    <PeopleSearchResults query={query} compact />
+                    <div className="max-h-[min(50dvh,calc(100dvh_-_8rem))] min-h-0 overflow-y-auto overscroll-contain [scrollbar-width:thin] [scrollbar-color:color-mix(in_srgb,var(--nora-accent)_40%,transparent)_transparent]">
+                      <PlacesSearchResults
+                        query={query}
+                        onSelect={(place) => {
+                          onSelectPlace?.(place)
+                          closePanel()
+                        }}
+                      />
+                      <PeopleSearchResults query={query} compact />
+                    </div>
                   </motion.div>
                 ) : null}
               </AnimatePresence>

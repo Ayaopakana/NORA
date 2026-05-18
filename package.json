@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:clean": "rm -rf .next && next dev",
+    "dev:restart": "sh -c 'lsof -ti :3000,:3001 2>/dev/null | xargs kill -9 2>/dev/null; rm -rf .next && next dev'",
     "dev:api": "npm run dev --prefix server",
     "build": "next build",
     "start": "next start",

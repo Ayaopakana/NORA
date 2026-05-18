@@ -16,6 +16,7 @@ import {
   isFriend,
 } from '@/lib/social-storage'
 import type { PublicProfile } from '@/types/public-profile'
+import { cn } from '@/lib/utils'
 
 type PeopleSearchResultsProps = {
   query: string
@@ -62,7 +63,7 @@ export function PeopleSearchResults({ query, compact }: PeopleSearchResultsProps
   const friendCount = getFriendIds().length
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex flex-col">
       <div className="border-b border-[var(--nora-border-subtle)] px-3 pb-2 pt-0.5">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-500 dark:text-sky-400">
           {compact ? t('search.peopleTitle') : t('search.community')}
@@ -83,7 +84,12 @@ export function PeopleSearchResults({ query, compact }: PeopleSearchResultsProps
         </p>
       ) : null}
 
-      <ul className="min-h-0 flex-1 space-y-3 overflow-y-auto px-2 pb-2 pt-1">
+      <ul
+        className={cn(
+          'space-y-3 px-2 pb-2 pt-1',
+          compact ? '' : 'min-h-0 flex-1 overflow-y-auto',
+        )}
+      >
         {suggested.length > 0 ? (
           <li>
             <p className="mb-1.5 flex items-center gap-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-sky-400">

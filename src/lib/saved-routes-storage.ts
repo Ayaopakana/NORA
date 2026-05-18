@@ -4,6 +4,7 @@ import {
   apiDeleteSavedRoute,
   apiListSavedRoutes,
   apiSaveRoute,
+  apiUpdateSavedRoute,
 } from '@/api/routes'
 import { readStoredLocale } from '@/i18n/locale-storage'
 import {
@@ -60,6 +61,7 @@ function normalizeSavedRoute(
       let lng = Number(p.lng)
       let lat = Number(p.lat)
       if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+        if (p.id.startsWith('custom-')) return null
         if (!fresh) return null
         lng = fresh.lng
         lat = fresh.lat
@@ -84,9 +86,13 @@ function normalizeSavedRoute(
   if (!stops.length) return null
   const savedAt = Number(o.savedAt)
 
+  const name =
+    typeof o.name === 'string' && o.name.trim() ? o.name.trim() : fields.name
+
   return {
     id: o.id,
     ...fields,
+    ...(name ? { name } : {}),
     stops,
     totalDurationMin: Number(o.totalDurationMin) || 0,
     savedAt: Number.isFinite(savedAt) ? savedAt : Date.now(),
@@ -165,7 +171,7 @@ export async function isDayRouteSaved(
   route: DayRoute,
 ): Promise<boolean> {
   const list = await getSavedRoutesLocalized(userId, readStoredLocale())
-  return list.some((r) => sameStops(r, route))
+  return list.some((r) => r.id === route.id || sameStops(r, route))
 }
 
 export async function findSavedRouteMatch(
@@ -181,6 +187,12 @@ export async function saveDayRoute(
   userId: string,
   route: DayRoute,
 ): Promise<boolean> {
+  const existing = await findSavedRouteById(userId, route.id)
+  if (existing) {
+    await updateSavedRoute(userId, route)
+    return true
+  }
+
   if (isApiEnabled()) {
     try {
       await apiSaveRoute(route)
@@ -200,6 +212,35 @@ export async function saveDayRoute(
   writeStore(store)
   notifySavedRoutesChange()
   return true
+}
+
+export async function findSavedRouteById(
+  userId: string,
+  routeId: string,
+  locale: Locale = readStoredLocale(),
+): Promise<SavedDayRoute | null> {
+  const list = await getSavedRoutesLocalized(userId, locale)
+  return list.find((r) => r.id === routeId) ?? null
+}
+
+export async function updateSavedRoute(userId: string, route: DayRoute) {
+  if (isApiEnabled()) {
+    await apiUpdateSavedRoute(route)
+    notifySavedRoutesChange()
+    return
+  }
+
+  const store = readStore()
+  const list = getSavedRoutesLocal(userId, readStoredLocale())
+  const idx = list.findIndex((r) => r.id === route.id)
+  if (idx < 0) return
+  const prev = list[idx]!
+  const entry: SavedDayRoute = { ...route, savedAt: prev.savedAt }
+  const next = [...list]
+  next[idx] = entry
+  store[userId] = next
+  writeStore(store)
+  notifySavedRoutesChange()
 }
 
 export async function removeSavedRoute(userId: string, routeId: string) {

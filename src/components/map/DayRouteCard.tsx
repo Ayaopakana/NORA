@@ -8,11 +8,14 @@ import {
   ChevronUp,
   MapPin,
   Navigation,
+  Pencil,
   Route,
   X,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { RouteEditSection } from '@/components/map/RouteEditSection'
 import { formatRouteDuration, type DayRoute } from '@/lib/build-day-route'
+import { routeDisplayTitle } from '@/lib/route-edit'
 import { dailyBudgetLabel } from '@/lib/daily-budget'
 import {
   getRoutePeriodMeta,
@@ -30,7 +33,9 @@ type DayRouteCardProps = {
   onSelectStop: (stopId: string) => void
   onClear: () => void
   onSave?: () => boolean | Promise<boolean>
+  onRouteChange?: (route: DayRoute) => void
   isSaved?: boolean
+  hasUnsavedChanges?: boolean
   navigationActive?: boolean
   canStartNavigation?: boolean
   onStartNavigation?: () => void
@@ -43,7 +48,9 @@ export function DayRouteCard({
   onSelectStop,
   onClear,
   onSave,
+  onRouteChange,
   isSaved = false,
+  hasUnsavedChanges = false,
   navigationActive = false,
   canStartNavigation = false,
   onStartNavigation,
@@ -52,9 +59,11 @@ export function DayRouteCard({
   const { locale, t } = useI18n()
   const [saveHint, setSaveHint] = useState<'idle' | 'saved' | 'duplicate'>('idle')
   const [collapsed, setCollapsed] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   useEffect(() => {
     setCollapsed(false)
+    setEditing(false)
   }, [route.id])
 
   const duration = formatRouteDuration(route.totalDurationMin, locale)
@@ -65,6 +74,8 @@ export function DayRouteCard({
     period: periodMeta[route.dayPeriod].label,
     area: route.area,
   })
+  const titleFallback = route.area.trim() || route.stops[0]?.title || '—'
+  const displayTitle = routeDisplayTitle(route, titleFallback)
   const stopsLine = t('routeBuilder.stops', {
     count: String(route.stops.length),
     duration,
@@ -128,8 +139,9 @@ export function DayRouteCard({
               : t('routeBuilder.routePreview')}
           </p>
           <p className="mt-0.5 text-sm font-semibold leading-snug text-[var(--nora-text)]">
-            {stopsLine}
+            {displayTitle}
           </p>
+          <p className="mt-0.5 text-[11px] text-[var(--nora-text-muted)]">{stopsLine}</p>
           {!collapsed ? (
             <>
               <p className="mt-0.5 text-[10px] text-sky-600/90 dark:text-sky-400/80">
@@ -152,6 +164,25 @@ export function DayRouteCard({
         </button>
 
         <motion.div layout="position" className="flex shrink-0 items-center gap-0.5">
+          {onRouteChange ? (
+            <button
+              type="button"
+              onClick={() => {
+                setEditing((v) => !v)
+                if (collapsed) setCollapsed(false)
+              }}
+              className={cn(
+                'rounded-lg p-1 transition-colors',
+                editing
+                  ? 'bg-sky-400/15 text-sky-700 dark:text-sky-200'
+                  : 'text-[var(--nora-text-muted)] hover:bg-[var(--nora-surface-veil)] hover:text-[var(--nora-text)]',
+              )}
+              aria-label={t('routeBuilder.editRoute')}
+              aria-pressed={editing}
+            >
+              <Pencil className="h-4 w-4" aria-hidden />
+            </button>
+          ) : null}
           {collapsed ? (
             <button
               type="button"
@@ -192,6 +223,9 @@ export function DayRouteCard({
             transition={spring.layout}
             className="overflow-hidden"
           >
+            {editing && onRouteChange ? (
+              <RouteEditSection route={route} onChange={onRouteChange} />
+            ) : (
             <ol className="relative mt-3 max-h-[11rem] space-y-0 overflow-y-auto pr-0.5">
               {canStartNavigation ? (
                 <li className="relative mb-2 flex items-start gap-2 rounded-lg border border-dashed border-sky-400/35 bg-sky-400/8 px-2 py-1.5">
@@ -251,6 +285,7 @@ export function DayRouteCard({
                 </li>
               ))}
             </ol>
+            )}
 
             {onStartNavigation || onStopNavigation ? (
               <button
@@ -277,7 +312,7 @@ export function DayRouteCard({
               <button
                 type="button"
                 onClick={handleSave}
-                disabled={isSaved && saveHint === 'idle'}
+                disabled={isSaved && !hasUnsavedChanges && saveHint === 'idle'}
                 className={cn(
                   'mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-medium transition-colors',
                   isSaved && saveHint === 'idle'
@@ -290,9 +325,11 @@ export function DayRouteCard({
                   ? t('routeBuilder.savedRoute')
                   : saveHint === 'duplicate'
                     ? t('routeBuilder.alreadySaved')
-                    : isSaved
-                      ? t('routeBuilder.alreadySaved')
-                      : t('routeBuilder.saveRoute')}
+                    : isSaved && hasUnsavedChanges
+                      ? t('routeBuilder.saveChanges')
+                      : isSaved
+                        ? t('routeBuilder.alreadySaved')
+                        : t('routeBuilder.saveRoute')}
               </button>
             ) : null}
           </motion.div>

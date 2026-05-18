@@ -219,6 +219,9 @@ export function MapboxSurface({
         /* Быстрее показывать тайлы, без долгого «растворения» пустой подложки */
         fadeDuration: 0,
         maxPitch: 85,
+        touchPitch: true,
+        dragRotate: true,
+        touchZoomRotate: true,
       })
 
       mapRef.current = instance

@@ -1,7 +1,7 @@
 'use client'
 
 import { AnimatePresence, motion } from 'framer-motion'
-import { CalendarDays, Coins, Sparkles, X } from 'lucide-react'
+import { CalendarDays, Coins, Route, Sparkles, X } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { MbtiHelpDialog } from '@/components/MbtiHelpDialog'
@@ -39,6 +39,7 @@ type PlannerHubPanelProps = {
   activeRouteId?: string | null
   onSelectSavedRoute?: (route: SavedDayRoute) => void
   onDeleteSavedRoute?: (routeId: string) => void
+  onOpenRouteBuilder?: () => void
 }
 
 /** Кнопка — нижняя часть верхней половины; панель тянется до навбара */
@@ -60,6 +61,7 @@ export function PlannerHubPanel({
   activeRouteId = null,
   onSelectSavedRoute,
   onDeleteSavedRoute,
+  onOpenRouteBuilder,
 }: PlannerHubPanelProps) {
   const [open, setOpen] = useState(defaultOpen)
   const { locale, t } = useI18n()
@@ -172,7 +174,21 @@ export function PlannerHubPanel({
                 </button>
               </header>
 
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 py-2.5 pr-1.5 [scrollbar-width:thin] [scrollbar-color:color-mix(in_srgb,var(--nora-accent)_40%,transparent)_transparent]">
+              <motion.div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2.5 py-2.5 pr-1.5 [scrollbar-width:thin] [scrollbar-color:color-mix(in_srgb,var(--nora-accent)_40%,transparent)_transparent]">
+                {onOpenRouteBuilder ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onOpenRouteBuilder()
+                      setPanelOpen(false)
+                    }}
+                    className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl border border-sky-400/45 bg-sky-400/12 px-3 py-2.5 text-xs font-semibold text-sky-800 shadow-sm transition-colors hover:bg-sky-400/18 dark:text-sky-100"
+                  >
+                    <Route className="h-4 w-4 shrink-0" aria-hidden />
+                    {t('planner.createDayRoute')}
+                  </button>
+                ) : null}
+
                 <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--nora-text-muted)]">
                   {t('planner.state')}
                 </p>
@@ -285,7 +301,7 @@ export function PlannerHubPanel({
                     compact
                   />
                 </div>
-              </div>
+              </motion.div>
             </motion.aside>
           </>
         ) : null}

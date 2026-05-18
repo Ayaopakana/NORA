@@ -177,8 +177,8 @@ export function useUserGeolocation({
         : {
             center: [next.lng, next.lat] as [number, number],
             zoom: Math.max(map.getZoom(), 18),
-            pitch: 0,
-            bearing: 0,
+            pitch: map.getPitch(),
+            bearing: map.getBearing(),
             padding: USER_VIEW_PADDING,
           }
 

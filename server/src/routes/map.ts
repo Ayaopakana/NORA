@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
-import { dgisWalkingRoute, isDgisConfigured } from '../lib/dgis.js'
+import { dgisGeocode, dgisWalkingRoute, isDgisConfigured } from '../lib/dgis.js'
 import { osrmWalkingRoute } from '../lib/osrm-route.js'
 import { appendPathPoints } from '../lib/wkt.js'
 import { geocodeManifestEntry } from '../lib/geocode-entry.js'
@@ -70,6 +70,34 @@ export async function mapRoutes(app: FastifyInstance) {
         },
       ]
     })
+  })
+
+  const geocodeBodySchema = z.object({
+    query: z.string().min(2).max(240),
+  })
+
+  /** Геокодирование адреса для пользовательской остановки. */
+  app.post('/map/geocode', async (req, reply) => {
+    const parsed = geocodeBodySchema.safeParse(req.body)
+    if (!parsed.success) {
+      return reply.status(400).send({
+        code: 'INVALID_BODY',
+        message: parsed.error.flatten(),
+      })
+    }
+    if (!isDgisConfigured()) {
+      return reply.status(503).send(apiError(503, 'DGIS_NOT_CONFIGURED', 'Set DGIS_API_KEY'))
+    }
+    try {
+      const coord = await dgisGeocode(parsed.data.query)
+      if (!coord) {
+        return reply.status(404).send(apiError(404, 'GEOCODE_MISS', 'No result'))
+      }
+      return coord
+    } catch (err) {
+      req.log.warn({ err }, 'geocode failed')
+      return reply.status(502).send(apiError(502, 'GEOCODE_ERROR', 'Geocode failed'))
+    }
   })
 
   /** Пешеходная геометрия маршрута между остановками. */

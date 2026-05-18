@@ -2,6 +2,7 @@
 
 import { Route, Trash2 } from 'lucide-react'
 import { formatRouteDuration } from '@/lib/build-day-route'
+import { routeDisplayTitle } from '@/lib/route-edit'
 import {
   getRoutePeriodMeta,
   getRouteVibeMeta,
@@ -45,7 +46,10 @@ export function SavedRoutesList({
           {routes.map((route) => {
             const active = route.id === activeRouteId
             const duration = formatRouteDuration(route.totalDurationMin, locale)
-            const title = route.area.trim() || route.stops[0]?.title || '—'
+            const title = routeDisplayTitle(
+              route,
+              route.area.trim() || route.stops[0]?.title || '—',
+            )
             const vibe = vibeMeta[route.vibe]
             return (
               <li key={route.id} className="flex gap-1">

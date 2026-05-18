@@ -12,6 +12,7 @@ const patchBodySchema = z
     nickname: z.string().min(1).optional(),
     bio: z.string().optional(),
     avatarUrl: z.string().nullable().optional(),
+    avatarPrivacy: z.enum(['open', 'preview']).optional(),
     psychotypeId: z.string().optional(),
     moodNote: z.string().optional(),
     budgetComfort: z.string().optional(),
@@ -28,6 +29,8 @@ const patchBodySchema = z
       .optional(),
     dailyBudgetIndex: z.number().int().min(0).max(3).optional(),
     initialMood: z.string().optional(),
+    birthDay: z.number().int().min(1).max(31).nullable().optional(),
+    birthMonth: z.number().int().min(1).max(12).nullable().optional(),
     birthYear: z.number().int().nullable().optional(),
     routine: z.object({ slots: z.array(z.unknown()) }).optional(),
   })
@@ -166,6 +169,7 @@ export async function usersRoutes(app: FastifyInstance) {
       if (patch.nickname !== undefined) data.nickname = patch.nickname.trim()
       if (patch.bio !== undefined) data.bio = patch.bio.trim()
       if (patch.avatarUrl !== undefined) data.avatarUrl = patch.avatarUrl
+      if (patch.avatarPrivacy !== undefined) data.avatarPrivacy = patch.avatarPrivacy
       if (patch.psychotypeId !== undefined) data.psychotypeId = patch.psychotypeId
       if (patch.moodNote !== undefined) data.moodNote = patch.moodNote.trim()
       if (patch.budgetComfort !== undefined) data.budgetComfort = patch.budgetComfort
@@ -179,6 +183,8 @@ export async function usersRoutes(app: FastifyInstance) {
         data.dailyBudgetIndex = patch.dailyBudgetIndex
       }
       if (patch.initialMood !== undefined) data.initialMood = patch.initialMood
+      if (patch.birthDay !== undefined) data.birthDay = patch.birthDay
+      if (patch.birthMonth !== undefined) data.birthMonth = patch.birthMonth
       if (patch.birthYear !== undefined) data.birthYear = patch.birthYear
       if (patch.routine !== undefined) data.routine = JSON.stringify(patch.routine)
 

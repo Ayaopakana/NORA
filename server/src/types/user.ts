@@ -6,6 +6,7 @@ export type ApiUser = {
   nickname: string
   bio: string
   avatarUrl: string | null
+  avatarPrivacy: string
   psychotypeId: string
   moodNote: string
   budgetComfort: string
@@ -17,6 +18,8 @@ export type ApiUser = {
   zones: Record<string, { lng: number; lat: number }>
   dailyBudgetIndex: number
   initialMood: string
+  birthDay: number | null
+  birthMonth: number | null
   birthYear: number | null
   routine: { slots: unknown[] }
 }

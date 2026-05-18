@@ -53,6 +53,7 @@ export function RouteBuilderForm({
   const [stopCount, setStopCount] = useState<number>(3)
   const [areaKey, setAreaKey] = useState<RouteAreaKey>('center')
   const [areaCustom, setAreaCustom] = useState('')
+  const [routeName, setRouteName] = useState('')
   const [error, setError] = useState<string | null>(null)
 
   const vibeMeta = getRouteVibeMeta(locale)
@@ -115,6 +116,7 @@ export function RouteBuilderForm({
         stopCount,
         areaKey,
         areaCustom,
+        name: routeName,
         mbti,
         birthDate,
         userId: user.id,
@@ -139,7 +141,20 @@ export function RouteBuilderForm({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 pb-3 pt-2">
-      <div className="border-b border-[var(--nora-border-subtle)] pb-2">
+      <label className="block border-b border-[var(--nora-border-subtle)] pb-2">
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-sky-500 dark:text-sky-400">
+          {t('routeBuilder.routeNameLabel')}
+        </span>
+        <input
+          type="text"
+          value={routeName}
+          onChange={(e) => setRouteName(e.target.value)}
+          placeholder={t('routeBuilder.routeNamePlaceholder')}
+          className="glass-input mt-1.5 w-full px-3 py-2.5 text-sm"
+        />
+      </label>
+
+      <div className="mt-2 border-b border-[var(--nora-border-subtle)] pb-2">
         <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-500 dark:text-sky-400">
           {t('routeBuilder.title')}
         </p>

@@ -17,6 +17,7 @@ export function toApiUser(row: DbUser): ApiUser {
     nickname: row.nickname,
     bio: row.bio,
     avatarUrl: row.avatarUrl,
+    avatarPrivacy: row.avatarPrivacy,
     psychotypeId: row.psychotypeId,
     moodNote: row.moodNote,
     budgetComfort: row.budgetComfort,
@@ -28,6 +29,8 @@ export function toApiUser(row: DbUser): ApiUser {
     zones: parseJson(row.zones, {}),
     dailyBudgetIndex: row.dailyBudgetIndex,
     initialMood: row.initialMood,
+    birthDay: row.birthDay,
+    birthMonth: row.birthMonth,
     birthYear: row.birthYear,
     routine: parseJson(row.routine, { slots: [] }),
   }

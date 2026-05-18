@@ -60,10 +60,14 @@ export type DayRouteInput = {
   organizerBudgetIdx?: number
   /** Настроение из профиля / карты — уточняет «устал» vs «энергия» */
   profileMood?: MoodPreset
+  /** Пользовательское название маршрута */
+  name?: string
 }
 
 export type DayRoute = {
   id: string
+  /** Название, заданное пользователем */
+  name?: string
   vibe: RouteVibe
   /** Для подбора мест и обратной совместимости */
   mood: PlannerMood
@@ -82,7 +86,7 @@ export type DayRoute = {
   organizerBudgetIdx?: number
 }
 
-function parseDurationMinutes(s: string): number {
+export function parseDurationMinutes(s: string): number {
   const h = s.match(/(\d+)\s*(?:ч|h|саат|시간)\b/i)
   const m = s.match(/(\d+)\s*(?:мин|min|мүн|분)\b/i)
   return (h ? Number(h[1]) * 60 : 0) + (m ? Number(m[1]) : 0)
@@ -231,8 +235,11 @@ export function buildDayRoute(
   const groupSize = input.groupSize ?? 1
   const participantIds = input.participantIds ?? []
 
+  const routeName = input.name?.trim()
+
   return {
     id: `route-${Date.now()}`,
+    ...(routeName ? { name: routeName } : {}),
     vibe,
     mood,
     dayPeriod: input.dayPeriod,
@@ -293,6 +300,7 @@ export function normalizeDayRouteFields(
   | 'groupBudgetAvg'
   | 'groupBudgetEffective'
   | 'organizerBudgetIdx'
+  | 'name'
 > | null {
   const legacySlot = raw.timeSlot
   const legacyMood = raw.mood
@@ -347,9 +355,15 @@ export function normalizeDayRouteFields(
     ? raw.participantIds.filter((id): id is string => typeof id === 'string')
     : []
 
+  const name =
+    typeof raw.name === 'string' && raw.name.trim()
+      ? raw.name.trim()
+      : undefined
+
   return {
     vibe,
     mood,
+    ...(name ? { name } : {}),
     dayPeriod,
     stopCount,
     areaKey,

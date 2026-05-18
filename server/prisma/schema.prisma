@@ -29,7 +29,10 @@ model User {
   zones            String   @default("{}")
   dailyBudgetIndex Int      @default(1)
   initialMood      String   @default("")
+  birthDay         Int?
+  birthMonth       Int?
   birthYear        Int?
+  avatarPrivacy    String   @default("open")
   routine          String   @default("{\"slots\":[]}")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
